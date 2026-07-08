@@ -1,0 +1,22 @@
+{
+  "short_name": "ArchWeb",
+  "name": "ArchWeb OS",
+  "icons": [
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/a/a5/Archlinux-icon-crystal-64.svg",
+      "type": "image/svg+xml",
+      "sizes": "64x64"
+    },
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Arch_Linux_Logo_with_Name.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0d0d0d",
+  "theme_color": "#1793d1",
+  "display": "standalone",
+  "orientation": "any"
+}
