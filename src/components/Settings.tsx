@@ -92,7 +92,7 @@ export const Settings: React.FC<SettingsProps> = ({
         setUpdateStatus('Paket listesi kontrol ediliyor...');
         setTimeout(() => {
           setIsUpdating(false);
-          setUpdateStatus('Sistem güncel! ArchWeb OS v2.0 en son kararlı sürümdür.');
+          setUpdateStatus('Sistem güncel! ArchWeb for Kids v3.0 en son kararlı sürümdür.');
         }, 1000);
       }, 1000);
     }, 1000);
@@ -598,11 +598,11 @@ export const Settings: React.FC<SettingsProps> = ({
                 <div className="divide-y divide-white/5 space-y-2 pt-1">
                   <div className="flex justify-between text-xs py-1">
                     <span className="text-white/40">İşletim Sistemi</span>
-                    <span className="text-white/80 font-bold">ArchWeb OS</span>
+                    <span className="text-white/80 font-bold">ArchWeb for Kids</span>
                   </div>
                   <div className="flex justify-between text-xs py-1">
                     <span className="text-white/40">Sistem Sürümü</span>
-                    <span className="text-white/80 font-mono font-bold text-[var(--accent)]">v2.0</span>
+                    <span className="text-white/80 font-mono font-bold text-[var(--accent)]">v3.0</span>
                   </div>
                   <div className="flex justify-between text-xs py-1">
                     <span className="text-white/40">Çekirdek Sürümü</span>
@@ -624,7 +624,7 @@ export const Settings: React.FC<SettingsProps> = ({
               </section>
 
               <div className="text-center text-[10px] text-white/30 space-y-1">
-                <p>ArchWeb OS &bull; Bir Arch Linux Simülasyon Projesidir</p>
+                <p>ArchWeb for Kids &bull; Bir Arch Linux Çocuk Simülasyon Projesidir</p>
                 <p>&copy; 2026. Tüm hakları simüle edilmiştir.</p>
               </div>
             </motion.div>

@@ -35,7 +35,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           className="flex items-center gap-1.5 hover:text-white cursor-pointer transition-colors group"
         >
           <LayoutGrid size={14} className="text-[var(--accent)] group-hover:scale-110 transition-transform" />
-          <span className="font-bold text-white/80">Arch</span>
+          <span className="font-bold text-white/80">ArchWeb Kids</span>
         </div>
         <div className="flex items-center gap-3">
           <span className="hover:text-white cursor-pointer">Etkinlikler</span>

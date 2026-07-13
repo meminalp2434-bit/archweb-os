@@ -25,7 +25,7 @@ export const Neofetch: React.FC = () => {
   ];
 
   const info = [
-    { label: "Sistem", value: "ArchWeb OS v2.0 (Arch Linux)" },
+    { label: "Sistem", value: "ArchWeb for Kids v3.0 (Arch Linux)" },
     { label: "Makine", value: "Web-Container v1.0" },
     { label: "Çekirdek", value: "6.12.0-arch1-1" },
     { label: "Çalışma Süresi", value: "2 gün, 4 saat, 20 dak" },
