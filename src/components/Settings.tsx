@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Palette, Monitor, Shield, Info, Smartphone, AppWindow, ShieldAlert, ShieldCheck, Lock, RefreshCw, AlertCircle, QrCode, Download, ExternalLink } from 'lucide-react';
+import { X, Palette, Monitor, Shield, Info, Smartphone, AppWindow, ShieldAlert, ShieldCheck, Lock, RefreshCw, AlertCircle, QrCode, Download, ExternalLink, Volume2, VolumeX, Music } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface SettingsProps {
@@ -31,6 +31,14 @@ interface SettingsProps {
   // Mobile / APK
   mobileMode: boolean;
   setMobileMode: (val: boolean) => void;
+
+  // Audio (Ses)
+  volume: number;
+  setVolume: (val: number) => void;
+  isMuted: boolean;
+  setIsMuted: (val: boolean) => void;
+  startupSoundEnabled: boolean;
+  setStartupSoundEnabled: (val: boolean) => void;
 }
 
 type TabType = 'appearance' | 'display' | 'security' | 'mobile' | 'about';
@@ -56,6 +64,12 @@ export const Settings: React.FC<SettingsProps> = ({
   onLockScreen,
   mobileMode,
   setMobileMode,
+  volume,
+  setVolume,
+  isMuted,
+  setIsMuted,
+  startupSoundEnabled,
+  setStartupSoundEnabled,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('appearance');
   const [isUpdating, setIsUpdating] = useState(false);
@@ -87,7 +101,7 @@ export const Settings: React.FC<SettingsProps> = ({
   const getTabTitle = () => {
     switch (activeTab) {
       case 'appearance': return 'Görünüm Ayarları';
-      case 'display': return 'Ekran Ayarları';
+      case 'display': return 'Ekran & Ses Ayarları';
       case 'security': return 'Sistem Güvenliği';
       case 'mobile': return 'Mobil & APK Ayarları';
       case 'about': return 'Sistem Hakkında';
@@ -133,7 +147,7 @@ export const Settings: React.FC<SettingsProps> = ({
             className={`flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-colors ${activeTab === 'display' ? 'bg-[var(--accent)]/20 text-[var(--accent)]' : 'hover:bg-white/5 text-white/60'}`}
           >
             <Monitor size={14} />
-            Ekran
+            Ekran & Ses
           </button>
           <button 
             onClick={() => setActiveTab('security')}
@@ -274,7 +288,7 @@ export const Settings: React.FC<SettingsProps> = ({
                 <p className="text-[10px] text-white/40">Sistem pencereleri, terminal ve metin boyutu seçilen ölçeğe göre ayarlanır.</p>
                 <div className="flex gap-2">
                   {[
-                    { id: 'small', label: 'Küçük (A%' },
+                    { id: 'small', label: 'Küçük (A%)' },
                     { id: 'medium', label: 'Orta (AA%)' },
                     { id: 'large', label: 'Büyük (AAA%)' }
                   ].map((size) => (
@@ -286,6 +300,64 @@ export const Settings: React.FC<SettingsProps> = ({
                       {size.label}
                     </button>
                   ))}
+                </div>
+              </section>
+
+              {/* Ses Ayarları (Audio Settings) */}
+              <section className="bg-white/5 p-4 rounded-xl border border-white/5 space-y-4">
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider text-white/50 flex items-center gap-2">
+                  <Volume2 size={14} className="text-[var(--accent)]" />
+                  Sistem Ses Ayarları
+                </h3>
+
+                {/* System Volume Control */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-white/60 font-medium">Sistem Ses Seviyesi</span>
+                    <span className="text-[var(--accent)] font-bold">{isMuted ? 'Sessiz' : `${volume}%`}</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={() => setIsMuted(!isMuted)}
+                      className={`p-2 rounded-lg transition-all ${isMuted ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-white/5 text-white/60 hover:text-white'}`}
+                      title={isMuted ? "Sesi Aç" : "Sessiz Yap"}
+                    >
+                      {isMuted || volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                    </button>
+                    <input 
+                      type="range" 
+                      min="0" 
+                      max="100" 
+                      value={isMuted ? 0 : volume}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        setVolume(val);
+                        if (val > 0 && isMuted) {
+                          setIsMuted(false);
+                        }
+                      }}
+                      className="flex-1 accent-[var(--accent)] h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* Windows 11 Startup Sound Toggle */}
+                <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-[var(--accent)]/10 text-[var(--accent)]">
+                      <Music size={16} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white">Windows 11 Açılış Sesi</h4>
+                      <p className="text-[10px] text-white/40 font-normal">Sistem her açıldığında veya kilit açıldığında Windows 11 açılış sesini çalar.</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setStartupSoundEnabled(!startupSoundEnabled)}
+                    className={`relative w-12 h-6 rounded-full transition-colors ${startupSoundEnabled ? 'bg-[var(--accent)]' : 'bg-white/10'}`}
+                  >
+                    <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${startupSoundEnabled ? 'translate-x-6' : ''}`} />
+                  </button>
                 </div>
               </section>
             </motion.div>

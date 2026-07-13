@@ -1,13 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Cpu, HardDrive, Wifi, Battery, Clock, Search, LayoutGrid, Terminal as TerminalIcon, Shield } from 'lucide-react';
+import { Cpu, HardDrive, Wifi, Battery, Clock, Search, LayoutGrid, Terminal as TerminalIcon, Shield, Volume2, VolumeX } from 'lucide-react';
 
 interface TopBarProps {
   onLauncherToggle: () => void;
   onPowerToggle?: () => void;
   firewallActive?: boolean;
+  volume: number;
+  setVolume: (val: number) => void;
+  isMuted: boolean;
+  setIsMuted: (val: boolean) => void;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({ onLauncherToggle, onPowerToggle, firewallActive }) => {
+export const TopBar: React.FC<TopBarProps> = ({ 
+  onLauncherToggle, 
+  onPowerToggle, 
+  firewallActive,
+  volume,
+  setVolume,
+  isMuted,
+  setIsMuted
+}) => {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -49,6 +61,37 @@ export const TopBar: React.FC<TopBarProps> = ({ onLauncherToggle, onPowerToggle,
           </div>
           <Wifi size={14} />
           <Battery size={14} />
+          
+          {/* Hover-expandable Volume Control */}
+          <div className="relative flex items-center gap-1.5 group/vol px-1">
+            <button 
+              onClick={() => setIsMuted(!isMuted)} 
+              className="hover:text-white cursor-pointer transition-colors flex items-center"
+              title={isMuted ? "Sesi Aç" : "Sesi Kapat"}
+            >
+              {isMuted || volume === 0 ? <VolumeX size={13} className="text-red-400" /> : <Volume2 size={13} />}
+            </button>
+            <div className="w-0 group-hover/vol:w-16 overflow-hidden transition-all duration-300 flex items-center">
+              <input 
+                type="range" 
+                min="0" 
+                max="100" 
+                value={isMuted ? 0 : volume}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  setVolume(val);
+                  if (val > 0 && isMuted) {
+                    setIsMuted(false);
+                  }
+                }}
+                className="w-14 accent-[var(--accent)] h-1 bg-white/20 rounded-lg appearance-none cursor-pointer"
+              />
+            </div>
+            <span className="text-[9px] text-white/40 min-w-[18px] text-right font-mono">
+              {isMuted ? 'MUTE' : `${volume}%`}
+            </span>
+          </div>
+
           {firewallActive && (
             <span title="UFW Güvenlik Duvarı Aktif" className="flex items-center">
               <Shield size={12} className="text-emerald-500 fill-emerald-500/15" />

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { playWindows11StartupSound } from './utils/audio';
 import { TopBar } from './components/TopBar';
 import { Terminal } from './components/Terminal';
 import { Settings } from './components/Settings';
@@ -8,8 +9,11 @@ import { Launcher } from './components/Launcher';
 import { TrashBin } from './components/TrashBin';
 import { TextEditor } from './components/TextEditor';
 import { PowerDialog } from './components/PowerDialog';
+import { EmailApp } from './components/EmailApp';
+import { KidLogin } from './components/KidLogin';
+import { KidApp } from './components/KidApp';
 import { motion, AnimatePresence } from 'motion/react';
-import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock } from 'lucide-react';
+import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock, Mail, Sparkles } from 'lucide-react';
 
 const getWallpaperGradient = (wallpaper: number, accentColor: string) => {
   switch (wallpaper) {
@@ -26,15 +30,31 @@ const getWallpaperGradient = (wallpaper: number, accentColor: string) => {
 };
 
 export default function App() {
-  const [isTerminalOpen, setIsTerminalOpen] = useState(true);
+  // Kid OS states
+  const [isKidAppOpen, setIsKidAppOpen] = useState(false);
+  const [isSetupComplete, setIsSetupComplete] = useState<boolean>(() => {
+    return localStorage.getItem('archweb_kid_setup_complete') === 'true';
+  });
+  const [gmailUser, setGmailUser] = useState<string>(() => {
+    return localStorage.getItem('archweb_gmail_user') || '';
+  });
+  const [kidCategory, setKidCategory] = useState<'education' | 'gaming' | 'creativity' | 'science'>(() => {
+    return (localStorage.getItem('archweb_kid_category') as any) || 'education';
+  });
+  const [kidAvatar, setKidAvatar] = useState<string>(() => {
+    return localStorage.getItem('archweb_kid_avatar') || '🦊';
+  });
+
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false); // Default to false for kids
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isBrowserOpen, setIsBrowserOpen] = useState(false);
   const [isFileManagerOpen, setIsFileManagerOpen] = useState(false);
+  const [isEmailOpen, setIsEmailOpen] = useState(false);
   const [isLauncherOpen, setIsLauncherOpen] = useState(false);
   const [isTrashOpen, setIsTrashOpen] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isPowerDialogOpen, setIsPowerDialogOpen] = useState(false);
-  const [isShutDown, setIsShutDown] = useState(false);
+  const [isShutDown, setIsShutDown] = useState(true);
   const [isRestarting, setIsRestarting] = useState(false);
   const [accentColor, setAccentColor] = useState('#1793d1');
   const [editingFile, setEditingFile] = useState({ name: 'notlar.txt', content: 'ArchWeb OS\'e Hoş Geldiniz!\n\nBu, Arch Linux ortamının tamamen işlevsel bir web simülasyonudur.\n\nKeyfini çıkarın!' });
@@ -48,7 +68,77 @@ export default function App() {
   const [pinRequired, setPinRequired] = useState(false);
   const [pinCode, setPinCode] = useState('1234');
   const [mobileMode, setMobileMode] = useState(false);
-  const [isLocked, setIsLocked] = useState(false);
+  const [isLocked, setIsLocked] = useState(true);
+
+  // Sound and Volume Settings
+  const [volume, setVolume] = useState<number>(() => {
+    const saved = localStorage.getItem('archweb_volume');
+    return saved !== null ? parseInt(saved) : 80;
+  });
+  const [isMuted, setIsMuted] = useState<boolean>(() => {
+    const saved = localStorage.getItem('archweb_muted');
+    return saved !== null ? saved === 'true' : false;
+  });
+  const [startupSoundEnabled, setStartupSoundEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem('archweb_startup_sound');
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  // Sync sound settings with localStorage
+  useEffect(() => {
+    localStorage.setItem('archweb_volume', volume.toString());
+  }, [volume]);
+
+  useEffect(() => {
+    localStorage.setItem('archweb_muted', isMuted.toString());
+  }, [isMuted]);
+
+  useEffect(() => {
+    localStorage.setItem('archweb_startup_sound', startupSoundEnabled.toString());
+  }, [startupSoundEnabled]);
+
+  const handleSetupComplete = (gmail: string, category: 'education' | 'gaming' | 'creativity' | 'science', avatar: string) => {
+    setGmailUser(gmail);
+    setKidCategory(category);
+    setKidAvatar(avatar);
+    setIsSetupComplete(true);
+    localStorage.setItem('archweb_gmail_user', gmail);
+    localStorage.setItem('archweb_kid_category', category);
+    localStorage.setItem('archweb_kid_avatar', avatar);
+    localStorage.setItem('archweb_kid_setup_complete', 'true');
+
+    // Automatically theme the system based on selected category!
+    if (category === 'education') {
+      setWallpaper(1);
+      setAccentColor('#f59e0b'); // amber
+      setFirewallActive(true);
+    } else if (category === 'gaming') {
+      setWallpaper(3);
+      setAccentColor('#ec4899'); // pink
+    } else if (category === 'creativity') {
+      setWallpaper(1);
+      setAccentColor('#14b8a6'); // teal
+    } else if (category === 'science') {
+      setWallpaper(3);
+      setAccentColor('#a855f7'); // purple
+      setFirewallActive(true);
+    }
+
+    setIsKidAppOpen(true); // Open the Kids App Hub immediately!
+    setIsTerminalOpen(false); // Close terminal
+  };
+
+  const handleKidLogout = () => {
+    setIsSetupComplete(false);
+    setGmailUser('');
+    setKidCategory('education');
+    setKidAvatar('🦊');
+    localStorage.removeItem('archweb_gmail_user');
+    localStorage.removeItem('archweb_kid_category');
+    localStorage.removeItem('archweb_kid_avatar');
+    localStorage.removeItem('archweb_kid_setup_complete');
+    setIsKidAppOpen(false);
+  };
 
   const [lockInput, setLockInput] = useState('');
   const [lockError, setLockError] = useState(false);
@@ -96,6 +186,10 @@ export default function App() {
             e.preventDefault();
             setIsEditorOpen(!isEditorOpen);
             break;
+          case 'e':
+            e.preventDefault();
+            toggleEmail();
+            break;
           case 'p':
             e.preventDefault();
             setIsPowerDialogOpen(!isPowerDialogOpen);
@@ -116,6 +210,7 @@ export default function App() {
           setIsSettingsOpen(false);
           setIsBrowserOpen(false);
           setIsFileManagerOpen(false);
+          setIsEmailOpen(false);
           setIsTrashOpen(false);
           setIsEditorOpen(false);
         }
@@ -130,6 +225,7 @@ export default function App() {
   const toggleSettings = () => setIsSettingsOpen(!isSettingsOpen);
   const toggleBrowser = () => setIsBrowserOpen(!isBrowserOpen);
   const toggleFileManager = () => setIsFileManagerOpen(!isFileManagerOpen);
+  const toggleEmail = () => setIsEmailOpen(!isEmailOpen);
   const toggleTrash = () => setIsTrashOpen(!isTrashOpen);
   const toggleLauncher = () => setIsLauncherOpen(!isLauncherOpen);
 
@@ -139,6 +235,7 @@ export default function App() {
       case 'settings': setIsSettingsOpen(true); break;
       case 'browser': setIsBrowserOpen(true); break;
       case 'files': setIsFileManagerOpen(true); break;
+      case 'email': setIsEmailOpen(true); break;
       case 'trash': setIsTrashOpen(true); break;
     }
   };
@@ -154,12 +251,16 @@ export default function App() {
     setTimeout(() => {
       setIsRestarting(false);
       // Reset all windows
-      setIsTerminalOpen(true);
+      setIsTerminalOpen(false);
       setIsSettingsOpen(false);
       setIsBrowserOpen(false);
       setIsFileManagerOpen(false);
+      setIsEmailOpen(false);
       setIsTrashOpen(false);
       setIsEditorOpen(false);
+      if (startupSoundEnabled) {
+        playWindows11StartupSound(volume, isMuted, true);
+      }
     }, 3000);
   };
 
@@ -168,7 +269,12 @@ export default function App() {
       <div className="h-screen w-screen bg-black flex flex-col items-center justify-center gap-4 animate-in fade-in duration-1000">
         <div className="text-white/20 font-mono text-sm">Sistem kapandı.</div>
         <button 
-          onClick={() => setIsShutDown(false)}
+          onClick={() => {
+            setIsShutDown(false);
+            if (startupSoundEnabled) {
+              playWindows11StartupSound(volume, isMuted, true);
+            }
+          }}
           className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all text-xs"
         >
           Sistemi Başlat
@@ -191,12 +297,20 @@ export default function App() {
     );
   }
 
+  // Inject KidLogin if kid is not configured or gmail setup is missing
+  if (!isSetupComplete) {
+    return <KidLogin onComplete={handleSetupComplete} />;
+  }
+
   const handleUnlock = () => {
     if (pinRequired) {
       if (lockInput === pinCode) {
         setIsLocked(false);
         setLockInput('');
         setLockError(false);
+        if (startupSoundEnabled) {
+          playWindows11StartupSound(volume, isMuted);
+        }
       } else {
         setLockError(true);
         setLockInput('');
@@ -204,6 +318,9 @@ export default function App() {
       }
     } else {
       setIsLocked(false);
+      if (startupSoundEnabled) {
+        playWindows11StartupSound(volume, isMuted);
+      }
     }
   };
 
@@ -230,12 +347,12 @@ export default function App() {
 
         {/* Center Password Form */}
         <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-6 w-80 shadow-2xl flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-[var(--accent)]/20 border border-[var(--accent)]/40 flex items-center justify-center text-[13px] text-[var(--accent)] font-bold">
-            AU
+          <div className="w-12 h-12 rounded-full bg-[var(--accent)]/20 border border-[var(--accent)]/40 flex items-center justify-center text-2xl">
+            {isSetupComplete ? kidAvatar : '🦊'}
           </div>
           <div className="text-center">
-            <span className="text-xs font-bold text-white font-mono block">arch-user</span>
-            <span className="text-[10px] text-white/40 font-mono">localhost</span>
+            <span className="text-xs font-bold text-white font-mono block">{isSetupComplete ? gmailUser.split('@')[0] : 'arch-user'}</span>
+            <span className="text-[10px] text-white/40 font-mono">{isSetupComplete ? `${kidCategory} modu` : 'localhost'}</span>
           </div>
 
           {pinRequired ? (
@@ -280,7 +397,7 @@ export default function App() {
 
   const desktopContent = (
     <div 
-      className={`relative ${mobileMode ? 'h-full w-full rounded-[32px]' : 'h-screen w-screen'} overflow-hidden flex flex-col selection:bg-[var(--accent)] selection:bg-opacity-30 transition-all duration-700`}
+      className={`relative ${mobileMode ? 'h-full w-full rounded-[32px]' : 'h-screen w-screen'} overflow-y-auto overflow-x-hidden flex flex-col selection:bg-[var(--accent)] selection:bg-opacity-30 transition-all duration-700`}
       style={{ 
         background: getWallpaperGradient(wallpaper, accentColor),
         fontSize: fontSize === 'small' ? '12px' : fontSize === 'large' ? '16px' : '14px',
@@ -301,6 +418,10 @@ export default function App() {
         onLauncherToggle={toggleLauncher} 
         onPowerToggle={() => setIsPowerDialogOpen(true)}
         firewallActive={firewallActive}
+        volume={volume}
+        setVolume={setVolume}
+        isMuted={isMuted}
+        setIsMuted={setIsMuted}
       />
 
       {/* Main Workspace */}
@@ -378,6 +499,12 @@ export default function App() {
                 }}
                 mobileMode={mobileMode}
                 setMobileMode={setMobileMode}
+                volume={volume}
+                setVolume={setVolume}
+                isMuted={isMuted}
+                setIsMuted={setIsMuted}
+                startupSoundEnabled={startupSoundEnabled}
+                setStartupSoundEnabled={setStartupSoundEnabled}
               />
             </motion.div>
           )}
@@ -412,7 +539,23 @@ export default function App() {
                   setEditingFile({ name, content });
                   setIsEditorOpen(true);
                 }}
+                category={kidCategory}
+                gmailUser={gmailUser}
               />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {isEmailOpen && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="absolute w-full max-w-4xl h-full max-h-[600px] z-[45]"
+            >
+              <EmailApp onClose={() => setIsEmailOpen(false)} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -449,8 +592,41 @@ export default function App() {
           )}
         </AnimatePresence>
 
+        <AnimatePresence>
+          {isKidAppOpen && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="absolute w-full max-w-5xl h-full max-h-[600px] z-50"
+            >
+              <KidApp 
+                onClose={() => setIsKidAppOpen(false)}
+                category={kidCategory}
+                gmailUser={gmailUser}
+                avatar={kidAvatar}
+                onLogout={handleKidLogout}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Desktop Icons */}
         <div className="absolute top-8 left-8 flex flex-col gap-8">
+          <button 
+            onClick={() => setIsKidAppOpen(true)}
+            className="flex flex-col items-center gap-1 group relative"
+          >
+            <div className="w-12 h-12 bg-yellow-500/10 border border-yellow-500/30 rounded-xl flex items-center justify-center group-hover:bg-yellow-500/20 group-hover:border-yellow-400 transition-all shadow-[0_0_12px_rgba(234,179,8,0.2)]">
+              <Sparkles size={24} className="text-yellow-400 group-hover:scale-110 transition-transform" />
+            </div>
+            <span className="text-[10px] font-mono text-yellow-300 group-hover:text-yellow-200 font-bold">Çocuk Dünyası</span>
+            <div className="absolute -top-1.5 -right-1 px-1 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full border border-pink-400 text-[8px] font-bold text-white scale-90 px-1 py-0.5 animate-pulse leading-none uppercase">
+              Aktif
+            </div>
+          </button>
+
           <button 
             onClick={() => setIsTerminalOpen(true)}
             className="flex flex-col items-center gap-1 group"
@@ -489,6 +665,16 @@ export default function App() {
               <Folder size={24} className="text-white/80 group-hover:text-[var(--accent)]" />
             </div>
             <span className="text-[10px] font-mono text-white/60 group-hover:text-white">Ev</span>
+          </button>
+
+          <button 
+            onClick={() => setIsEmailOpen(true)}
+            className="flex flex-col items-center gap-1 group"
+          >
+            <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 group-hover:border-[var(--accent)] transition-all">
+              <Mail size={24} className="text-white/80 group-hover:text-[var(--accent)]" />
+            </div>
+            <span className="text-[10px] font-mono text-white/60 group-hover:text-white">E-posta</span>
           </button>
 
           <button 
@@ -532,6 +718,21 @@ export default function App() {
             className={`p-2 rounded-xl transition-all hover:scale-110 ${isFileManagerOpen ? 'bg-[var(--accent)]/20 border border-[var(--accent)]/40' : 'bg-white/5 border border-white/10 hover:bg-white/10'}`}
           >
             <Folder size={20} className={isFileManagerOpen ? 'text-[var(--accent)]' : 'text-white/70'} />
+          </button>
+
+          <button 
+            onClick={toggleEmail}
+            className={`p-2 rounded-xl transition-all hover:scale-110 ${isEmailOpen ? 'bg-[var(--accent)]/20 border border-[var(--accent)]/40' : 'bg-white/5 border border-white/10 hover:bg-white/10'}`}
+          >
+            <Mail size={20} className={isEmailOpen ? 'text-[var(--accent)]' : 'text-white/70'} />
+          </button>
+
+          <button 
+            onClick={() => setIsKidAppOpen(!isKidAppOpen)}
+            className={`p-2 rounded-xl transition-all hover:scale-110 ${isKidAppOpen ? 'bg-yellow-500/20 border border-yellow-500/40' : 'bg-white/5 border border-white/10 hover:bg-white/10'}`}
+            title="Çocuk Dünyası"
+          >
+            <Sparkles size={20} className={isKidAppOpen ? 'text-yellow-400' : 'text-white/70'} />
           </button>
 
           <div className="w-px h-6 bg-white/10 mx-1" />

@@ -4,9 +4,11 @@ import { X, Folder, File, ChevronLeft, HardDrive, Home, Download, Music, Image a
 interface FileManagerProps {
   onClose: () => void;
   onOpenFile?: (name: string, content: string) => void;
+  category?: 'education' | 'gaming' | 'creativity' | 'science';
+  gmailUser?: string;
 }
 
-export const FileManager: React.FC<FileManagerProps> = ({ onClose, onOpenFile }) => {
+export const FileManager: React.FC<FileManagerProps> = ({ onClose, onOpenFile, category, gmailUser }) => {
   const [currentPath, setCurrentPath] = useState('/home/user');
   
   const rootFolders = [
@@ -20,7 +22,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ onClose, onOpenFile })
 
   const allFiles: Record<string, { name: string, size: string, content: string }[]> = {
     '/home/user': [
-      { name: 'yapılandırma.json', size: '1.2 KB', content: '{\n  "tema": "koyu",\n  "vurgu": "arch-mavisi",\n  "sürüm": "1.0.0"\n}' },
+      { name: 'yapılandırma.json', size: '1.2 KB', content: '{\n  "tema": "koyu",\n  "vurgu": "arch-mavisi",\n  "sürüm": "2.0.0"\n}' },
       { name: 'notlar.txt', size: '456 B', content: 'ArchWeb OS\'e Hoş Geldiniz!\n\nBu, Arch Linux ortamının tamamen işlevsel bir web simülasyonudur.' },
       { name: 'betik.sh', size: '2.1 KB', content: '#!/bin/bash\n\necho "Arch Linux\'tan Merhaba!"\nsudo pacman -Syu' },
     ],
@@ -30,16 +32,80 @@ export const FileManager: React.FC<FileManagerProps> = ({ onClose, onOpenFile })
     ],
     '/home/user/Masaüstü': [
       { name: 'notlar.txt', size: '456 B', content: 'ArchWeb OS\'e Hoş Geldiniz!\n\nBu, Arch Linux ortamının tamamen işlevsel bir web simülasyonudur.' },
+    ],
+    '/home/user/archweb': [
+      { name: 'system.conf', size: '2.4 KB', content: '# ArchWeb OS System Configuration\nSYS_VERSION=2.0\nKERNEL=6.12.0-arch1-1\nUI_MODE=desktop\nACCENT_COLOR=#1793d1\nFIREWALL=active\nAUTO_UPDATE=true\nSECURITY_PATCH=2026-07\nOS_ROOT_TYPE=vfs\nDEBUG_LEVEL=3' },
+      { name: 'grub.cfg', size: '1.8 KB', content: '# GRUB Bootloader Configuration\nset default="0"\nset timeout=5\n\nmenuentry "ArchWeb OS v2.0 (Kernel 6.12.0-arch1-1)" --class arch {\n    load_video\n    set gfxpayload=keep\n    insmod gzio\n    insmod part_gpt\n    insmod ext2\n    search --no-floppy --fs-uuid --set=root 1410f2d4-34ad-4d08\n    linux /boot/vmlinuz-linux root=UUID=1410f2d4-34ad-4d08 rw quiet\n    initrd /boot/initramfs-linux.img\n}' },
+      { name: 'fstab', size: '512 B', content: '# /etc/fstab: static file system information.\n# <file system>             <mount point>  <type>  <options>  <dump>  <pass>\nUUID=1410f2d4-34ad-4d08     /              ext4    defaults,noatime 0 1\nUUID=A8C2-F312             /boot          vfat    defaults,fmask=0077,dmask=0077 0 2\n/dev/vda3                   none           swap    defaults   0 0' }
+    ],
+    '/home/user/archweb/data': [
+      { name: 'system.db', size: '320 KB', content: '[SQLite Database Document]\n-- Contains local settings, package configurations, system user registries and session states.' },
+      { name: 'user_profiles.dat', size: '42 KB', content: '[Binary Data]\n-- User custom profiles, desktop layout, wallpaper choice and color scheme configs.' },
+      { name: 'hosts', size: '210 B', content: '127.0.0.1   localhost\n::1         localhost\n127.0.1.1   archweb.localdomain archweb' },
+      { name: 'sound_settings.conf', size: '150 B', content: '# ArchWeb OS Audio Configuration\nSYSTEM_VOLUME=80\nMUTE=false\nSTARTUP_SOUND=true\nAUDIO_ENGINE=WebAudioSynth' },
+      { name: 'windows11_startup.mp3', size: '1.2 MB', content: '[Audio Binary Buffer]\n-- Decoded 44.1kHz Stereo buffer containing high-fidelity Windows 11 boot sequence.' }
+    ],
+    '/home/user/archweb/obb': [
+      { name: 'main.1020.com.archweb.os.obb', size: '1.4 GB', content: '[Android Expansion File]\n-- Contains high-definition system graphics, compiled icon packages, desktop window sound effects and desktop engine cache assets.' },
+      { name: 'patch.1020.com.archweb.os.obb', size: '82 MB', content: '[Android Patch Expansion File]\n-- Cumulative patches for ArchWeb Mobile v2.0 performance improvement and hotfixes.' }
+    ],
+    '/home/user/archweb/media': [
+      { name: 'startup.wav', size: '2.3 MB', content: '[RIFF WAVE Audio File]\n-- Plays on boot. Cyberpunk / Sci-fi synth chime.' },
+      { name: 'wallpaper.png', size: '4.7 MB', content: '[PNG Image File]\n-- Default High-Res background wallpaper of ArchWeb OS.' },
+      { name: 'notification.ogg', size: '420 KB', content: '[Ogg Vorbis Audio File]\n-- Soft mechanical click sound for desktop notifications.' }
     ]
   };
 
   const subFolders: Record<string, { name: string }[]> = {
-    '/home/user': rootFolders,
+    '/home/user': [
+      ...rootFolders,
+      { name: 'archweb' }
+    ],
     '/home/user/Belgeler': [
       { name: 'İş' },
       { name: 'Kişisel' }
-    ]
+    ],
+    '/home/user/archweb': [
+      { name: 'data' },
+      { name: 'obb' },
+      { name: 'media' }
+    ],
+    '/home/user/archweb/data': [],
+    '/home/user/archweb/obb': [],
+    '/home/user/archweb/media': []
   };
+
+  // Dynamically inject custom child files if category is selected
+  if (category) {
+    if (!subFolders['/home/user'].some(f => f.name === 'Çocuk Dünyası')) {
+      subFolders['/home/user'].push({ name: 'Çocuk Dünyası' });
+    }
+
+    let kidFiles: { name: string, size: string, content: string }[] = [];
+    if (category === 'education') {
+      kidFiles = [
+        { name: 'günlük_programım.txt', size: '220 B', content: 'Sevgili Kâşif,\n\nİşte senin için harika bir günlük ders programı:\n\n- 09:00 - Kitap Okuma\n- 10:30 - Matematik Soruları\n- 14:00 - Doğa Keşfi\n- 16:00 - Bilim Robotu ile Sohbet!' },
+        { name: 'matematik_notları.txt', size: '180 B', content: 'Matematik Notlarım:\n\nToplama (+), Çıkarma (-) ve Çarpma (*) işlemleri zihnini geliştirir! Çocuk Dünyası uygulamasında pratik yapıp yıldız kazanabilirsin.' }
+      ];
+    } else if (category === 'gaming') {
+      kidFiles = [
+        { name: 'oyun_taktikleri.txt', size: '150 B', content: 'Yılan Oyunu Taktikleri:\n\n- Yılan hızlandıkça sakin ol!\n- Elmaları toplarken duvarlara çarpmamaya dikkat et!\n- Kuyruğuna çarpmamak için geniş dönüşler yap.' },
+        { name: 'skor_rekorları.txt', size: '120 B', content: 'En Yüksek Skor Listesi:\n\n1. Süper Kâşif - 350 Puan ⭐\n2. Bilim Robotu - 280 Puan\n3. Şirin Panda - 150 Puan' }
+      ];
+    } else if (category === 'creativity') {
+      kidFiles = [
+        { name: 'resim_fikirleri.txt', size: '200 B', content: 'Sihirli Tuval Fikirlerim:\n\n- Uzayda uçan pembe bir fil 🐘\n- Denizlerin altındaki sihirli şato 🏰\n- Gökkuşağında kayan sevimli bir kedi 🐱' },
+        { name: 'masal_notu.txt', size: '160 B', content: 'Bir varmış bir yokmuş... Gökyüzündeki pofuduk bulutların üzerinde yaşayan küçük, sihirli bir tilki varmış. Bu tilki her gece yıldızları sayarmış...' }
+      ];
+    } else if (category === 'science') {
+      kidFiles = [
+        { name: 'uzay_bilgileri.txt', size: '280 B', content: 'Bilinmeyen Uzay Bilgileri:\n\n- Güneş Sistemi\'nin en büyük gezegeni Jüpiter\'dir.\n- Mars kızıl renktedir çünkü yüzeyi paslı demir tozlarıyla kaplıdır.\n- Satürn sudan daha hafiftir! Devasa bir su havuzu olsa üzerinde yüzerdi!' },
+        { name: 'robot_notu.txt', size: '130 B', content: 'Yapay Zeka Bilim Robotu ile sohbet ederken dilediğin her şeyi sorabilirsin. Bilim ve dinozor sorularını çok sever!' }
+      ];
+    }
+    allFiles['/home/user/Çocuk Dünyası'] = kidFiles;
+    subFolders['/home/user/Çocuk Dünyası'] = [];
+  }
 
   const currentFiles = allFiles[currentPath] || [];
   const currentFolders = subFolders[currentPath] || [];

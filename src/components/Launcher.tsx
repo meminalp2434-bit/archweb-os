@@ -1,5 +1,5 @@
 import React from 'react';
-import { Terminal, Settings, Globe, Folder, Trash2, Search, Power, LogOut, User } from 'lucide-react';
+import { Terminal, Settings, Globe, Folder, Trash2, Search, Power, LogOut, User, Mail } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface LauncherProps {
@@ -14,6 +14,7 @@ export const Launcher: React.FC<LauncherProps> = ({ onClose, onLaunch, onPowerCl
     { id: 'settings', name: 'Ayarlar', icon: Settings, color: '#9c27b0' },
     { id: 'browser', name: 'Tarayıcı', icon: Globe, color: '#4caf50' },
     { id: 'files', name: 'Dosyalar', icon: Folder, color: '#ff9800' },
+    { id: 'email', name: 'E-posta', icon: Mail, color: '#00bcd4' },
     { id: 'trash', name: 'Çöp Kutusu', icon: Trash2, color: '#f44336' },
   ];
 
