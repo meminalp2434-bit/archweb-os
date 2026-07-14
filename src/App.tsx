@@ -12,8 +12,9 @@ import { PowerDialog } from './components/PowerDialog';
 import { EmailApp } from './components/EmailApp';
 import { KidLogin } from './components/KidLogin';
 import { KidApp } from './components/KidApp';
+import { PlayStore } from './components/PlayStore';
 import { motion, AnimatePresence } from 'motion/react';
-import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock, Mail, Sparkles } from 'lucide-react';
+import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock, Mail, Sparkles, Play, Cpu, ShoppingBag, Smartphone } from 'lucide-react';
 
 const getWallpaperGradient = (wallpaper: number, accentColor: string) => {
   switch (wallpaper) {
@@ -38,6 +39,12 @@ export default function App() {
   const [gmailUser, setGmailUser] = useState<string>(() => {
     return localStorage.getItem('archweb_gmail_user') || '';
   });
+  const [gmailPassword, setGmailPassword] = useState<string>(() => {
+    return localStorage.getItem('archweb_gmail_password') || '';
+  });
+  const [loginMethod, setLoginMethod] = useState<'email' | 'google' | 'microsoft' | 'apple'>(() => {
+    return (localStorage.getItem('archweb_login_method') as any) || 'email';
+  });
   const [kidCategory, setKidCategory] = useState<'education' | 'gaming' | 'creativity' | 'science'>(() => {
     return (localStorage.getItem('archweb_kid_category') as any) || 'education';
   });
@@ -50,12 +57,20 @@ export default function App() {
   const [isBrowserOpen, setIsBrowserOpen] = useState(false);
   const [isFileManagerOpen, setIsFileManagerOpen] = useState(false);
   const [isEmailOpen, setIsEmailOpen] = useState(false);
+  const [isPlayStoreOpen, setIsPlayStoreOpen] = useState(false);
   const [isLauncherOpen, setIsLauncherOpen] = useState(false);
   const [isTrashOpen, setIsTrashOpen] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isPowerDialogOpen, setIsPowerDialogOpen] = useState(false);
+  const [isAppLauncherOpen, setIsAppLauncherOpen] = useState(false);
+  const [launchedProgramName, setLaunchedProgramName] = useState('');
+  const [launcherStep, setLauncherStep] = useState<'bootstrap' | 'menu'>('bootstrap');
+  const [launcherLogs, setLauncherLogs] = useState<string[]>([]);
   const [isShutDown, setIsShutDown] = useState(true);
   const [isRestarting, setIsRestarting] = useState(false);
+  const [isSafeMode, setIsSafeMode] = useState<boolean>(() => {
+    return localStorage.getItem('archweb_safe_mode') === 'true';
+  });
   const [accentColor, setAccentColor] = useState('#1793d1');
   const [editingFile, setEditingFile] = useState({ name: 'notlar.txt', content: 'ArchWeb OS\'e Hoş Geldiniz!\n\nBu, Arch Linux ortamının tamamen işlevsel bir web simülasyonudur.\n\nKeyfini çıkarın!' });
 
@@ -97,12 +112,24 @@ export default function App() {
     localStorage.setItem('archweb_startup_sound', startupSoundEnabled.toString());
   }, [startupSoundEnabled]);
 
-  const handleSetupComplete = (gmail: string, category: 'education' | 'gaming' | 'creativity' | 'science', avatar: string) => {
+  const handleSetupComplete = (
+    gmail: string,
+    category: 'education' | 'gaming' | 'creativity' | 'science',
+    avatar: string,
+    method: 'email' | 'google' | 'microsoft' | 'apple' = 'email',
+    password?: string
+  ) => {
     setGmailUser(gmail);
     setKidCategory(category);
     setKidAvatar(avatar);
+    setLoginMethod(method);
+    if (password) {
+      setGmailPassword(password);
+      localStorage.setItem('archweb_gmail_password', password);
+    }
     setIsSetupComplete(true);
     localStorage.setItem('archweb_gmail_user', gmail);
+    localStorage.setItem('archweb_login_method', method);
     localStorage.setItem('archweb_kid_category', category);
     localStorage.setItem('archweb_kid_avatar', avatar);
     localStorage.setItem('archweb_kid_setup_complete', 'true');
@@ -131,9 +158,13 @@ export default function App() {
   const handleKidLogout = () => {
     setIsSetupComplete(false);
     setGmailUser('');
+    setGmailPassword('');
+    setLoginMethod('email');
     setKidCategory('education');
     setKidAvatar('🦊');
     localStorage.removeItem('archweb_gmail_user');
+    localStorage.removeItem('archweb_gmail_password');
+    localStorage.removeItem('archweb_login_method');
     localStorage.removeItem('archweb_kid_category');
     localStorage.removeItem('archweb_kid_avatar');
     localStorage.removeItem('archweb_kid_setup_complete');
@@ -211,6 +242,7 @@ export default function App() {
           setIsBrowserOpen(false);
           setIsFileManagerOpen(false);
           setIsEmailOpen(false);
+          setIsPlayStoreOpen(false);
           setIsTrashOpen(false);
           setIsEditorOpen(false);
         }
@@ -219,15 +251,46 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isLauncherOpen, isTerminalOpen, isSettingsOpen, isBrowserOpen, isFileManagerOpen, isTrashOpen, isEditorOpen]);
+  }, [isLauncherOpen, isTerminalOpen, isSettingsOpen, isBrowserOpen, isFileManagerOpen, isTrashOpen, isEditorOpen, isPlayStoreOpen]);
 
   const toggleTerminal = () => setIsTerminalOpen(!isTerminalOpen);
   const toggleSettings = () => setIsSettingsOpen(!isSettingsOpen);
   const toggleBrowser = () => setIsBrowserOpen(!isBrowserOpen);
   const toggleFileManager = () => setIsFileManagerOpen(!isFileManagerOpen);
   const toggleEmail = () => setIsEmailOpen(!isEmailOpen);
+  const togglePlayStore = () => setIsPlayStoreOpen(!isPlayStoreOpen);
   const toggleTrash = () => setIsTrashOpen(!isTrashOpen);
   const toggleLauncher = () => setIsLauncherOpen(!isLauncherOpen);
+
+  const handleExecuteProgram = (name: string) => {
+    setLaunchedProgramName(name);
+    setIsAppLauncherOpen(true);
+    setLauncherStep('bootstrap');
+    setLauncherLogs([]);
+
+    const logMessages = [
+      `$ ./${name}`,
+      `[  SİSTEM  ] Sanal dosya sistemi doğrulanıyor... Başarılı.`,
+      `[  SİSTEM  ] Sistem kütüphaneleri yükleniyor...`,
+      `[  SİSTEM  ] Bağımlılık paketleri denetleniyor...`,
+      `[  SİSTEM  ] Grafik arayüz motoru (X11/Wayland) başlatıldı.`,
+      `[  BAŞARI  ] '${name}' programı başarıyla çalıştırıldı!`,
+      `[  BİLGİ  ] Uygulama Yönetim Merkezi hazırlanıyor...`
+    ];
+
+    let currentIndex = 0;
+    const interval = setInterval(() => {
+      if (currentIndex < logMessages.length) {
+        setLauncherLogs(prev => [...prev, logMessages[currentIndex]]);
+        currentIndex++;
+      } else {
+        clearInterval(interval);
+        setTimeout(() => {
+          setLauncherStep('menu');
+        }, 300);
+      }
+    }, 200);
+  };
 
   const handleLaunch = (appId: string) => {
     switch (appId) {
@@ -236,6 +299,7 @@ export default function App() {
       case 'browser': setIsBrowserOpen(true); break;
       case 'files': setIsFileManagerOpen(true); break;
       case 'email': setIsEmailOpen(true); break;
+      case 'playstore': setIsPlayStoreOpen(true); break;
       case 'trash': setIsTrashOpen(true); break;
     }
   };
@@ -243,11 +307,15 @@ export default function App() {
   const handleShutdown = () => {
     setIsPowerDialogOpen(false);
     setIsShutDown(true);
+    localStorage.removeItem('archweb_safe_mode');
+    setIsSafeMode(false);
   };
 
   const handleRestart = () => {
     setIsPowerDialogOpen(false);
     setIsRestarting(true);
+    localStorage.removeItem('archweb_safe_mode');
+    setIsSafeMode(false);
     setTimeout(() => {
       setIsRestarting(false);
       // Reset all windows
@@ -256,6 +324,29 @@ export default function App() {
       setIsBrowserOpen(false);
       setIsFileManagerOpen(false);
       setIsEmailOpen(false);
+      setIsPlayStoreOpen(false);
+      setIsTrashOpen(false);
+      setIsEditorOpen(false);
+      if (startupSoundEnabled) {
+        playWindows11StartupSound(volume, isMuted, true);
+      }
+    }, 3000);
+  };
+
+  const handleSafeMode = () => {
+    setIsPowerDialogOpen(false);
+    setIsRestarting(true);
+    localStorage.setItem('archweb_safe_mode', 'true');
+    setIsSafeMode(true);
+    setTimeout(() => {
+      setIsRestarting(false);
+      // Reset all windows
+      setIsTerminalOpen(false);
+      setIsSettingsOpen(false);
+      setIsBrowserOpen(false);
+      setIsFileManagerOpen(false);
+      setIsEmailOpen(false);
+      setIsPlayStoreOpen(false);
       setIsTrashOpen(false);
       setIsEditorOpen(false);
       if (startupSoundEnabled) {
@@ -284,13 +375,25 @@ export default function App() {
   }
 
   if (isRestarting) {
+    const isSafe = localStorage.getItem('archweb_safe_mode') === 'true';
     return (
       <div className="h-screen w-screen bg-black flex flex-col items-center justify-center gap-6 font-mono">
         <div className="flex flex-col gap-1 text-[var(--accent)] text-xs">
-          <div>[  OK  ] Reached target Graphical Interface.</div>
-          <div>[  OK  ] Stopped Getty on tty1.</div>
-          <div>[  OK  ] Stopped User Manager for UID 1000.</div>
-          <div className="animate-pulse mt-4">Sistem yeniden başlatılıyor...</div>
+          {isSafe ? (
+            <>
+              <div>[  OK  ] Reached target Safe Graphical Interface.</div>
+              <div>[  OK  ] Loaded minimal system modules.</div>
+              <div>[  OK  ] Mounted recovery and diagnostic mode.</div>
+              <div className="animate-pulse mt-4 text-amber-500 font-bold">Sistem GÜVENLİ MODDA başlatılıyor...</div>
+            </>
+          ) : (
+            <>
+              <div>[  OK  ] Reached target Graphical Interface.</div>
+              <div>[  OK  ] Stopped Getty on tty1.</div>
+              <div>[  OK  ] Stopped User Manager for UID 1000.</div>
+              <div className="animate-pulse mt-4">Sistem yeniden başlatılıyor...</div>
+            </>
+          )}
         </div>
         <RotateCcw size={32} className="text-[var(--accent)] animate-spin" />
       </div>
@@ -397,13 +500,41 @@ export default function App() {
 
   const desktopContent = (
     <div 
-      className={`relative ${mobileMode ? 'h-full w-full rounded-[32px]' : 'h-screen w-screen'} overflow-y-auto overflow-x-hidden flex flex-col selection:bg-[var(--accent)] selection:bg-opacity-30 transition-all duration-700`}
+      className={`relative ${mobileMode ? 'h-full w-full rounded-none sm:rounded-[32px]' : 'h-screen w-screen'} overflow-hidden flex flex-col selection:bg-[var(--accent)] selection:bg-opacity-30 transition-all duration-700`}
       style={{ 
         background: getWallpaperGradient(wallpaper, accentColor),
         fontSize: fontSize === 'small' ? '12px' : fontSize === 'large' ? '16px' : '14px',
-        filter: `brightness(${brightness}%)`
+        filter: `brightness(${brightness}%) ${isSafeMode ? 'grayscale(0.6) contrast(1.05)' : ''}`
       }}
     >
+      {/* Safe Mode Banner & Watermarks */}
+      {isSafeMode && (
+        <>
+          <div className="absolute top-10 left-1/2 -translate-x-1/2 z-[80] w-full max-w-xl px-4 pointer-events-auto">
+            <div className="bg-red-500/10 backdrop-blur-md border border-red-500/30 rounded-xl p-3 flex items-center justify-between text-xs text-red-200 shadow-lg select-none">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span><strong>Güvenli Mod Aktif:</strong> Sadece temel sistem özellikleri devrede.</span>
+              </div>
+              <button 
+                onClick={() => {
+                  localStorage.removeItem('archweb_safe_mode');
+                  setIsSafeMode(false);
+                }}
+                className="px-2.5 py-1 rounded bg-red-500/20 hover:bg-red-500/40 border border-red-500/40 font-bold transition-all text-[10px] text-white whitespace-nowrap cursor-pointer"
+              >
+                Normal Moda Dön
+              </button>
+            </div>
+          </div>
+          <div className="absolute inset-0 pointer-events-none select-none z-[10] overflow-hidden">
+            <div className="absolute top-12 left-4 text-[10px] font-mono font-bold text-red-500/15 uppercase tracking-widest">Güvenli Mod</div>
+            <div className="absolute top-12 right-4 text-[10px] font-mono font-bold text-red-500/15 uppercase tracking-widest">Güvenli Mod</div>
+            <div className="absolute bottom-20 left-4 text-[10px] font-mono font-bold text-red-500/15 uppercase tracking-widest">Güvenli Mod</div>
+            <div className="absolute bottom-20 right-4 text-[10px] font-mono font-bold text-red-500/15 uppercase tracking-widest">Güvenli Mod</div>
+          </div>
+        </>
+      )}
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-20 pointer-events-none">
         <div 
@@ -422,6 +553,8 @@ export default function App() {
         setVolume={setVolume}
         isMuted={isMuted}
         setIsMuted={setIsMuted}
+        mobileMode={mobileMode}
+        onMobileToggle={() => setMobileMode(!mobileMode)}
       />
 
       {/* Main Workspace */}
@@ -434,6 +567,13 @@ export default function App() {
                 onClose={() => setIsLauncherOpen(false)} 
                 onLaunch={handleLaunch} 
                 onPowerClick={() => setIsPowerDialogOpen(true)}
+                userAvatar={kidAvatar}
+                userName={gmailUser.split('@')[0]}
+                userEmail={gmailUser}
+                userPassword={gmailPassword}
+                loginMethod={loginMethod}
+                kidCategory={kidCategory}
+                onLogout={handleKidLogout}
               />
             </div>
           )}
@@ -447,6 +587,7 @@ export default function App() {
                 onClose={() => setIsPowerDialogOpen(false)}
                 onShutdown={handleShutdown}
                 onRestart={handleRestart}
+                onSafeMode={handleSafeMode}
               />
             </div>
           )}
@@ -459,7 +600,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="absolute w-full max-w-4xl h-full max-h-[600px] z-10"
+              className={`absolute w-full h-full transition-all duration-300 z-10 ${mobileMode ? 'inset-x-0 top-8 bottom-0 max-w-full max-h-full rounded-none' : 'max-w-4xl max-h-[600px] rounded-lg'}`}
             >
               <Terminal onClose={() => setIsTerminalOpen(false)} />
             </motion.div>
@@ -473,7 +614,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="absolute w-full max-w-2xl h-full max-h-[500px] z-20"
+              className={`absolute w-full h-full transition-all duration-300 z-20 ${mobileMode ? 'inset-x-0 top-8 bottom-0 max-w-full max-h-full rounded-none' : 'max-w-2xl max-h-[500px] rounded-lg'}`}
             >
               <Settings 
                 onClose={() => setIsSettingsOpen(false)} 
@@ -517,7 +658,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="absolute w-full max-w-5xl h-full max-h-[700px] z-30"
+              className={`absolute w-full h-full transition-all duration-300 z-30 ${mobileMode ? 'inset-x-0 top-8 bottom-0 max-w-full max-h-full rounded-none' : 'max-w-5xl max-h-[700px] rounded-lg'}`}
             >
               <Browser onClose={() => setIsBrowserOpen(false)} />
             </motion.div>
@@ -531,17 +672,205 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="absolute w-full max-w-4xl h-full max-h-[600px] z-40"
+              className={`absolute w-full h-full transition-all duration-300 z-40 ${mobileMode ? 'inset-x-0 top-8 bottom-0 max-w-full max-h-full rounded-none' : 'max-w-4xl max-h-[600px] rounded-lg'}`}
             >
               <FileManager 
                 onClose={() => setIsFileManagerOpen(false)} 
                 onOpenFile={(name, content) => {
-                  setEditingFile({ name, content });
-                  setIsEditorOpen(true);
+                  if (name === 'uygulamayi_ac.sh' || name === 'baslat.desktop' || name === 'archweb_launcher.exe') {
+                    handleExecuteProgram(name);
+                  } else {
+                    setEditingFile({ name, content });
+                    setIsEditorOpen(true);
+                  }
                 }}
                 category={kidCategory}
                 gmailUser={gmailUser}
               />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {isAppLauncherOpen && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="absolute w-full max-w-xl bg-[#0d0d12] rounded-xl border border-white/10 overflow-hidden shadow-2xl z-[90] flex flex-col font-sans text-white/90"
+              id="app-launcher-modal"
+            >
+              {/* Title Bar */}
+              <div className="flex items-center justify-between px-4 py-2.5 bg-white/5 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <Cpu size={14} className="text-[var(--accent)] animate-pulse" />
+                  <span className="text-xs font-mono font-bold tracking-tight">
+                    ArchWeb Program Başlatıcı — {launchedProgramName}
+                  </span>
+                </div>
+                <button 
+                  onClick={() => setIsAppLauncherOpen(false)}
+                  className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors"
+                  id="close-launcher-btn"
+                />
+              </div>
+
+              {/* Window Body */}
+              <div className="p-5 flex-1 flex flex-col overflow-hidden min-h-[320px] max-h-[460px]">
+                {launcherStep === 'bootstrap' ? (
+                  <div className="flex-1 flex flex-col bg-black/60 rounded-lg p-4 font-mono text-[11px] text-emerald-400 overflow-y-auto space-y-1.5 border border-white/5 shadow-inner">
+                    {launcherLogs.map((log, index) => (
+                      <div key={index} className="flex gap-2">
+                        <span className="text-emerald-500/40">[{index + 1}]</span>
+                        <span>{log}</span>
+                      </div>
+                    ))}
+                    <div className="flex items-center gap-2 mt-4 text-white/50">
+                      <div className="w-3.5 h-3.5 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" />
+                      <span>Program yükleniyor, lütfen bekleyin...</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex-1 flex flex-col space-y-4 overflow-y-auto pr-1">
+                    <div className="text-center space-y-1.5 pb-2 border-b border-white/5">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-400 font-mono uppercase font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                        Program Aktif
+                      </div>
+                      <h3 className="text-sm font-bold text-white tracking-tight">Sistem Uygulama Yönetim Paneli</h3>
+                      <p className="text-[11px] text-white/50">ArchWeb OS sanal katmanında çalıştırmak istediğiniz masaüstü uygulamasını seçin:</p>
+                    </div>
+
+                    {/* Applications Grid */}
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <button 
+                        onClick={() => {
+                          setIsTerminalOpen(true);
+                          setIsAppLauncherOpen(false);
+                        }}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/40 hover:bg-white/10 transition-all text-left group"
+                        id="launcher-run-terminal"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+                          <TerminalIcon size={18} />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-white">Uçbirim (Terminal)</div>
+                          <div className="text-[9px] text-white/40">Komut satırı simülatörü</div>
+                        </div>
+                      </button>
+
+                      <button 
+                        onClick={() => {
+                          setIsFileManagerOpen(true);
+                          setIsAppLauncherOpen(false);
+                        }}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-cyan-500/40 hover:bg-white/10 transition-all text-left group"
+                        id="launcher-run-files"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
+                          <Folder size={18} />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-white">Ev Dizini (Dosyalar)</div>
+                          <div className="text-[9px] text-white/40">Sanal dosya yöneticisi</div>
+                        </div>
+                      </button>
+
+                      <button 
+                        onClick={() => {
+                          setIsBrowserOpen(true);
+                          setIsAppLauncherOpen(false);
+                        }}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-pink-500/40 hover:bg-white/10 transition-all text-left group"
+                        id="launcher-run-browser"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-pink-500/10 flex items-center justify-center text-pink-400 group-hover:scale-110 transition-transform">
+                          <Globe size={18} />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-white">İnternet Tarayıcısı</div>
+                          <div className="text-[9px] text-white/40">Web sörf simülasyonu</div>
+                        </div>
+                      </button>
+
+                      <button 
+                        onClick={() => {
+                          setIsSettingsOpen(true);
+                          setIsAppLauncherOpen(false);
+                        }}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-indigo-500/40 hover:bg-white/10 transition-all text-left group"
+                        id="launcher-run-settings"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+                          <SettingsIcon size={18} />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-white">Sistem Ayarları</div>
+                          <div className="text-[9px] text-white/40">Tema ve konfigürasyonlar</div>
+                        </div>
+                      </button>
+
+                      <button 
+                        onClick={() => {
+                          setIsEmailOpen(true);
+                          setIsAppLauncherOpen(false);
+                        }}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-amber-500/40 hover:bg-white/10 transition-all text-left group"
+                        id="launcher-run-email"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
+                          <Mail size={18} />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-white">E-Posta İstemcisi</div>
+                          <div className="text-[9px] text-white/40">Simüle posta kutusu</div>
+                        </div>
+                      </button>
+
+                      <button 
+                        onClick={() => {
+                          setIsKidAppOpen(true);
+                          setIsAppLauncherOpen(false);
+                        }}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-yellow-400/40 hover:bg-white/10 transition-all text-left group"
+                        id="launcher-run-kids"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-400 group-hover:scale-110 transition-transform">
+                          <Sparkles size={18} />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-white">Çocuk Dünyası</div>
+                          <div className="text-[9px] text-white/40">Eğitim ve oyun paneli</div>
+                        </div>
+                      </button>
+                    </div>
+
+                    {/* Bottom Options */}
+                    <div className="pt-3 border-t border-white/5 flex gap-2 justify-end">
+                      <button 
+                        onClick={() => {
+                          setIsAppLauncherOpen(false);
+                          handleRestart();
+                        }}
+                        className="px-3 py-1.5 rounded-lg border border-red-500/30 text-[10px] text-red-400 hover:bg-red-500/10 font-bold font-mono transition-all flex items-center gap-1"
+                        id="launcher-system-restart"
+                      >
+                        <RotateCcw size={12} />
+                        Sistemi Yeniden Başlat
+                      </button>
+                      <button 
+                        onClick={() => setIsAppLauncherOpen(false)}
+                        className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] text-white/60 font-bold transition-all"
+                        id="launcher-close"
+                      >
+                        Kapat
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -553,10 +882,16 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="absolute w-full max-w-4xl h-full max-h-[600px] z-[45]"
+              className={`absolute w-full h-full transition-all duration-300 z-[45] ${mobileMode ? 'inset-x-0 top-8 bottom-0 max-w-full max-h-full rounded-none' : 'max-w-4xl max-h-[600px] rounded-lg'}`}
             >
               <EmailApp onClose={() => setIsEmailOpen(false)} />
             </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {isPlayStoreOpen && (
+            <PlayStore onClose={() => setIsPlayStoreOpen(false)} mobileMode={mobileMode} />
           )}
         </AnimatePresence>
 
@@ -567,7 +902,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="absolute w-full max-w-2xl h-full max-h-[500px] z-50"
+              className={`absolute w-full h-full transition-all duration-300 z-50 ${mobileMode ? 'inset-x-0 top-8 bottom-0 max-w-full max-h-full rounded-none' : 'max-w-2xl max-h-[500px] rounded-lg'}`}
             >
               <TrashBin onClose={() => setIsTrashOpen(false)} />
             </motion.div>
@@ -581,7 +916,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="absolute w-full max-w-3xl h-full max-h-[600px] z-[60]"
+              className={`absolute w-full h-full transition-all duration-300 z-[60] ${mobileMode ? 'inset-x-0 top-8 bottom-0 max-w-full max-h-full rounded-none' : 'max-w-3xl max-h-[600px] rounded-lg'}`}
             >
               <TextEditor 
                 onClose={() => setIsEditorOpen(false)} 
@@ -599,7 +934,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="absolute w-full max-w-5xl h-full max-h-[600px] z-50"
+              className={`absolute w-full h-full transition-all duration-300 z-50 ${mobileMode ? 'inset-x-0 top-8 bottom-0 max-w-full max-h-full rounded-none' : 'max-w-5xl max-h-[600px] rounded-lg'}`}
             >
               <KidApp 
                 onClose={() => setIsKidAppOpen(false)}
@@ -678,6 +1013,16 @@ export default function App() {
           </button>
 
           <button 
+            onClick={() => setIsPlayStoreOpen(true)}
+            className="flex flex-col items-center gap-1 group"
+          >
+            <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 group-hover:border-[#01875f] transition-all">
+              <ShoppingBag size={24} className="text-white/80 group-hover:text-[#01875f]" />
+            </div>
+            <span className="text-[10px] font-mono text-white/60 group-hover:text-white">Play Store</span>
+          </button>
+
+          <button 
             onClick={() => setIsEditorOpen(true)}
             className="flex flex-col items-center gap-1 group"
           >
@@ -728,11 +1073,27 @@ export default function App() {
           </button>
 
           <button 
+            onClick={togglePlayStore}
+            className={`p-2 rounded-xl transition-all hover:scale-110 ${isPlayStoreOpen ? 'bg-[#01875f]/20 border border-[#01875f]/40' : 'bg-white/5 border border-white/10 hover:bg-white/10'}`}
+            title="Google Play Store"
+          >
+            <ShoppingBag size={20} className={isPlayStoreOpen ? 'text-[#01875f]' : 'text-white/70'} />
+          </button>
+
+          <button 
             onClick={() => setIsKidAppOpen(!isKidAppOpen)}
             className={`p-2 rounded-xl transition-all hover:scale-110 ${isKidAppOpen ? 'bg-yellow-500/20 border border-yellow-500/40' : 'bg-white/5 border border-white/10 hover:bg-white/10'}`}
             title="Çocuk Dünyası"
           >
             <Sparkles size={20} className={isKidAppOpen ? 'text-yellow-400' : 'text-white/70'} />
+          </button>
+
+          <button 
+            onClick={() => setMobileMode(!mobileMode)}
+            className={`p-2 rounded-xl transition-all hover:scale-110 ${mobileMode ? 'bg-[var(--accent)]/20 border border-[var(--accent)]/40' : 'bg-white/5 border border-white/10 hover:bg-white/10'}`}
+            title="Telefon Modu"
+          >
+            <Smartphone size={20} className={mobileMode ? 'text-[var(--accent)]' : 'text-white/70'} />
           </button>
 
           <div className="w-px h-6 bg-white/10 mx-1" />
@@ -750,11 +1111,11 @@ export default function App() {
 
   if (mobileMode) {
     return (
-      <div className="h-screen w-screen bg-[#070707] flex items-center justify-center p-4">
-        {/* Outer Phone Frame */}
-        <div className="w-[380px] h-[780px] border-[10px] border-neutral-800 bg-[#0d0d0d] rounded-[48px] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] relative flex flex-col">
+      <div className="h-[100dvh] w-screen bg-[#070707] flex items-center justify-center sm:p-4 overflow-hidden">
+        {/* Outer Phone Frame - Responsive: Fullscreen on mobile, framed on desktop */}
+        <div className="w-full h-full sm:w-[380px] sm:h-[780px] sm:border-[10px] sm:border-neutral-800 bg-[#0d0d0d] rounded-none sm:rounded-[48px] overflow-hidden sm:shadow-[0_0_50px_rgba(0,0,0,0.8)] relative flex flex-col">
           {/* Status Notches / Camera details */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-neutral-800 rounded-b-2xl z-[999] flex items-center justify-center">
+          <div className="hidden sm:flex absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-neutral-800 rounded-b-2xl z-[999] items-center justify-center">
             <div className="w-12 h-1 bg-black rounded-full mb-1" />
             <div className="w-2.5 h-2.5 bg-neutral-900 rounded-full absolute right-4 top-1.5 border border-neutral-700" />
           </div>
@@ -762,7 +1123,23 @@ export default function App() {
           {desktopContent}
 
           {/* Home Indicator Bar */}
-          <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-28 h-1 bg-white/40 rounded-full z-[999]" />
+          <button 
+            onClick={() => {
+              setIsTerminalOpen(false);
+              setIsSettingsOpen(false);
+              setIsBrowserOpen(false);
+              setIsFileManagerOpen(false);
+              setIsEmailOpen(false);
+              setIsPlayStoreOpen(false);
+              setIsTrashOpen(false);
+              setIsEditorOpen(false);
+              setIsKidAppOpen(false);
+              setIsAppLauncherOpen(false);
+              setIsLauncherOpen(false);
+            }}
+            className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-28 h-2 hover:bg-white bg-white/40 rounded-full z-[999] transition-all cursor-pointer border-none outline-none"
+            title="Ana Ekrana Dön"
+          />
         </div>
       </div>
     );

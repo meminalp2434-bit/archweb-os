@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Folder, File, ChevronLeft, HardDrive, Home, Download, Music, Image as ImageIcon, Video, ArrowLeft } from 'lucide-react';
+import { X, Folder, File, ChevronLeft, HardDrive, Home, Download, Music, Image as ImageIcon, Video, ArrowLeft, Terminal, Cpu } from 'lucide-react';
 
 interface FileManagerProps {
   onClose: () => void;
@@ -34,6 +34,9 @@ export const FileManager: React.FC<FileManagerProps> = ({ onClose, onOpenFile, c
       { name: 'notlar.txt', size: '456 B', content: 'ArchWeb OS\'e Hoş Geldiniz!\n\nBu, Arch Linux ortamının tamamen işlevsel bir web simülasyonudur.' },
     ],
     '/home/user/archweb': [
+      { name: 'uygulamayi_ac.sh', size: '1.2 KB', content: '#!/bin/bash\n# ArchWeb OS Uygulama Başlatıcı\n\necho "Başlatıcı yükleniyor..."\nsleep 1\necho "Modüller yükleniyor..."\n/usr/bin/archweb-launcher --open' },
+      { name: 'baslat.desktop', size: '340 B', content: '[Desktop Entry]\nType=Application\nName=ArchWeb OS Başlatıcı\nComment=Sistemi ve uygulamaları yönetir\nExec=uygulamayi_ac.sh\nIcon=utilities-terminal\nTerminal=true\nCategories=System;Utility;' },
+      { name: 'archweb_launcher.exe', size: '5.4 MB', content: '[ArchWeb Windows Executable Engine]\n-- Simulated binary wrapper for launching ArchWeb OS Desktop on Windows hosts.\n-- Embedded node-webkit/electron runner.\n-- Double-click to execute and initialize environment.' },
       { name: 'system.conf', size: '2.4 KB', content: '# ArchWeb OS System Configuration\nSYS_VERSION=2.0\nKERNEL=6.12.0-arch1-1\nUI_MODE=desktop\nACCENT_COLOR=#1793d1\nFIREWALL=active\nAUTO_UPDATE=true\nSECURITY_PATCH=2026-07\nOS_ROOT_TYPE=vfs\nDEBUG_LEVEL=3' },
       { name: 'grub.cfg', size: '1.8 KB', content: '# GRUB Bootloader Configuration\nset default="0"\nset timeout=5\n\nmenuentry "ArchWeb OS v2.0 (Kernel 6.12.0-arch1-1)" --class arch {\n    load_video\n    set gfxpayload=keep\n    insmod gzio\n    insmod part_gpt\n    insmod ext2\n    search --no-floppy --fs-uuid --set=root 1410f2d4-34ad-4d08\n    linux /boot/vmlinuz-linux root=UUID=1410f2d4-34ad-4d08 rw quiet\n    initrd /boot/initramfs-linux.img\n}' },
       { name: 'fstab', size: '512 B', content: '# /etc/fstab: static file system information.\n# <file system>             <mount point>  <type>  <options>  <dump>  <pass>\nUUID=1410f2d4-34ad-4d08     /              ext4    defaults,noatime 0 1\nUUID=A8C2-F312             /boot          vfat    defaults,fmask=0077,dmask=0077 0 2\n/dev/vda3                   none           swap    defaults   0 0' }
@@ -172,21 +175,31 @@ export const FileManager: React.FC<FileManagerProps> = ({ onClose, onOpenFile, c
               <span className="text-[11px] text-center truncate w-full">{folder.name}</span>
             </div>
           ))}
-          {currentFiles.map((file) => (
-            <div 
-              key={file.name} 
-              onClick={() => onOpenFile?.(file.name, file.content)}
-              className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-white/5 cursor-pointer group"
-            >
-              <div className="w-12 h-12 flex items-center justify-center text-white/40 group-hover:scale-110 transition-transform">
-                <File size={36} />
+          {currentFiles.map((file) => {
+            const isExecutable = file.name.endsWith('.sh') || file.name.endsWith('.desktop') || file.name.endsWith('.exe');
+            const isExe = file.name.endsWith('.exe');
+            return (
+              <div 
+                key={file.name} 
+                onClick={() => onOpenFile?.(file.name, file.content)}
+                className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-white/5 cursor-pointer group"
+              >
+                <div className={`w-12 h-12 flex items-center justify-center group-hover:scale-110 transition-transform ${isExecutable ? (isExe ? 'text-amber-400' : 'text-emerald-400') : 'text-white/40'}`}>
+                  {isExe ? (
+                    <Cpu size={36} />
+                  ) : isExecutable ? (
+                    <Terminal size={36} />
+                  ) : (
+                    <File size={36} />
+                  )}
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className={`text-[11px] text-center truncate w-full ${isExecutable ? 'font-bold text-white' : ''}`}>{file.name}</span>
+                  <span className="text-[9px] text-white/20">{file.size}</span>
+                </div>
               </div>
-              <div className="flex flex-col items-center">
-                <span className="text-[11px] text-center truncate w-full">{file.name}</span>
-                <span className="text-[9px] text-white/20">{file.size}</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
           {currentFolders.length === 0 && currentFiles.length === 0 && (
             <div className="col-span-full h-full flex flex-col items-center justify-center opacity-20 pt-12">
               <Folder size={48} />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Cpu, HardDrive, Wifi, Battery, Clock, Search, LayoutGrid, Terminal as TerminalIcon, Shield, Volume2, VolumeX } from 'lucide-react';
+import { Cpu, HardDrive, Wifi, Battery, Clock, Search, LayoutGrid, Terminal as TerminalIcon, Shield, Volume2, VolumeX, Smartphone } from 'lucide-react';
 
 interface TopBarProps {
   onLauncherToggle: () => void;
@@ -9,6 +9,8 @@ interface TopBarProps {
   setVolume: (val: number) => void;
   isMuted: boolean;
   setIsMuted: (val: boolean) => void;
+  mobileMode?: boolean;
+  onMobileToggle?: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({ 
@@ -18,7 +20,9 @@ export const TopBar: React.FC<TopBarProps> = ({
   volume,
   setVolume,
   isMuted,
-  setIsMuted
+  setIsMuted,
+  mobileMode = false,
+  onMobileToggle
 }) => {
   const [time, setTime] = useState(new Date());
 
@@ -100,6 +104,13 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
         <div className="w-px h-3 bg-white/10" />
         <div className="flex items-center gap-2">
+          <button 
+            onClick={onMobileToggle}
+            className={`p-1 rounded-md transition-all cursor-pointer flex items-center justify-center ${mobileMode ? 'text-[var(--accent)] bg-[var(--accent)]/15 border border-[var(--accent)]/30 scale-110' : 'text-white/60 hover:text-white'}`}
+            title={mobileMode ? "Masaüstü Moduna Geç" : "Telefon Moduna Geç"}
+          >
+            <Smartphone size={14} />
+          </button>
           <Search size={14} className="hover:text-white cursor-pointer" />
           <div 
             onClick={onPowerToggle}
