@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Download, Smartphone, CheckCircle2, AlertTriangle, Chrome, Share2, ArrowDownToLine, SmartphoneCharging } from 'lucide-react';
+import { X, AlertTriangle, Chrome, Share2, AppWindow, Package, Download, CheckCircle2, ArrowDownToLine } from 'lucide-react';
 
 interface ApkInstallerProps {
   onClose: () => void;
@@ -45,9 +45,9 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-black/40 border-b border-white/10 shrink-0">
         <div className="flex items-center gap-2">
-          <Smartphone size={16} className="text-[var(--accent)]" />
+          <Package size={16} className="text-[var(--accent)]" />
           <span className="text-xs font-mono font-bold tracking-wider uppercase text-white/90">
-            ArchWeb Mobil Kurulum ve APK Yöneticisi
+            ArchWeb OS Kurulum (Android 10+)
           </span>
         </div>
         <button 
@@ -62,14 +62,14 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
       {/* Main Body */}
       <div className="flex-1 overflow-y-auto p-5 space-y-6">
         {/* Intro Banner */}
-        <div className="bg-gradient-to-r from-[var(--accent)]/10 to-purple-500/10 border border-[var(--accent)]/20 rounded-xl p-4 flex flex-col md:flex-row items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[var(--accent)]/20 flex items-center justify-center shrink-0">
-            <SmartphoneCharging size={24} className="text-[var(--accent)]" />
+        <div className="bg-gradient-to-r from-[var(--accent)]/10 to-purple-500/10 border border-[var(--accent)]/20 rounded-xl p-4 flex flex-col items-center text-center gap-4">
+          <div className="w-24 h-24 rounded-3xl bg-black flex items-center justify-center shrink-0 border border-white/10 shadow-xl overflow-hidden p-2">
+            <img src="/icon.svg" alt="ArchWeb OS Icon" className="w-full h-full object-contain" />
           </div>
-          <div className="text-center md:text-left space-y-1">
-            <h3 className="text-sm font-bold text-white tracking-tight">ArchWeb OS Artık Cebinizde!</h3>
-            <p className="text-xs text-white/60 leading-relaxed">
-              ArchWeb OS'i mobil telefonunuzda yerel (native) bir uygulama olarak çalıştırabilir veya tarayıcınız üzerinden ana ekrana ekleyerek her an erişebilirsiniz.
+          <div className="space-y-1">
+            <h3 className="text-lg font-bold text-white tracking-tight">ArchWeb OS Artık Cebinizde!</h3>
+            <p className="text-xs text-white/60 leading-relaxed max-w-sm mx-auto">
+              ArchWeb OS'i cihazınızda <b>tam ekran ve yerel bir uygulama (Native PWA)</b> olarak çalıştırabilirsiniz. Uygulama, Android 10 ve üstü sürümlerle tam uyumludur.
             </p>
           </div>
         </div>
@@ -78,12 +78,12 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
         <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1">
-              <h4 className="text-xs font-bold font-mono tracking-wider text-[var(--accent)] uppercase">Android Kurulum Paketi (.APK)</h4>
-              <p className="text-xs text-white/80 font-bold">archinstall.apk — v1.0.0</p>
-              <p className="text-[11px] text-white/50">Capacitor Native Android derlemesi, tüm telefon ekranları ile %100 uyumludur.</p>
+              <h4 className="text-xs font-bold font-mono tracking-wider text-[var(--accent)] uppercase flex items-center gap-2"><Package size={14} /> Kurulum Paketi (.APK)</h4>
+              <p className="text-xs text-white/80 font-bold mt-1">archinstall.apk — v1.0.0</p>
+              <p className="text-[11px] text-white/50">Gereksinim: Android 10 ve üstü sürümler.</p>
             </div>
             <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-[9px] text-emerald-400 font-mono font-bold uppercase shrink-0">
-              Uyumlu
+              Android 10+
             </span>
           </div>
 
@@ -126,68 +126,48 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
           </div>
         </div>
 
-        {/* Installation Steps */}
-        <div className="space-y-3">
-          <h4 className="text-xs font-bold font-mono text-white/50 uppercase tracking-wider">
-            Android APK Kurulum Adımları
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="bg-white/5 border border-white/5 rounded-lg p-3.5 space-y-2">
-              <div className="w-6 h-6 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-mono font-bold flex items-center justify-center">
-                1
-              </div>
-              <h5 className="text-xs font-bold text-white">APK'yı İndirin</h5>
-              <p className="text-[11px] text-white/50 leading-relaxed">
-                Yukarıdaki butona tıklayarak <strong>archinstall.apk</strong> dosyasını akıllı cihazınıza indirin.
-              </p>
-            </div>
-
-            <div className="bg-white/5 border border-white/5 rounded-lg p-3.5 space-y-2">
-              <div className="w-6 h-6 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-mono font-bold flex items-center justify-center">
-                2
-              </div>
-              <h5 className="text-xs font-bold text-white">İzinleri Verin</h5>
-              <p className="text-[11px] text-white/50 leading-relaxed">
-                Ayarlar &gt; Güvenlik menüsünden <strong>"Bilinmeyen Kaynaklardan Yükleme"</strong> seçeneğini aktif hale getirin.
-              </p>
-            </div>
-
-            <div className="bg-white/5 border border-white/5 rounded-lg p-3.5 space-y-2">
-              <div className="w-6 h-6 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-mono font-bold flex items-center justify-center">
-                3
-              </div>
-              <h5 className="text-xs font-bold text-white">Kurulumu Başlatın</h5>
-              <p className="text-[11px] text-white/50 leading-relaxed">
-                İndirdiğiniz dosyaya dokunarak <strong>"Yükle"</strong> butonuna basın ve kurulumu saniyeler içinde tamamlayın.
-              </p>
-            </div>
+        {/* Info Section */}
+        <div className="bg-white/5 border border-red-500/30 rounded-xl p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={16} className="text-red-400" />
+            <h4 className="text-sm font-bold text-red-300">APK Ayrıştırma Hatası Bilgilendirmesi</h4>
           </div>
+          <p className="text-xs text-white/70 leading-relaxed">
+            Daha önce indirilen <strong>.apk</strong> dosyası "paket parçalanamadı / ayrıştırılamadı" hatası verebilir. Bu durum derleme farklılıklarından kaynaklanabilir.
+          </p>
+          <p className="text-xs text-white/90 font-bold border-l-2 border-[var(--accent)] pl-3">
+            Eğer APK hata verirse, aşağıdaki "Ana Ekrana Ekle" (PWA) yöntemini kullanarak uygulamayı güvenli ve eksiksiz olarak Android 10+ cihazınıza yükleyin.
+          </p>
         </div>
 
-        {/* Progressive Web App Alternative */}
-        <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <AlertTriangle size={14} className="text-amber-400" />
-            <h4 className="text-xs font-bold text-amber-300">Alternatif: Kurulumsuz PWA (Web Uygulaması)</h4>
-          </div>
-          <p className="text-[11px] text-white/60 leading-relaxed">
-            APK indirmek istemiyorsanız veya iOS (iPhone) kullanıyorsanız, tarayıcınızın <strong>"Ana Ekrana Ekle"</strong> özelliğini kullanarak uygulamayı tam ekran ve sıfır gecikme ile yükleyebilirsiniz:
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-            <div className="flex items-start gap-2.5 bg-black/20 p-2.5 rounded-lg">
-              <Chrome size={14} className="text-blue-400 mt-0.5 shrink-0" />
-              <div>
-                <span className="text-[11px] font-bold text-white block">Android (Chrome)</span>
-                <span className="text-[10px] text-white/50">Sağ üstteki <strong>3 noktaya</strong> dokunun ve <strong>"Uygulamayı yükle"</strong> seçeneğini seçin.</span>
+        {/* Installation Steps */}
+        <div className="space-y-3">
+          <h4 className="text-xs font-bold font-mono text-white/50 uppercase tracking-wider flex items-center gap-2">
+            <AppWindow size={14} /> Alternatif: Kurulumsuz PWA Adımları
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-3 bg-black/20 border border-white/5 p-4 rounded-xl">
+              <div className="flex items-center gap-3">
+                <Chrome size={20} className="text-blue-400 shrink-0" />
+                <span className="text-sm font-bold text-white">Android 10+ (Chrome)</span>
               </div>
+              <ul className="text-xs text-white/60 space-y-2 list-decimal list-inside">
+                <li>Tarayıcınızdan <strong>Sağ Üstteki 3 Noktaya</strong> (⋮) dokunun.</li>
+                <li>Menüden <strong>"Uygulamayı yükle"</strong> veya <strong>"Ana Ekrana Ekle"</strong> seçeneğini seçin.</li>
+                <li>Kurulumu onaylayın. ArchWeb ikonu ana ekranınızda belirecektir.</li>
+              </ul>
             </div>
 
-            <div className="flex items-start gap-2.5 bg-black/20 p-2.5 rounded-lg">
-              <Share2 size={14} className="text-pink-400 mt-0.5 shrink-0" />
-              <div>
-                <span className="text-[11px] font-bold text-white block">iOS / iPhone (Safari)</span>
-                <span className="text-[10px] text-white/50">Alt taraftaki <strong>Paylaş</strong> butonuna dokunun ve <strong>"Ana Ekrana Ekle"</strong>yi seçin.</span>
+            <div className="flex flex-col gap-3 bg-black/20 border border-white/5 p-4 rounded-xl">
+              <div className="flex items-center gap-3">
+                <Share2 size={20} className="text-blue-400 shrink-0" />
+                <span className="text-sm font-bold text-white">iOS / iPhone (Safari)</span>
               </div>
+              <ul className="text-xs text-white/60 space-y-2 list-decimal list-inside">
+                <li>Safari alt menüsündeki <strong>Paylaş</strong> (Yukarı ok) butonuna dokunun.</li>
+                <li>Listeyi aşağı kaydırın ve <strong>"Ana Ekrana Ekle"</strong> seçeneğini seçin.</li>
+                <li><strong>"Ekle"</strong> butonuna basın. ArchWeb ikonu ana ekranınızda belirecektir.</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -195,3 +175,4 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
     </div>
   );
 };
+

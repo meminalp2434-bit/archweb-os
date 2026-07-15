@@ -15,7 +15,7 @@ import { KidApp } from './components/KidApp';
 import { PlayStore } from './components/PlayStore';
 import { ApkInstaller } from './components/ApkInstaller';
 import { motion, AnimatePresence } from 'motion/react';
-import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock, Mail, Sparkles, Play, Cpu, ShoppingBag, Smartphone, Download } from 'lucide-react';
+import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock, Mail, Sparkles, Play, Cpu, ShoppingBag, Smartphone, Download, Package } from 'lucide-react';
 
 const getWallpaperGradient = (wallpaper: number, accentColor: string) => {
   switch (wallpaper) {
@@ -1055,7 +1055,7 @@ export default function App() {
             className="flex flex-col items-center gap-1 group relative"
           >
             <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center group-hover:bg-emerald-500/20 group-hover:border-emerald-400 transition-all shadow-[0_0_12px_rgba(16,185,129,0.15)]">
-              <Smartphone size={24} className="text-emerald-400 group-hover:scale-110 transition-transform" />
+              <Package size={24} className="text-emerald-400 group-hover:scale-110 transition-transform" />
             </div>
             <span className="text-[10px] font-mono text-emerald-300 group-hover:text-emerald-200 font-bold">APK Yükle</span>
             <div className="absolute -top-1.5 -right-1 px-1 bg-emerald-500 rounded-full border border-emerald-400 text-[8px] font-bold text-white scale-90 px-1 py-0.5 leading-none">
