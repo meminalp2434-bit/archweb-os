@@ -31,6 +31,27 @@ const getWallpaperGradient = (wallpaper: number, accentColor: string) => {
   }
 };
 
+const LockScreenClock = () => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center mt-12 gap-2 text-white">
+      <Clock className="w-8 h-8 opacity-60" />
+      <h1 className="text-5xl font-sans tracking-tight font-light">
+        {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      </h1>
+      <p className="text-sm font-mono opacity-60">
+        {currentTime.toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+      </p>
+    </div>
+  );
+};
+
 export default function App() {
   // Kid OS states
   const [isKidAppOpen, setIsKidAppOpen] = useState(false);
@@ -71,7 +92,7 @@ export default function App() {
   const [isShutDown, setIsShutDown] = useState(true);
   const [isRestarting, setIsRestarting] = useState(false);
   const [isSafeMode, setIsSafeMode] = useState<boolean>(() => {
-    return localStorage.getItem('archweb_safe_mode') === 'true';
+    return localStorage.getItem('archweb_safe_mode') === 'true' || import.meta.env.VITE_SAFE_MODE === 'true';
   });
   const [accentColor, setAccentColor] = useState('#1793d1');
   const [editingFile, setEditingFile] = useState({ name: 'notlar.txt', content: 'ArchWeb OS\'e Hoş Geldiniz!\n\nBu, Arch Linux ortamının tamamen işlevsel bir web simülasyonudur.\n\nKeyfini çıkarın!' });
@@ -175,12 +196,6 @@ export default function App() {
 
   const [lockInput, setLockInput] = useState('');
   const [lockError, setLockError] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--accent', accentColor);
@@ -257,10 +272,28 @@ export default function App() {
 
   const toggleTerminal = () => setIsTerminalOpen(!isTerminalOpen);
   const toggleSettings = () => setIsSettingsOpen(!isSettingsOpen);
-  const toggleBrowser = () => setIsBrowserOpen(!isBrowserOpen);
+  const toggleBrowser = () => {
+    if (!isBrowserOpen && isSafeMode) {
+      alert("Güvenli Mod: Bu uygulamanın hizmeti şu anda kapalıdır.");
+      return;
+    }
+    setIsBrowserOpen(!isBrowserOpen);
+  };
   const toggleFileManager = () => setIsFileManagerOpen(!isFileManagerOpen);
-  const toggleEmail = () => setIsEmailOpen(!isEmailOpen);
-  const togglePlayStore = () => setIsPlayStoreOpen(!isPlayStoreOpen);
+  const toggleEmail = () => {
+    if (!isEmailOpen && isSafeMode) {
+      alert("Güvenli Mod: Bu uygulamanın hizmeti şu anda kapalıdır.");
+      return;
+    }
+    setIsEmailOpen(!isEmailOpen);
+  };
+  const togglePlayStore = () => {
+    if (!isPlayStoreOpen && isSafeMode) {
+      alert("Güvenli Mod: Bu uygulamanın hizmeti şu anda kapalıdır.");
+      return;
+    }
+    setIsPlayStoreOpen(!isPlayStoreOpen);
+  };
   const toggleTrash = () => setIsTrashOpen(!isTrashOpen);
   const toggleLauncher = () => setIsLauncherOpen(!isLauncherOpen);
 
@@ -298,10 +331,19 @@ export default function App() {
     switch (appId) {
       case 'terminal': setIsTerminalOpen(true); break;
       case 'settings': setIsSettingsOpen(true); break;
-      case 'browser': setIsBrowserOpen(true); break;
+      case 'browser': 
+        if (isSafeMode) { alert("Güvenli Mod: Bu uygulamanın hizmeti şu anda kapalıdır."); }
+        else { setIsBrowserOpen(true); }
+        break;
       case 'files': setIsFileManagerOpen(true); break;
-      case 'email': setIsEmailOpen(true); break;
-      case 'playstore': setIsPlayStoreOpen(true); break;
+      case 'email': 
+        if (isSafeMode) { alert("Güvenli Mod: Bu uygulamanın hizmeti şu anda kapalıdır."); }
+        else { setIsEmailOpen(true); }
+        break;
+      case 'playstore': 
+        if (isSafeMode) { alert("Güvenli Mod: Bu uygulamanın hizmeti şu anda kapalıdır."); }
+        else { setIsPlayStoreOpen(true); }
+        break;
       case 'trash': setIsTrashOpen(true); break;
     }
   };
@@ -431,6 +473,14 @@ export default function App() {
     }
   };
 
+  const handleAppOpen = (appName: string, openSetter: (v: boolean) => void) => {
+    if (isSafeMode && !['terminal', 'settings', 'filemanager', 'trash'].includes(appName)) {
+      alert("Güvenli Mod: Bu uygulamanın hizmeti şu anda kapalıdır.");
+      return;
+    }
+    openSetter(true);
+  };
+
   if (isLocked) {
     return (
       <div 
@@ -441,16 +491,7 @@ export default function App() {
           filter: `brightness(${brightness}%)`
         }}
       >
-        {/* Top Lock Info */}
-        <div className="flex flex-col items-center mt-12 gap-2 text-white">
-          <Clock className="w-8 h-8 opacity-60" />
-          <h1 className="text-5xl font-sans tracking-tight font-light">
-            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </h1>
-          <p className="text-sm font-mono opacity-60">
-            {currentTime.toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </p>
-        </div>
+        <LockScreenClock />
 
         {/* Center Password Form */}
         <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-6 w-80 shadow-2xl flex flex-col items-center gap-4">
@@ -604,7 +645,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className={`absolute w-full h-full transition-all duration-300 z-10 ${mobileMode ? 'inset-x-0 top-8 bottom-0 max-w-full max-h-full rounded-none' : 'max-w-4xl max-h-[600px] rounded-lg'}`}
+              className={`absolute w-full h-full transition-all duration-300 z-10 ${mobileMode ? 'inset-0 max-w-none max-h-none rounded-none' : 'inset-0 m-auto max-w-4xl max-h-[600px] rounded-lg'}`}
             >
               <Terminal onClose={() => setIsTerminalOpen(false)} />
             </motion.div>
@@ -618,7 +659,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className={`absolute w-full h-full transition-all duration-300 z-20 ${mobileMode ? 'inset-x-0 top-8 bottom-0 max-w-full max-h-full rounded-none' : 'max-w-2xl max-h-[500px] rounded-lg'}`}
+              className={`absolute w-full h-full transition-all duration-300 z-20 ${mobileMode ? 'inset-0 max-w-none max-h-none rounded-none' : 'inset-0 m-auto max-w-2xl max-h-[500px] rounded-lg'}`}
             >
               <Settings 
                 onClose={() => setIsSettingsOpen(false)} 
@@ -662,7 +703,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className={`absolute w-full h-full transition-all duration-300 z-30 ${mobileMode ? 'inset-x-0 top-8 bottom-0 max-w-full max-h-full rounded-none' : 'max-w-5xl max-h-[700px] rounded-lg'}`}
+              className={`absolute w-full h-full transition-all duration-300 z-30 ${mobileMode ? 'inset-0 max-w-none max-h-none rounded-none' : 'inset-0 m-auto max-w-5xl max-h-[700px] rounded-lg'}`}
             >
               <Browser onClose={() => setIsBrowserOpen(false)} />
             </motion.div>
@@ -676,7 +717,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className={`absolute w-full h-full transition-all duration-300 z-40 ${mobileMode ? 'inset-x-0 top-8 bottom-0 max-w-full max-h-full rounded-none' : 'max-w-4xl max-h-[600px] rounded-lg'}`}
+              className={`absolute w-full h-full transition-all duration-300 z-40 ${mobileMode ? 'inset-0 max-w-none max-h-none rounded-none' : 'inset-0 m-auto max-w-4xl max-h-[600px] rounded-lg'}`}
             >
               <FileManager 
                 onClose={() => setIsFileManagerOpen(false)} 
@@ -886,7 +927,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className={`absolute w-full h-full transition-all duration-300 z-[45] ${mobileMode ? 'inset-x-0 top-8 bottom-0 max-w-full max-h-full rounded-none' : 'max-w-4xl max-h-[600px] rounded-lg'}`}
+              className={`absolute w-full h-full transition-all duration-300 z-[45] ${mobileMode ? 'inset-0 max-w-none max-h-none rounded-none' : 'inset-0 m-auto max-w-4xl max-h-[600px] rounded-lg'}`}
             >
               <EmailApp onClose={() => setIsEmailOpen(false)} />
             </motion.div>
@@ -906,7 +947,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className={`absolute w-full h-full transition-all duration-300 z-50 ${mobileMode ? 'inset-x-0 top-8 bottom-0 max-w-full max-h-full rounded-none' : 'max-w-2xl max-h-[500px] rounded-lg'}`}
+              className={`absolute w-full h-full transition-all duration-300 z-50 ${mobileMode ? 'inset-0 max-w-none max-h-none rounded-none' : 'inset-0 m-auto max-w-2xl max-h-[500px] rounded-lg'}`}
             >
               <TrashBin onClose={() => setIsTrashOpen(false)} />
             </motion.div>
@@ -920,7 +961,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className={`absolute w-full h-full transition-all duration-300 z-[60] ${mobileMode ? 'inset-x-0 top-8 bottom-0 max-w-full max-h-full rounded-none' : 'max-w-3xl max-h-[600px] rounded-lg'}`}
+              className={`absolute w-full h-full transition-all duration-300 z-[60] ${mobileMode ? 'inset-0 max-w-none max-h-none rounded-none' : 'inset-0 m-auto max-w-3xl max-h-[600px] rounded-lg'}`}
             >
               <TextEditor 
                 onClose={() => setIsEditorOpen(false)} 
@@ -938,7 +979,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className={`absolute w-full h-full transition-all duration-300 z-50 ${mobileMode ? 'inset-x-0 top-8 bottom-0 max-w-full max-h-full rounded-none' : 'max-w-5xl max-h-[600px] rounded-lg'}`}
+              className={`absolute w-full h-full transition-all duration-300 z-50 ${mobileMode ? 'inset-0 max-w-none max-h-none rounded-none' : 'inset-0 m-auto max-w-5xl max-h-[600px] rounded-lg'}`}
             >
               <KidApp 
                 onClose={() => setIsKidAppOpen(false)}
@@ -958,7 +999,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className={`absolute w-full h-full transition-all duration-300 z-[70] ${mobileMode ? 'inset-x-0 top-8 bottom-0 max-w-full max-h-full rounded-none' : 'max-w-3xl max-h-[580px] rounded-lg'}`}
+              className={`absolute w-full h-full transition-all duration-300 z-[70] ${mobileMode ? 'inset-0 max-w-none max-h-none rounded-none' : 'inset-0 m-auto max-w-3xl max-h-[580px] rounded-lg'}`}
             >
               <ApkInstaller onClose={() => setIsApkInstallerOpen(false)} />
             </motion.div>
@@ -966,108 +1007,126 @@ export default function App() {
         </AnimatePresence>
 
         {/* Desktop Icons */}
-        <div className="absolute top-8 left-8 flex flex-col gap-8">
-          <button 
-            onClick={() => setIsKidAppOpen(true)}
-            className="flex flex-col items-center gap-1 group relative"
-          >
-            <div className="w-12 h-12 bg-yellow-500/10 border border-yellow-500/30 rounded-xl flex items-center justify-center group-hover:bg-yellow-500/20 group-hover:border-yellow-400 transition-all shadow-[0_0_12px_rgba(234,179,8,0.2)]">
-              <Sparkles size={24} className="text-yellow-400 group-hover:scale-110 transition-transform" />
-            </div>
-            <span className="text-[10px] font-mono text-yellow-300 group-hover:text-yellow-200 font-bold">Çocuk Dünyası</span>
-            <div className="absolute -top-1.5 -right-1 px-1 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full border border-pink-400 text-[8px] font-bold text-white scale-90 px-1 py-0.5 animate-pulse leading-none uppercase">
-              Aktif
-            </div>
-          </button>
+        <div className="absolute top-8 left-8 bottom-24 flex flex-col flex-wrap content-start gap-x-6 gap-y-8">
+          <motion.div drag dragMomentum={false}>
+            <button 
+              onClick={() => handleAppOpen('kidapp', setIsKidAppOpen)}
+              className="flex flex-col items-center gap-1 group relative cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-yellow-500/10 border border-yellow-500/30 rounded-xl flex items-center justify-center group-hover:bg-yellow-500/20 group-hover:border-yellow-400 transition-all shadow-[0_0_12px_rgba(234,179,8,0.2)]">
+                <Sparkles size={24} className="text-yellow-400 group-hover:scale-110 transition-transform" />
+              </div>
+              <span className="text-[10px] font-mono text-yellow-300 group-hover:text-yellow-200 font-bold">Çocuk Dünyası</span>
+              <div className="absolute -top-1.5 -right-1 px-1 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full border border-pink-400 text-[8px] font-bold text-white scale-90 px-1 py-0.5 animate-pulse leading-none uppercase">
+                Aktif
+              </div>
+            </button>
+          </motion.div>
 
-          <button 
-            onClick={() => setIsTerminalOpen(true)}
-            className="flex flex-col items-center gap-1 group"
-          >
-            <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 group-hover:border-[var(--accent)] transition-all">
-              <TerminalIcon size={24} className="text-white/80 group-hover:text-[var(--accent)]" />
-            </div>
-            <span className="text-[10px] font-mono text-white/60 group-hover:text-white">Uçbirim</span>
-          </button>
+          <motion.div drag dragMomentum={false}>
+            <button 
+              onClick={() => handleAppOpen('terminal', setIsTerminalOpen)}
+              className="flex flex-col items-center gap-1 group cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 group-hover:border-[var(--accent)] transition-all">
+                <TerminalIcon size={24} className="text-white/80 group-hover:text-[var(--accent)]" />
+              </div>
+              <span className="text-[10px] font-mono text-white/60 group-hover:text-white">Uçbirim</span>
+            </button>
+          </motion.div>
           
-          <button 
-            onClick={() => setIsSettingsOpen(true)}
-            className="flex flex-col items-center gap-1 group"
-          >
-            <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 group-hover:border-[var(--accent)] transition-all">
-              <SettingsIcon size={24} className="text-white/80 group-hover:text-[var(--accent)]" />
-            </div>
-            <span className="text-[10px] font-mono text-white/60 group-hover:text-white">Ayarlar</span>
-          </button>
+          <motion.div drag dragMomentum={false}>
+            <button 
+              onClick={() => handleAppOpen('settings', setIsSettingsOpen)}
+              className="flex flex-col items-center gap-1 group cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 group-hover:border-[var(--accent)] transition-all">
+                <SettingsIcon size={24} className="text-white/80 group-hover:text-[var(--accent)]" />
+              </div>
+              <span className="text-[10px] font-mono text-white/60 group-hover:text-white">Ayarlar</span>
+            </button>
+          </motion.div>
 
-          <button 
-            onClick={() => setIsBrowserOpen(true)}
-            className="flex flex-col items-center gap-1 group"
-          >
-            <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 group-hover:border-[var(--accent)] transition-all">
-              <Globe size={24} className="text-white/80 group-hover:text-[var(--accent)]" />
-            </div>
-            <span className="text-[10px] font-mono text-white/60 group-hover:text-white">Tarayıcı</span>
-          </button>
+          <motion.div drag dragMomentum={false}>
+            <button 
+              onClick={() => handleAppOpen('browser', setIsBrowserOpen)}
+              className="flex flex-col items-center gap-1 group cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 group-hover:border-[var(--accent)] transition-all">
+                <Globe size={24} className="text-white/80 group-hover:text-[var(--accent)]" />
+              </div>
+              <span className="text-[10px] font-mono text-white/60 group-hover:text-white">Tarayıcı</span>
+            </button>
+          </motion.div>
 
-          <button 
-            onClick={() => setIsFileManagerOpen(true)}
-            className="flex flex-col items-center gap-1 group"
-          >
-            <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 group-hover:border-[var(--accent)] transition-all">
-              <Folder size={24} className="text-white/80 group-hover:text-[var(--accent)]" />
-            </div>
-            <span className="text-[10px] font-mono text-white/60 group-hover:text-white">Ev</span>
-          </button>
+          <motion.div drag dragMomentum={false}>
+            <button 
+              onClick={() => handleAppOpen('filemanager', setIsFileManagerOpen)}
+              className="flex flex-col items-center gap-1 group cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 group-hover:border-[var(--accent)] transition-all">
+                <Folder size={24} className="text-white/80 group-hover:text-[var(--accent)]" />
+              </div>
+              <span className="text-[10px] font-mono text-white/60 group-hover:text-white">Ev</span>
+            </button>
+          </motion.div>
 
-          <button 
-            onClick={() => setIsEmailOpen(true)}
-            className="flex flex-col items-center gap-1 group"
-          >
-            <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 group-hover:border-[var(--accent)] transition-all">
-              <Mail size={24} className="text-white/80 group-hover:text-[var(--accent)]" />
-            </div>
-            <span className="text-[10px] font-mono text-white/60 group-hover:text-white">E-posta</span>
-          </button>
+          <motion.div drag dragMomentum={false}>
+            <button 
+              onClick={() => handleAppOpen('email', setIsEmailOpen)}
+              className="flex flex-col items-center gap-1 group cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 group-hover:border-[var(--accent)] transition-all">
+                <Mail size={24} className="text-white/80 group-hover:text-[var(--accent)]" />
+              </div>
+              <span className="text-[10px] font-mono text-white/60 group-hover:text-white">E-posta</span>
+            </button>
+          </motion.div>
 
-          <button 
-            onClick={() => setIsPlayStoreOpen(true)}
-            className="flex flex-col items-center gap-1 group"
-          >
-            <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 group-hover:border-[#01875f] transition-all">
-              <ShoppingBag size={24} className="text-white/80 group-hover:text-[#01875f]" />
-            </div>
-            <span className="text-[10px] font-mono text-white/60 group-hover:text-white">Play Store</span>
-          </button>
+          <motion.div drag dragMomentum={false}>
+            <button 
+              onClick={() => handleAppOpen('playstore', setIsPlayStoreOpen)}
+              className="flex flex-col items-center gap-1 group cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 group-hover:border-[#01875f] transition-all">
+                <ShoppingBag size={24} className="text-white/80 group-hover:text-[#01875f]" />
+              </div>
+              <span className="text-[10px] font-mono text-white/60 group-hover:text-white">Play Store</span>
+            </button>
+          </motion.div>
 
-          <button 
-            onClick={() => setIsEditorOpen(true)}
-            className="flex flex-col items-center gap-1 group"
-          >
-            <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 group-hover:border-[var(--accent)] transition-all">
-              <FileText size={24} className="text-white/80 group-hover:text-[var(--accent)]" />
-            </div>
-            <span className="text-[10px] font-mono text-white/60 group-hover:text-white">Notlar.txt</span>
-          </button>
+          <motion.div drag dragMomentum={false}>
+            <button 
+              onClick={() => handleAppOpen('editor', setIsEditorOpen)}
+              className="flex flex-col items-center gap-1 group cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 group-hover:border-[var(--accent)] transition-all">
+                <FileText size={24} className="text-white/80 group-hover:text-[var(--accent)]" />
+              </div>
+              <span className="text-[10px] font-mono text-white/60 group-hover:text-white">Notlar.txt</span>
+            </button>
+          </motion.div>
 
-          <button 
-            onClick={() => setIsApkInstallerOpen(true)}
-            className="flex flex-col items-center gap-1 group relative"
-          >
-            <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center group-hover:bg-emerald-500/20 group-hover:border-emerald-400 transition-all shadow-[0_0_12px_rgba(16,185,129,0.15)]">
-              <Package size={24} className="text-emerald-400 group-hover:scale-110 transition-transform" />
-            </div>
-            <span className="text-[10px] font-mono text-emerald-300 group-hover:text-emerald-200 font-bold">APK Yükle</span>
-            <div className="absolute -top-1.5 -right-1 px-1 bg-emerald-500 rounded-full border border-emerald-400 text-[8px] font-bold text-white scale-90 px-1 py-0.5 leading-none">
-              APK
-            </div>
-          </button>
+          <motion.div drag dragMomentum={false}>
+            <button 
+              onClick={() => handleAppOpen('apkinstaller', setIsApkInstallerOpen)}
+              className="flex flex-col items-center gap-1 group relative cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center group-hover:bg-emerald-500/20 group-hover:border-emerald-400 transition-all shadow-[0_0_12px_rgba(16,185,129,0.15)]">
+                <Package size={24} className="text-emerald-400 group-hover:scale-110 transition-transform" />
+              </div>
+              <span className="text-[10px] font-mono text-emerald-300 group-hover:text-emerald-200 font-bold">APK Yükle</span>
+              <div className="absolute -top-1.5 -right-1 px-1 bg-emerald-500 rounded-full border border-emerald-400 text-[8px] font-bold text-white scale-90 px-1 py-0.5 leading-none">
+                APK
+              </div>
+            </button>
+          </motion.div>
         </div>
       </main>
 
       {/* Bottom Dock */}
-      <div className="h-16 w-full flex items-center justify-center pb-4 z-50">
-        <div className="bg-black/40 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-2xl flex items-center gap-4 shadow-2xl">
+      <div className="h-16 w-full flex items-center justify-center pb-4 z-[100] px-2">
+        <div className="bg-black/40 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-2xl flex items-center gap-2 sm:gap-4 shadow-2xl max-w-full overflow-x-auto overflow-y-hidden" style={{ scrollbarWidth: 'none' }}>
           <button 
             onClick={toggleTerminal}
             className={`p-2 rounded-xl transition-all hover:scale-110 ${isTerminalOpen ? 'bg-[var(--accent)]/20 border border-[var(--accent)]/40' : 'bg-white/5 border border-white/10 hover:bg-white/10'}`}
@@ -1144,7 +1203,7 @@ export default function App() {
     return (
       <div className="h-[100dvh] w-screen bg-[#070707] flex items-center justify-center sm:p-4 overflow-hidden">
         {/* Outer Phone Frame - Responsive: Fullscreen on mobile, framed on desktop */}
-        <div className="w-full h-full sm:w-[380px] sm:h-[780px] sm:border-[10px] sm:border-neutral-800 bg-[#0d0d0d] rounded-none sm:rounded-[48px] overflow-hidden sm:shadow-[0_0_50px_rgba(0,0,0,0.8)] relative flex flex-col">
+        <div className="w-full h-full sm:w-[380px] sm:h-[780px] sm:max-h-[95dvh] sm:border-[10px] sm:border-neutral-800 bg-[#0d0d0d] rounded-none sm:rounded-[48px] overflow-hidden sm:shadow-[0_0_50px_rgba(0,0,0,0.8)] relative flex flex-col">
           {/* Status Notches / Camera details */}
           <div className="hidden sm:flex absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-neutral-800 rounded-b-2xl z-[999] items-center justify-center">
             <div className="w-12 h-1 bg-black rounded-full mb-1" />

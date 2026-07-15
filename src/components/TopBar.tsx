@@ -13,6 +13,22 @@ interface TopBarProps {
   onMobileToggle?: () => void;
 }
 
+const TopBarClock = () => {
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/5 px-3 py-0.5 rounded-full border border-white/10">
+      <Clock size={12} />
+      <span>{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+    </div>
+  );
+};
+
 export const TopBar: React.FC<TopBarProps> = ({ 
   onLauncherToggle, 
   onPowerToggle, 
@@ -24,13 +40,6 @@ export const TopBar: React.FC<TopBarProps> = ({
   mobileMode = false,
   onMobileToggle
 }) => {
-  const [time, setTime] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
   return (
     <div className="h-8 w-full bg-black/40 backdrop-blur-sm border-b border-white/5 flex items-center justify-between px-4 text-[11px] font-mono text-white/60 z-50">
       <div className="flex items-center gap-4">
@@ -48,10 +57,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
       </div>
 
-      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/5 px-3 py-0.5 rounded-full border border-white/10">
-        <Clock size={12} />
-        <span>{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
-      </div>
+      <TopBarClock />
 
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-3">

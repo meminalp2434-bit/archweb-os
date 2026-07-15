@@ -47,7 +47,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
         <div className="flex items-center gap-2">
           <Package size={16} className="text-[var(--accent)]" />
           <span className="text-xs font-mono font-bold tracking-wider uppercase text-white/90">
-            ArchWeb OS Kurulum (Android 10+)
+            ArchWeb OS Kurulum (Android 10+, HyperOS, One UI)
           </span>
         </div>
         <button 
@@ -69,7 +69,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
           <div className="space-y-1">
             <h3 className="text-lg font-bold text-white tracking-tight">ArchWeb OS Artık Cebinizde!</h3>
             <p className="text-xs text-white/60 leading-relaxed max-w-sm mx-auto">
-              ArchWeb OS'i cihazınızda <b>tam ekran ve yerel bir uygulama (Native PWA)</b> olarak çalıştırabilirsiniz. Uygulama, Android 10 ve üstü sürümlerle tam uyumludur.
+              ArchWeb OS'i cihazınızda <b>tam ekran ve yerel bir uygulama (Native PWA)</b> olarak çalıştırabilirsiniz. Uygulama; Android 10 ve üstü sürümlerle, özellikle <b>Xiaomi (HyperOS)</b> ve <b>Samsung (One UI)</b> cihazlarla tam uyumludur.
             </p>
           </div>
         </div>
@@ -79,11 +79,11 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1">
               <h4 className="text-xs font-bold font-mono tracking-wider text-[var(--accent)] uppercase flex items-center gap-2"><Package size={14} /> Kurulum Paketi (.APK)</h4>
-              <p className="text-xs text-white/80 font-bold mt-1">archinstall.apk — v1.0.0</p>
-              <p className="text-[11px] text-white/50">Gereksinim: Android 10 ve üstü sürümler.</p>
+              <p className="text-xs text-white/80 font-bold mt-1">archinstall.apk — v20.1.2</p>
+              <p className="text-[11px] text-white/50">Gereksinim: Android 10+, Xiaomi HyperOS, Samsung One UI.</p>
             </div>
             <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-[9px] text-emerald-400 font-mono font-bold uppercase shrink-0">
-              Android 10+
+              HyperOS & One UI
             </span>
           </div>
 
@@ -136,7 +136,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
             Daha önce indirilen <strong>.apk</strong> dosyası "paket parçalanamadı / ayrıştırılamadı" hatası verebilir. Bu durum derleme farklılıklarından kaynaklanabilir.
           </p>
           <p className="text-xs text-white/90 font-bold border-l-2 border-[var(--accent)] pl-3">
-            Eğer APK hata verirse, aşağıdaki "Ana Ekrana Ekle" (PWA) yöntemini kullanarak uygulamayı güvenli ve eksiksiz olarak Android 10+ cihazınıza yükleyin.
+            Eğer APK hata verirse, aşağıdaki "Ana Ekrana Ekle" (PWA) yöntemini kullanarak uygulamayı güvenli ve eksiksiz olarak Android 10+, Xiaomi veya Samsung cihazınıza yükleyin. PWA mimarisi HyperOS ve One UI'da sorunsuz çalışır.
           </p>
         </div>
 
@@ -149,10 +149,10 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
             <div className="flex flex-col gap-3 bg-black/20 border border-white/5 p-4 rounded-xl">
               <div className="flex items-center gap-3">
                 <Chrome size={20} className="text-blue-400 shrink-0" />
-                <span className="text-sm font-bold text-white">Android 10+ (Chrome)</span>
+                <span className="text-sm font-bold text-white">HyperOS / One UI (Chrome)</span>
               </div>
               <ul className="text-xs text-white/60 space-y-2 list-decimal list-inside">
-                <li>Tarayıcınızdan <strong>Sağ Üstteki 3 Noktaya</strong> (⋮) dokunun.</li>
+                <li>Xiaomi veya Samsung cihazınızdan <strong>Chrome</strong>'u açın, sağ üstteki <strong>3 Noktaya</strong> (⋮) dokunun.</li>
                 <li>Menüden <strong>"Uygulamayı yükle"</strong> veya <strong>"Ana Ekrana Ekle"</strong> seçeneğini seçin.</li>
                 <li>Kurulumu onaylayın. ArchWeb ikonu ana ekranınızda belirecektir.</li>
               </ul>

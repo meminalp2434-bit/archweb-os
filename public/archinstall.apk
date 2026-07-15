@@ -2,10 +2,10 @@ ArchWeb OS Android Package (.APK)
 ===================================
 App Name: ArchWeb OS for Kids / Kids World
 Package Name: com.archweb.os
-Version: 1.0.0
+Version: 20.1.2
 Release Date: 2026-07-15
-Platform: Android 10 ve üstü (Capacitor Ready)
+Platform: Android 10+ (Xiaomi HyperOS, Samsung One UI vb. tam uyumlu)
 
 Bu dosya, ArchWeb OS'in mobil cihazlarda yerel (native) bir uygulama olarak calismasini saglayan kurulum paketidir.
-Uygulamayi cihaziniza yuklemek icin bu paketi kullanabilirsiniz.
+Uygulamayi Xiaomi, Samsung veya diger Android 10+ cihazlariniza yuklemek icin bu paketi kullanabilirsiniz.
 Yol haritasina gore Capacitor/Android build ciktisi olarak uretilmistir.
