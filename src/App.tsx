@@ -13,8 +13,9 @@ import { EmailApp } from './components/EmailApp';
 import { KidLogin } from './components/KidLogin';
 import { KidApp } from './components/KidApp';
 import { PlayStore } from './components/PlayStore';
+import { ApkInstaller } from './components/ApkInstaller';
 import { motion, AnimatePresence } from 'motion/react';
-import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock, Mail, Sparkles, Play, Cpu, ShoppingBag, Smartphone } from 'lucide-react';
+import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock, Mail, Sparkles, Play, Cpu, ShoppingBag, Smartphone, Download } from 'lucide-react';
 
 const getWallpaperGradient = (wallpaper: number, accentColor: string) => {
   switch (wallpaper) {
@@ -61,6 +62,7 @@ export default function App() {
   const [isLauncherOpen, setIsLauncherOpen] = useState(false);
   const [isTrashOpen, setIsTrashOpen] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isApkInstallerOpen, setIsApkInstallerOpen] = useState(false);
   const [isPowerDialogOpen, setIsPowerDialogOpen] = useState(false);
   const [isAppLauncherOpen, setIsAppLauncherOpen] = useState(false);
   const [launchedProgramName, setLaunchedProgramName] = useState('');
@@ -251,7 +253,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isLauncherOpen, isTerminalOpen, isSettingsOpen, isBrowserOpen, isFileManagerOpen, isTrashOpen, isEditorOpen, isPlayStoreOpen]);
+  }, [isLauncherOpen, isTerminalOpen, isSettingsOpen, isBrowserOpen, isFileManagerOpen, isTrashOpen, isEditorOpen, isPlayStoreOpen, isApkInstallerOpen]);
 
   const toggleTerminal = () => setIsTerminalOpen(!isTerminalOpen);
   const toggleSettings = () => setIsSettingsOpen(!isSettingsOpen);
@@ -327,6 +329,7 @@ export default function App() {
       setIsPlayStoreOpen(false);
       setIsTrashOpen(false);
       setIsEditorOpen(false);
+      setIsApkInstallerOpen(false);
       if (startupSoundEnabled) {
         playWindows11StartupSound(volume, isMuted, true);
       }
@@ -349,6 +352,7 @@ export default function App() {
       setIsPlayStoreOpen(false);
       setIsTrashOpen(false);
       setIsEditorOpen(false);
+      setIsApkInstallerOpen(false);
       if (startupSoundEnabled) {
         playWindows11StartupSound(volume, isMuted, true);
       }
@@ -947,6 +951,20 @@ export default function App() {
           )}
         </AnimatePresence>
 
+        <AnimatePresence>
+          {isApkInstallerOpen && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className={`absolute w-full h-full transition-all duration-300 z-[70] ${mobileMode ? 'inset-x-0 top-8 bottom-0 max-w-full max-h-full rounded-none' : 'max-w-3xl max-h-[580px] rounded-lg'}`}
+            >
+              <ApkInstaller onClose={() => setIsApkInstallerOpen(false)} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Desktop Icons */}
         <div className="absolute top-8 left-8 flex flex-col gap-8">
           <button 
@@ -1030,6 +1048,19 @@ export default function App() {
               <FileText size={24} className="text-white/80 group-hover:text-[var(--accent)]" />
             </div>
             <span className="text-[10px] font-mono text-white/60 group-hover:text-white">Notlar.txt</span>
+          </button>
+
+          <button 
+            onClick={() => setIsApkInstallerOpen(true)}
+            className="flex flex-col items-center gap-1 group relative"
+          >
+            <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center group-hover:bg-emerald-500/20 group-hover:border-emerald-400 transition-all shadow-[0_0_12px_rgba(16,185,129,0.15)]">
+              <Smartphone size={24} className="text-emerald-400 group-hover:scale-110 transition-transform" />
+            </div>
+            <span className="text-[10px] font-mono text-emerald-300 group-hover:text-emerald-200 font-bold">APK Yükle</span>
+            <div className="absolute -top-1.5 -right-1 px-1 bg-emerald-500 rounded-full border border-emerald-400 text-[8px] font-bold text-white scale-90 px-1 py-0.5 leading-none">
+              APK
+            </div>
           </button>
         </div>
       </main>
@@ -1134,6 +1165,7 @@ export default function App() {
               setIsTrashOpen(false);
               setIsEditorOpen(false);
               setIsKidAppOpen(false);
+              setIsApkInstallerOpen(false);
               setIsAppLauncherOpen(false);
               setIsLauncherOpen(false);
             }}
