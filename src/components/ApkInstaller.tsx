@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, AlertTriangle, Chrome, Share2, AppWindow, Package, Download, CheckCircle2, ArrowDownToLine, Monitor, Smartphone, Terminal, Cpu } from 'lucide-react';
+import { playWindows11StartupSound } from '../utils/audio';
 
 interface ApkInstallerProps {
   onClose: () => void;
@@ -24,6 +25,13 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
             setDownloadingFile(null);
             setDownloadedFiles(prev => ({ ...prev, [fileType]: true }));
             
+            // Play startup sound!
+            const savedVolume = localStorage.getItem('archweb_volume');
+            const volume = savedVolume !== null ? parseInt(savedVolume) : 80;
+            const savedMuted = localStorage.getItem('archweb_muted');
+            const isMuted = savedMuted !== null ? savedMuted === 'true' : false;
+            playWindows11StartupSound(volume, isMuted, true);
+
             // Trigger actual download of the file
             const link = document.createElement('a');
             let filename = '';

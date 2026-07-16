@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { playWindows11StartupSound } from './utils/audio';
+import { getApiUrl } from './utils/api';
+import { getOfflineSettings, saveOfflineSettings, saveOfflineFile } from './utils/localFileSystem';
 import { TopBar } from './components/TopBar';
 import { Terminal } from './components/Terminal';
 import { Settings } from './components/Settings';
@@ -91,12 +93,14 @@ export default function App() {
   const [launcherStep, setLauncherStep] = useState<'bootstrap' | 'menu'>('bootstrap');
   const [launcherLogs, setLauncherLogs] = useState<string[]>([]);
   const [isShutDown, setIsShutDown] = useState(true);
+  const [isSystemBooting, setIsSystemBooting] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
   const [isSafeMode, setIsSafeMode] = useState<boolean>(() => {
     return localStorage.getItem('archweb_safe_mode') === 'true' || (import.meta as any).env.VITE_SAFE_MODE === 'true';
   });
   const [accentColor, setAccentColor] = useState('#1793d1');
-  const [editingFile, setEditingFile] = useState({ name: 'notlar.txt', content: 'ArchWeb OS\'e Hoş Geldiniz!\n\nBu, Arch Linux ortamının tamamen işlevsel bir web simülasyonudur.\n\nKeyfini çıkarın!' });
+  const [editingFile, setEditingFile] = useState({ name: 'notlar.txt', content: 'ArchWeb OS\'e Hoş Geldiniz!\n\nBu, Arch Linux ortamının tamamen işlevsel bir web simülasyonudur.\n\nKeyfini çıkarın!', path: '/home/user/notlar.txt' });
+  const [isSettingsLoadedFromServer, setIsSettingsLoadedFromServer] = useState(false);
 
   // System settings state variables
   const [wallpaper, setWallpaper] = useState(0);
@@ -227,6 +231,126 @@ export default function App() {
     document.documentElement.style.setProperty('--accent', accentColor);
   }, [accentColor]);
 
+  const lastSavedSettings = useRef<any>(null);
+
+  // Load settings from the server or local fallback on startup
+  useEffect(() => {
+    const loadSettings = async () => {
+      let success = false;
+      let settings = null;
+      try {
+        const response = await fetch(getApiUrl('/api/settings'));
+        if (response.ok) {
+          settings = await response.json();
+          success = true;
+        }
+      } catch (err) {
+        console.warn("Local network server connection silent handling:", err);
+      }
+
+      if (!success) {
+        settings = getOfflineSettings();
+      }
+
+      if (settings) {
+        lastSavedSettings.current = settings;
+        if (settings.accentColor) setAccentColor(settings.accentColor);
+        if (settings.wallpaper !== undefined) setWallpaper(settings.wallpaper);
+        if (settings.volume !== undefined) setVolume(settings.volume);
+        if (settings.isMuted !== undefined) setIsMuted(settings.isMuted);
+        if (settings.startupSoundEnabled !== undefined) setStartupSoundEnabled(settings.startupSoundEnabled);
+        if (settings.isSetupComplete !== undefined) setIsSetupComplete(settings.isSetupComplete);
+        if (settings.gmailUser !== undefined) setGmailUser(settings.gmailUser);
+        if (settings.gmailPassword !== undefined) setGmailPassword(settings.gmailPassword);
+        if (settings.loginMethod !== undefined) setLoginMethod(settings.loginMethod);
+        if (settings.kidCategory !== undefined) setKidCategory(settings.kidCategory);
+        if (settings.kidAvatar !== undefined) setKidAvatar(settings.kidAvatar);
+        if (settings.pinRequired !== undefined) setPinRequired(settings.pinRequired);
+        if (settings.pinCode !== undefined) setPinCode(settings.pinCode);
+        if (settings.mobileMode !== undefined) setMobileMode(settings.mobileMode);
+        if (settings.brightness !== undefined) setBrightness(settings.brightness);
+        if (settings.firewallActive !== undefined) setFirewallActive(settings.firewallActive);
+        
+        // Ensure local fallback is also in sync
+        saveOfflineSettings(settings);
+      }
+      setIsSettingsLoadedFromServer(true);
+    };
+    loadSettings();
+  }, []);
+
+  // Save settings to the server and local fallback when they change
+  useEffect(() => {
+    if (!isSettingsLoadedFromServer) return;
+    const saveSettings = async () => {
+      const payload = {
+        accentColor,
+        wallpaper,
+        volume,
+        isMuted,
+        startupSoundEnabled,
+        isSetupComplete,
+        gmailUser,
+        gmailPassword,
+        loginMethod,
+        kidCategory,
+        kidAvatar,
+        pinRequired,
+        pinCode,
+        mobileMode,
+        brightness,
+        firewallActive
+      };
+
+      if (lastSavedSettings.current && JSON.stringify(lastSavedSettings.current) === JSON.stringify(payload)) {
+        return; // No actual change, prevent infinite loops with server file watcher
+      }
+      lastSavedSettings.current = payload;
+
+      // Always save to offline localStorage
+      saveOfflineSettings(payload);
+
+      try {
+        await fetch(getApiUrl('/api/settings'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.warn("Local network server connection silent handling:", err);
+      }
+    };
+    saveSettings();
+  }, [
+    isSettingsLoadedFromServer,
+    accentColor,
+    wallpaper,
+    volume,
+    isMuted,
+    startupSoundEnabled,
+    isSetupComplete,
+    gmailUser,
+    gmailPassword,
+    loginMethod,
+    kidCategory,
+    kidAvatar,
+    pinRequired,
+    pinCode,
+    mobileMode,
+    brightness,
+    firewallActive
+  ]);
+
+  useEffect(() => {
+    if (isSystemBooting) {
+      const timer = setTimeout(() => {
+        setIsSystemBooting(false);
+        setIsLocked(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isSystemBooting]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Alt + Key shortcuts
@@ -329,6 +453,10 @@ export default function App() {
     setLauncherStep('bootstrap');
     setLauncherLogs([]);
 
+    if (name === 'baslat.bat') {
+      playWindows11StartupSound(volume, isMuted, true);
+    }
+
     const logMessages = [
       `$ ./${name}`,
       `[  SİSTEM  ] Sanal dosya sistemi doğrulanıyor... Başarılı.`,
@@ -388,6 +516,7 @@ export default function App() {
     setIsSafeMode(false);
     setTimeout(() => {
       setIsRestarting(false);
+      setIsSystemBooting(true);
       // Reset all windows
       setIsTerminalOpen(false);
       setIsSettingsOpen(false);
@@ -398,9 +527,6 @@ export default function App() {
       setIsTrashOpen(false);
       setIsEditorOpen(false);
       setIsApkInstallerOpen(false);
-      if (startupSoundEnabled) {
-        playWindows11StartupSound(volume, isMuted, true);
-      }
     }, 3000);
   };
 
@@ -411,6 +537,7 @@ export default function App() {
     setIsSafeMode(true);
     setTimeout(() => {
       setIsRestarting(false);
+      setIsSystemBooting(true);
       // Reset all windows
       setIsTerminalOpen(false);
       setIsSettingsOpen(false);
@@ -421,9 +548,6 @@ export default function App() {
       setIsTrashOpen(false);
       setIsEditorOpen(false);
       setIsApkInstallerOpen(false);
-      if (startupSoundEnabled) {
-        playWindows11StartupSound(volume, isMuted, true);
-      }
     }, 3000);
   };
 
@@ -434,14 +558,21 @@ export default function App() {
         <button 
           onClick={() => {
             setIsShutDown(false);
-            if (startupSoundEnabled) {
-              playWindows11StartupSound(volume, isMuted, true);
-            }
+            setIsSystemBooting(true);
           }}
           className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all text-xs"
         >
           Sistemi Başlat
         </button>
+      </div>
+    );
+  }
+
+  if (isSystemBooting) {
+    return (
+      <div id="boot-loader-container" className="h-screen w-screen bg-black flex flex-col items-center justify-center gap-5 font-sans select-none z-[9999]">
+        <div className="w-10 h-10 rounded-full border-2 border-t-[var(--accent)] border-white/10 animate-spin" />
+        <div className="text-white/40 text-xs font-mono tracking-widest uppercase animate-pulse">Sistem Başlatılıyor...</div>
       </div>
     );
   }
@@ -798,11 +929,13 @@ export default function App() {
             >
               <FileManager 
                 onClose={() => setIsFileManagerOpen(false)} 
-                onOpenFile={(name, content) => {
-                  if (name === 'uygulamayi_ac.sh' || name === 'baslat.desktop' || name === 'archweb_launcher.exe') {
+                onOpenFile={(name, content, path) => {
+                  if (name === 'uygulamayi_ac.sh' || name === 'baslat.desktop' || name === 'archweb_launcher.exe' || name === 'baslat.bat') {
                     handleExecuteProgram(name);
+                  } else if (name === 'archweb.dmg' || name === 'archweb.deb' || name === 'archweb.dev') {
+                    setIsApkInstallerOpen(true);
                   } else {
-                    setEditingFile({ name, content });
+                    setEditingFile({ name, content, path });
                     setIsEditorOpen(true);
                   }
                 }}
@@ -1085,6 +1218,29 @@ export default function App() {
                 onClose={() => setIsEditorOpen(false)} 
                 fileName={editingFile.name}
                 initialContent={editingFile.content}
+                onSave={async (newContent) => {
+                  const virtualPath = editingFile.path || `/home/user/${editingFile.name}`;
+                  
+                  // Always save to local virtual fallback storage
+                  saveOfflineFile(virtualPath, newContent);
+                  setEditingFile(prev => ({ ...prev, content: newContent }));
+
+                  try {
+                    await fetch(getApiUrl('/api/files'), {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ 
+                        virtualPath, 
+                        content: newContent 
+                      })
+                    });
+                  } catch (err) {
+                    console.warn("Local network server connection silent handling:", err);
+                  }
+
+                  // Trigger custom refresh event for FileManager
+                  window.dispatchEvent(new CustomEvent('file_saved_refresh'));
+                }}
               />
             </motion.div>
           )}

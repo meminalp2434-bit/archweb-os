@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Palette, Monitor, Shield, Info, Smartphone, AppWindow, ShieldAlert, ShieldCheck, Lock, RefreshCw, AlertCircle, QrCode, Download, ExternalLink, Volume2, VolumeX, Music } from 'lucide-react';
 import { motion } from 'motion/react';
+import { playWindows11StartupSound } from '../utils/audio';
 
 interface SettingsProps {
   onClose: () => void;
@@ -607,6 +608,7 @@ export const Settings: React.FC<SettingsProps> = ({
                     <a 
                       href="/baslat.bat" 
                       download="baslat.bat"
+                      onClick={() => playWindows11StartupSound(volume, isMuted, true)}
                       className="w-full text-center py-1.5 bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 hover:text-blue-200 border border-blue-500/30 text-[10px] font-bold rounded-md transition-all flex items-center justify-center gap-1.5"
                     >
                       <Download size={11} /> baslat.bat İndir
@@ -626,6 +628,7 @@ export const Settings: React.FC<SettingsProps> = ({
                     <a 
                       href="/archweb.dmg" 
                       download="archweb.dmg"
+                      onClick={() => playWindows11StartupSound(volume, isMuted, true)}
                       className="w-full text-center py-1.5 bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 hover:text-purple-200 border border-purple-500/30 text-[10px] font-bold rounded-md transition-all flex items-center justify-center gap-1.5"
                     >
                       <Download size={11} /> archweb.dmg İndir
@@ -646,6 +649,7 @@ export const Settings: React.FC<SettingsProps> = ({
                       <a 
                         href="/archweb.deb" 
                         download="archweb.deb"
+                        onClick={() => playWindows11StartupSound(volume, isMuted, true)}
                         className="text-center py-1.5 bg-orange-500/15 hover:bg-orange-500/25 text-orange-300 hover:text-orange-200 border border-orange-500/30 text-[9px] font-bold rounded-md transition-all flex items-center justify-center gap-1"
                       >
                         <Download size={10} /> .deb İndir
@@ -653,6 +657,7 @@ export const Settings: React.FC<SettingsProps> = ({
                       <a 
                         href="/archweb.dev" 
                         download="archweb.dev"
+                        onClick={() => playWindows11StartupSound(volume, isMuted, true)}
                         className="text-center py-1.5 bg-orange-500/15 hover:bg-orange-500/25 text-orange-300 hover:text-orange-200 border border-orange-500/30 text-[9px] font-bold rounded-md transition-all flex items-center justify-center gap-1"
                       >
                         <Download size={10} /> .dev İndir

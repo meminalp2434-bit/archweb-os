@@ -5,9 +5,10 @@ interface TextEditorProps {
   onClose: () => void;
   fileName?: string;
   initialContent?: string;
+  onSave?: (content: string) => void;
 }
 
-export const TextEditor: React.FC<TextEditorProps> = ({ onClose, fileName = 'untitled.txt', initialContent = '' }) => {
+export const TextEditor: React.FC<TextEditorProps> = ({ onClose, fileName = 'untitled.txt', initialContent = '', onSave }) => {
   const [content, setContent] = useState(initialContent);
 
   return (
@@ -25,7 +26,14 @@ export const TextEditor: React.FC<TextEditorProps> = ({ onClose, fileName = 'unt
             <span>{fileName}</span>
           </div>
         </div>
-        <button className="flex items-center gap-2 px-3 py-1 bg-[var(--accent)]/20 text-[var(--accent)] rounded text-xs hover:bg-[var(--accent)]/30 transition-colors">
+        <button 
+          onClick={() => {
+            if (onSave) {
+              onSave(content);
+            }
+          }}
+          className="flex items-center gap-2 px-3 py-1 bg-[var(--accent)]/20 text-[var(--accent)] rounded text-xs hover:bg-[var(--accent)]/30 transition-colors"
+        >
           <Save size={12} />
           Kaydet
         </button>
