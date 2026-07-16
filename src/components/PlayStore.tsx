@@ -10,7 +10,7 @@ interface PlayStoreProps {
   mobileMode?: boolean;
 }
 
-interface AppItem {
+export interface AppItem {
   id: string;
   name: string;
   developer: string;
@@ -26,6 +26,99 @@ interface AppItem {
   screenshots: string[];
 }
 
+export const playStoreApps: AppItem[] = [
+  {
+    id: 'minecraft2d',
+    name: 'Minecraft 2D Lite',
+    developer: 'Mojang Sim',
+    category: 'games',
+    icon: Gamepad2,
+    iconColor: '#4caf50',
+    iconBg: 'bg-emerald-500/10',
+    rating: 4.8,
+    reviews: '124B',
+    downloads: '10M+',
+    size: '14 MB',
+    description: 'Sanal blok dünyasında maden kazın, kendi evinizi ve dünyanızı inşa edin! Tamamen simüle edilmiş 2D blok kırma ve yerleştirme oyunu çocukların yaratıcılığını geliştirir.',
+    screenshots: ['#1b4332', '#2d6a4f', '#40916c']
+  },
+  {
+    id: 'piano_kids',
+    name: 'Sihirli Çocuk Piyanosu',
+    developer: 'Melody Labs',
+    category: 'kids',
+    icon: Music,
+    iconColor: '#ff4081',
+    iconBg: 'bg-pink-500/10',
+    rating: 4.7,
+    reviews: '48B',
+    downloads: '5M+',
+    size: '8 MB',
+    description: 'Gerçek ses dalgası sentezleyici teknolojisiyle çalışan, rengarenk tuşlara sahip çocuk piyanosu. Kendi müziklerinizi besteleyin ve notaları eğlenceli bir şekilde öğrenin!',
+    screenshots: ['#590d22', '#800f2f', '#a9103f']
+  },
+  {
+    id: 'space_explorer',
+    name: 'Uzay Serüveni',
+    developer: 'Galaxy Games',
+    category: 'games',
+    icon: Compass,
+    iconColor: '#2196f3',
+    iconBg: 'bg-blue-500/10',
+    rating: 4.5,
+    reviews: '12B',
+    downloads: '1M+',
+    size: '12 MB',
+    description: 'Roketinizi meteor yağmurlarından koruyun, uzay boşluğundaki parlayan yıldızları toplayarak rekor kırın! Klavye veya dokunmatik kontrollerle oynanan eğlenceli uzay kaçış simülatörü.',
+    screenshots: ['#03045e', '#023e8a', '#0077b6']
+  },
+  {
+    id: 'coloring_book',
+    name: 'Sanal Boyama Dünyası',
+    developer: 'Art Studio Kids',
+    category: 'education',
+    icon: Palette,
+    iconColor: '#ffeb3b',
+    iconBg: 'bg-yellow-500/10',
+    rating: 4.6,
+    reviews: '34B',
+    downloads: '2M+',
+    size: '10 MB',
+    description: 'Birbirinden sevimli kedi, dinozor ve roket şablonlarını dilediğiniz gibi renklendirin! Gelişmiş fırça ve silgi modları içeren çocuk dostu çizim tableti uygulaması.',
+    screenshots: ['#3a0ca3', '#4361ee', '#4cc9f0']
+  },
+  {
+    id: 'yt_kids',
+    name: 'YouTube Kids',
+    developer: 'YouTube LLC Sim',
+    category: 'apps',
+    icon: Youtube,
+    iconColor: '#f44336',
+    iconBg: 'bg-red-500/10',
+    rating: 4.9,
+    reviews: '512B',
+    downloads: '50M+',
+    size: '18 MB',
+    description: 'Telif haklarını %100 korumak için tasarlanmış, çocuk dostu, eğlenceli ve güvenli bir YouTube simülatör uygulaması. Özenle seçilmiş çizgi filmler ve animasyonlar içerir.',
+    screenshots: ['#6411ad', '#8f2d56', '#d81159']
+  },
+  {
+    id: 'bunny_pet',
+    name: 'Sanal Tavşanım Bobo',
+    developer: 'Pet Care Studio',
+    category: 'kids',
+    icon: Heart,
+    iconColor: '#e040fb',
+    iconBg: 'bg-purple-500/10',
+    rating: 4.8,
+    reviews: '89B',
+    downloads: '10M+',
+    size: '15 MB',
+    description: 'Sevimli evcil tavşanınız Bobo\'yu besleyin, uyutun, onunla oyun oynayın! Açlık, enerji ve mutluluk barlarını doldurarak Bobo\'yu sağlıklı büyütün.',
+    screenshots: ['#10002b', '#240046', '#3c096c']
+  }
+];
+
 export const PlayStore: React.FC<PlayStoreProps> = ({ onClose, mobileMode = false }) => {
   const [activeTab, setActiveTab] = useState<'home' | 'games' | 'apps' | 'kids'>('home');
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,105 +128,12 @@ export const PlayStore: React.FC<PlayStoreProps> = ({ onClose, mobileMode = fals
     return saved ? JSON.parse(saved) : {};
   });
   const [installProgress, setInstallProgress] = useState<Record<string, number>>({});
-  const [runningApp, setRunningApp] = useState<string | null>(null);
 
   // Keep track of installation status in localStorage
   useEffect(() => {
     localStorage.setItem('playstore_installed_apps', JSON.stringify(installedApps));
+    window.dispatchEvent(new Event('playstore_apps_changed'));
   }, [installedApps]);
-
-  const appList: AppItem[] = [
-    {
-      id: 'minecraft2d',
-      name: 'Minecraft 2D Lite',
-      developer: 'Mojang Sim',
-      category: 'games',
-      icon: Gamepad2,
-      iconColor: '#4caf50',
-      iconBg: 'bg-emerald-500/10',
-      rating: 4.8,
-      reviews: '124B',
-      downloads: '10M+',
-      size: '14 MB',
-      description: 'Sanal blok dünyasında maden kazın, kendi evinizi ve dünyanızı inşa edin! Tamamen simüle edilmiş 2D blok kırma ve yerleştirme oyunu çocukların yaratıcılığını geliştirir.',
-      screenshots: ['#1b4332', '#2d6a4f', '#40916c']
-    },
-    {
-      id: 'piano_kids',
-      name: 'Sihirli Çocuk Piyanosu',
-      developer: 'Melody Labs',
-      category: 'kids',
-      icon: Music,
-      iconColor: '#ff4081',
-      iconBg: 'bg-pink-500/10',
-      rating: 4.7,
-      reviews: '48B',
-      downloads: '5M+',
-      size: '8 MB',
-      description: 'Gerçek ses dalgası sentezleyici teknolojisiyle çalışan, rengarenk tuşlara sahip çocuk piyanosu. Kendi müziklerinizi besteleyin ve notaları eğlenceli bir şekilde öğrenin!',
-      screenshots: ['#590d22', '#800f2f', '#a9103f']
-    },
-    {
-      id: 'space_explorer',
-      name: 'Uzay Serüveni',
-      developer: 'Galaxy Games',
-      category: 'games',
-      icon: Compass,
-      iconColor: '#2196f3',
-      iconBg: 'bg-blue-500/10',
-      rating: 4.5,
-      reviews: '12B',
-      downloads: '1M+',
-      size: '12 MB',
-      description: 'Roketinizi meteor yağmurlarından koruyun, uzay boşluğundaki parlayan yıldızları toplayarak rekor kırın! Klavye veya dokunmatik kontrollerle oynanan eğlenceli uzay kaçış simülatörü.',
-      screenshots: ['#03045e', '#023e8a', '#0077b6']
-    },
-    {
-      id: 'coloring_book',
-      name: 'Sanal Boyama Dünyası',
-      developer: 'Art Studio Kids',
-      category: 'education',
-      icon: Palette,
-      iconColor: '#ffeb3b',
-      iconBg: 'bg-yellow-500/10',
-      rating: 4.6,
-      reviews: '34B',
-      downloads: '2M+',
-      size: '10 MB',
-      description: 'Birbirinden sevimli kedi, dinozor ve roket şablonlarını dilediğiniz gibi renklendirin! Gelişmiş fırça ve silgi modları içeren çocuk dostu çizim tableti uygulaması.',
-      screenshots: ['#3a0ca3', '#4361ee', '#4cc9f0']
-    },
-    {
-      id: 'yt_kids',
-      name: 'YouTube Kids',
-      developer: 'YouTube LLC Sim',
-      category: 'apps',
-      icon: Youtube,
-      iconColor: '#f44336',
-      iconBg: 'bg-red-500/10',
-      rating: 4.9,
-      reviews: '512B',
-      downloads: '50M+',
-      size: '18 MB',
-      description: 'Telif haklarını %100 korumak için tasarlanmış, çocuk dostu, eğlenceli ve güvenli bir YouTube simülatör uygulaması. Özenle seçilmiş çizgi filmler ve animasyonlar içerir.',
-      screenshots: ['#6411ad', '#8f2d56', '#d81159']
-    },
-    {
-      id: 'bunny_pet',
-      name: 'Sanal Tavşanım Bobo',
-      developer: 'Pet Care Studio',
-      category: 'kids',
-      icon: Heart,
-      iconColor: '#e040fb',
-      iconBg: 'bg-purple-500/10',
-      rating: 4.8,
-      reviews: '89B',
-      downloads: '10M+',
-      size: '15 MB',
-      description: 'Sevimli evcil tavşanınız Bobo\'yu besleyin, uyutun, onunla oyun oynayın! Açlık, enerji ve mutluluk barlarını doldurarak Bobo\'yu sağlıklı büyütün.',
-      screenshots: ['#10002b', '#240046', '#3c096c']
-    }
-  ];
 
   const handleInstall = (appId: string) => {
     if (installedApps[appId]) return;
@@ -166,7 +166,7 @@ export const PlayStore: React.FC<PlayStoreProps> = ({ onClose, mobileMode = fals
     });
   };
 
-  const filteredApps = appList.filter(app => {
+  const filteredApps = playStoreApps.filter(app => {
     const matchesSearch = app.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           app.developer.toLowerCase().includes(searchQuery.toLowerCase());
     
@@ -276,39 +276,7 @@ export const PlayStore: React.FC<PlayStoreProps> = ({ onClose, mobileMode = fals
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#f8f9fa]">
           <AnimatePresence mode="wait">
-            {runningApp ? (
-              <motion.div 
-                key="running-app"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                className="h-full flex flex-col bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden"
-              >
-                {/* Embedded App Frame Title Bar */}
-                <div className="bg-gray-900 text-white px-4 py-2 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-xs font-mono font-bold">{appList.find(a => a.id === runningApp)?.name}</span>
-                  </div>
-                  <button 
-                    onClick={() => setRunningApp(null)}
-                    className="flex items-center gap-1.5 px-3 py-1 text-[10px] bg-red-500 hover:bg-red-600 text-white font-bold rounded-md transition-colors"
-                  >
-                    <X size={12} />
-                    Uygulamayı Kapat
-                  </button>
-                </div>
-
-                <div className="flex-1 overflow-auto bg-gray-50">
-                  {runningApp === 'minecraft2d' && <Minecraft2D />}
-                  {runningApp === 'piano_kids' && <PianoKids />}
-                  {runningApp === 'space_explorer' && <SpaceExplorer />}
-                  {runningApp === 'coloring_book' && <ColoringBook />}
-                  {runningApp === 'yt_kids' && <YTKids />}
-                  {runningApp === 'bunny_pet' && <BunnyPet />}
-                </div>
-              </motion.div>
-            ) : selectedApp ? (
+            {selectedApp ? (
               <motion.div 
                 key="detail"
                 initial={{ opacity: 0, x: 20 }}
@@ -356,7 +324,9 @@ export const PlayStore: React.FC<PlayStoreProps> = ({ onClose, mobileMode = fals
                     {installedApps[selectedApp.id] ? (
                       <>
                         <button 
-                          onClick={() => setRunningApp(selectedApp.id)}
+                          onClick={() => {
+                            window.dispatchEvent(new CustomEvent('playstore_launch_app', { detail: selectedApp.id }));
+                          }}
                           className="flex-1 py-2.5 rounded-full bg-[#01875f] hover:bg-[#00704e] text-white font-bold text-xs shadow-md shadow-emerald-700/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                         >
                           <Play size={14} /> Uygulamayı Çalıştır
@@ -496,7 +466,7 @@ export const PlayStore: React.FC<PlayStoreProps> = ({ onClose, mobileMode = fals
 /* ==========================================================================
    1. MINECRAFT 2D LITE MINI GAME
    ========================================================================== */
-const Minecraft2D: React.FC = () => {
+export const Minecraft2D: React.FC = () => {
   const [tool, setTool] = useState<'dig' | 'dirt' | 'brick' | 'wood' | 'leaf' | 'diamond'>('dig');
   const [grid, setGrid] = useState<string[][]>(() => {
     // Generate a beautiful 2D Minecraft sky, grass, dirt, stone layout
@@ -645,7 +615,7 @@ const Minecraft2D: React.FC = () => {
 /* ==========================================================================
    2. PIANO KIDS SYNTH MINI APP
    ========================================================================== */
-const PianoKids: React.FC = () => {
+export const PianoKids: React.FC = () => {
   const notes = [
     { name: 'C', label: 'Do', freq: 261.63, color: 'bg-red-500 border-red-600 text-white' },
     { name: 'D', label: 'Re', freq: 293.66, color: 'bg-orange-500 border-orange-600 text-white' },
@@ -712,7 +682,7 @@ const PianoKids: React.FC = () => {
 /* ==========================================================================
    3. SPACE EXPLORER MINI GAME (Canvas Keyboard or Touch)
    ========================================================================== */
-const SpaceExplorer: React.FC = () => {
+export const SpaceExplorer: React.FC = () => {
   const [gameState, setGameState] = useState<'idle' | 'playing' | 'gameover'>('idle');
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(() => {
@@ -910,7 +880,7 @@ const SpaceExplorer: React.FC = () => {
 /* ==========================================================================
    4. COLORING BOOK MINI APP
    ========================================================================== */
-const ColoringBook: React.FC = () => {
+export const ColoringBook: React.FC = () => {
   const [color, setColor] = useState('#ef4444');
   const [pixels, setPixels] = useState<Record<string, string>>({});
   
@@ -983,7 +953,7 @@ interface VideoItem {
   duration: string;
 }
 
-const YTKids: React.FC = () => {
+export const YTKids: React.FC = () => {
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -1090,7 +1060,7 @@ const YTKids: React.FC = () => {
 /* ==========================================================================
    6. BUNNY PET LITE MINI GAME
    ========================================================================== */
-const BunnyPet: React.FC = () => {
+export const BunnyPet: React.FC = () => {
   const [bunnyState, setBunnyState] = useState<'idle' | 'eating' | 'sleeping' | 'playing'>('idle');
   const [stats, setStats] = useState({ hunger: 70, energy: 60, love: 80 });
 

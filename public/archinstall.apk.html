@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArchWeb OS - Güvenli APK Yükleyici</title>
+    <style>
+        body {
+            background-color: #0d0d12;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            width: 90%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        .icon {
+            font-size: 48px;
+            color: #ff3b30;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        h1 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #ff453a;
+        }
+        p {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #ff453a 0%, #ff3b30 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(255, 59, 48, 0.3);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 59, 48, 0.4);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .steps {
+            text-align: left;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 25px;
+        }
+        .steps h2 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .steps ol {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .steps li {
+            margin-bottom: 8px;
+        }
+        .success-message {
+            display: none;
+            color: #34c759;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 15px;
+            background: rgba(52, 199, 89, 0.1);
+            border: 1px solid rgba(52, 199, 89, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">⚠️</div>
+        <h1>Güvenli APK Yükleme Bildirimi</h1>
+        <p>
+            ArchWeb OS mobil kurulum paketi (<b>archinstall.apk</b>) indirilmeye hazır. Tarayıcınız veya sisteminiz bu dosyayı "bilinmeyen kaynak" veya "potansiyel olarak zararlı" olarak tanımlayabilir. Bu uyarı tamamen imzasız geliştirici paketlerinden kaynaklanmaktadır ve sistemimiz tamamen güvenlidir.
+        </p>
+        
+        <button id="downloadBtn" class="btn">Korumayı Atla & APK Dosyasını İndir</button>
+        
+        <div id="successMsg" class="success-message">
+            ✓ İndirme başlatıldı! Eğer indirme otomatik başlamadıysa <a href="/archinstall.apk" download style="color: #34c759; text-decoration: underline; font-weight: bold;">buraya tıklayın</a>.
+        </div>
+
+        <div class="steps" id="installationSteps">
+            <h2>Yükleme Adımları (Android 10+, HyperOS, One UI)</h2>
+            <ol>
+                <li>Yukarıdaki kırmızı butona basarak <b>archinstall.apk</b> dosyasını cihazınıza indirin.</li>
+                <li>İndirilen dosyayı açın. Eğer sistem "Bilinmeyen kaynaklardan yükleme engellendi" uyarısı verirse, tarayıcı ayarlarına gidip <b>"Bu kaynaktan izin ver"</b> seçeneğini aktif edin.</li>
+                <li>Yükle butonuna basarak kurulumu tamamlayın ve ArchWeb OS dünyasını tam ekran yerel uygulama olarak deneyimleyin!</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            // Trigger actual download of the APK file
+            const link = document.createElement('a');
+            link.href = '/archinstall.apk';
+            link.download = 'archinstall.apk';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Show success message
+            document.getElementById('successMsg').style.display = 'block';
+            
+            // Visual feedback on button
+            const btn = document.getElementById('downloadBtn');
+            btn.innerHTML = '✓ İndirme Başlatıldı!';
+            btn.style.background = 'linear-gradient(135deg, #34c759 0%, #30b34d 100%)';
+            btn.style.boxShadow = '0 4px 15px rgba(52, 199, 89, 0.3)';
+        });
+    </script>
+</body>
+</html>

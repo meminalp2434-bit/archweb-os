@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Check, AlertCircle, ChevronRight, ArrowLeft, Star, Sparkles, Brain, Gamepad2, Paintbrush, Rocket, Eye, EyeOff, Lock, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -61,7 +61,11 @@ const CATEGORIES = [
 ];
 
 export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<0 | 1 | 2>(() => {
+    const savedUsersRaw = localStorage.getItem('archweb_registered_users');
+    const savedUsers = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
+    return savedUsers.length > 0 ? 0 : 1;
+  });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -69,6 +73,18 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
   const [selectedCategory, setSelectedCategory] = useState<'education' | 'gaming' | 'creativity' | 'science'>('education');
   const [error, setError] = useState('');
   const [loginMethod, setLoginMethod] = useState<'email' | 'google' | 'microsoft' | 'apple'>('email');
+  const [isRegistering, setIsRegistering] = useState<boolean>(false);
+  const [savedUsers, setSavedUsers] = useState<any[]>([]);
+
+  useEffect(() => {
+    const savedUsersRaw = localStorage.getItem('archweb_registered_users');
+    setSavedUsers(savedUsersRaw ? JSON.parse(savedUsersRaw) : []);
+  }, []);
+
+  const handleAccountSelect = (user: any) => {
+    // Log in directly! We load their saved preferences
+    onComplete(user.email, user.category || 'education', user.avatar || '🦊', user.loginMethod || 'email', user.password);
+  };
 
   // Interactive SSO simulation popup state
   const [ssoPopup, setSsoPopup] = useState<{
@@ -111,9 +127,36 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
       return;
     }
 
-    setError('');
-    setLoginMethod('email');
-    setStep(2);
+    // Read saved accounts to enforce "no entrance without real/saved account"
+    const savedUsersRaw = localStorage.getItem('archweb_registered_users');
+    const savedUsers = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
+
+    if (isRegistering) {
+      // Check if user already exists
+      const exists = savedUsers.some((u: any) => u.email.toLowerCase() === fullEmail.toLowerCase());
+      if (exists) {
+        setError('Bu e-posta adresiyle zaten kayıtlı bir hesap bulunuyor! Lütfen Giriş Yap sekmesini kullanın.');
+        return;
+      }
+      setLoginMethod('email');
+      setError('');
+      setStep(2);
+    } else {
+      // Login mode - find the registered account
+      const foundUser = savedUsers.find((u: any) => u.email.toLowerCase() === fullEmail.toLowerCase() && u.password === password);
+      if (!foundUser) {
+        setError('Hesap bulunamadı veya şifre yanlış! Lütfen kayıt olun veya şifrenizi kontrol edin.');
+        return;
+      }
+      // Log in directly! We load their saved preferences
+      setSelectedAvatar(foundUser.avatar || '🦊');
+      setSelectedCategory(foundUser.category || 'education');
+      setLoginMethod(foundUser.loginMethod || 'email');
+      setError('');
+      
+      // Let's set it up! We can immediately complete the login!
+      onComplete(fullEmail, foundUser.category || 'education', foundUser.avatar || '🦊', foundUser.loginMethod || 'email', password);
+    }
   };
 
   const handleSsoClick = (provider: 'google' | 'microsoft' | 'apple') => {
@@ -173,6 +216,26 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
   };
 
   const handleFinish = () => {
+    // Save account to list
+    const savedUsersRaw = localStorage.getItem('archweb_registered_users');
+    const savedUsers = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
+    
+    // Check if already registered to avoid duplicates
+    const index = savedUsers.findIndex((u: any) => u.email.toLowerCase() === email.toLowerCase());
+    const newUser = {
+      email,
+      password,
+      avatar: selectedAvatar,
+      category: selectedCategory,
+      loginMethod,
+    };
+    if (index > -1) {
+      savedUsers[index] = newUser;
+    } else {
+      savedUsers.push(newUser);
+    }
+    localStorage.setItem('archweb_registered_users', JSON.stringify(savedUsers));
+
     onComplete(email, selectedCategory, selectedAvatar, loginMethod, password);
   };
 
@@ -184,7 +247,57 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
       <div className="absolute inset-0 bg-[radial-gradient(#ffffff03_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none" />
 
       <AnimatePresence mode="wait">
-        {step === 1 ? (
+        {step === 0 ? (
+          /* STEP 0: ACCOUNT SELECTOR */
+          <motion.div 
+            key="step0"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="w-full max-w-md bg-white/5 border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative space-y-5"
+          >
+            <div className="text-center space-y-1">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 bg-clip-text text-transparent">Hesabını Seç</h1>
+              <p className="text-xs text-white/60">Giriş yapmak için kayıtlı bir hesap seç:</p>
+            </div>
+            <div className="space-y-3">
+              {savedUsers.map((user: any) => (
+                <button
+                  key={user.email}
+                  onClick={() => handleAccountSelect(user)}
+                  className="w-full p-4 bg-black/40 border border-white/10 rounded-2xl flex items-center gap-4 hover:bg-black/60 transition-all active:scale-[0.98]"
+                >
+                  <span className="text-3xl">{user.avatar}</span>
+                  <div className="text-left">
+                    <div className="text-sm font-bold text-white">{user.email.split('@')[0]}</div>
+                    <div className="text-[10px] text-white/50">{user.email}</div>
+                  </div>
+                </button>
+              ))}
+              <button
+                onClick={() => {
+                  setIsRegistering(true);
+                  setStep(1);
+                }}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 text-black font-extrabold text-xs hover:opacity-95 transition-all shadow-lg active:scale-95"
+              >
+                Yeni Hesap Ekle
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm("Tüm kayıtlı kullanıcı hesaplarını ve verileri sıfırlamak istediğinize emin misiniz?")) {
+                    localStorage.clear();
+                    window.location.reload();
+                  }
+                }}
+                className="w-full text-center text-[10px] text-white/40 hover:text-red-400 mt-2 underline transition-colors cursor-pointer"
+              >
+                Hesap Kayıtlarını ve Tüm Verileri Sıfırla
+              </button>
+            </div>
+          </motion.div>
+        ) : step === 1 ? (
           /* STEP 1: LOGIN DETAILS */
           <motion.div 
             key="step1"
@@ -193,6 +306,16 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
             exit={{ opacity: 0, scale: 0.95 }}
             className="w-full max-w-md bg-white/5 border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative space-y-5"
           >
+            {savedUsers.length > 0 && (
+              <button 
+                onClick={() => setStep(0)}
+                className="absolute top-4 left-4 p-2 rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-all flex items-center justify-center cursor-pointer z-10"
+                title="Hesap Seçimine Geri Dön"
+              >
+                <ArrowLeft size={16} />
+              </button>
+            )}
+
             {/* Playful Floating Badge */}
             <div className="absolute -top-4 -right-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-black px-3 py-1.5 rounded-full text-[10px] font-extrabold tracking-wider shadow-lg flex items-center gap-1">
               <Sparkles size={12} className="animate-spin" />
@@ -202,35 +325,67 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
             {/* Header Greeting */}
             <div className="text-center space-y-1">
               <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 bg-clip-text text-transparent flex items-center justify-center gap-2">
-                <span>Hoş Geldiniz!</span>
+                <span>{isRegistering ? 'Hesap Oluşturun!' : 'Hoş Geldiniz!'}</span>
                 <span className="animate-bounce">👋</span>
               </h1>
-              <p className="text-xs text-white/60">Giriş yapmak için bilgilerinizi girin veya bir hesap seçin!</p>
+              <p className="text-xs text-white/60">
+                {isRegistering 
+                  ? 'Sisteme güvenli erişim için e-posta ve şifre ile bir hesap oluşturun.' 
+                  : 'Sisteme giriş yapmak için kayıtlı e-posta ve şifrenizi girin.'}
+              </p>
             </div>
 
-            {/* Avatar Selection */}
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase font-mono tracking-wider text-yellow-300 font-bold block text-center">Bir Profil Karakteri Seç</label>
-              <div className="grid grid-cols-6 gap-2">
-                {AVATARS.map(item => (
-                  <button 
-                    key={item.emoji}
-                    onClick={() => setSelectedAvatar(item.emoji)}
-                    type="button"
-                    className={`aspect-square rounded-2xl text-2xl flex items-center justify-center bg-white/5 border transition-all hover:bg-white/10 hover:scale-105 active:scale-95 ${selectedAvatar === item.emoji ? 'border-yellow-400 bg-yellow-400/10 ring-2 ring-yellow-400/30' : 'border-white/10'}`}
-                    title={item.label}
-                  >
-                    {item.emoji}
-                  </button>
-                ))}
+            {/* Register / Login Switcher */}
+            <div className="flex bg-black/50 p-1 rounded-xl border border-white/5">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRegistering(true);
+                  setError('');
+                }}
+                className={`flex-1 py-1.5 text-center text-[10px] font-extrabold rounded-lg transition-all uppercase tracking-wider ${isRegistering ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-black shadow-lg' : 'text-white/60 hover:text-white'}`}
+              >
+                Kayıt Ol (Yeni Hesap)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRegistering(false);
+                  setError('');
+                }}
+                className={`flex-1 py-1.5 text-center text-[10px] font-extrabold rounded-lg transition-all uppercase tracking-wider ${!isRegistering ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-black shadow-lg' : 'text-white/60 hover:text-white'}`}
+              >
+                Giriş Yap
+              </button>
+            </div>
+
+            {/* Avatar Selection - only show on registration */}
+            {isRegistering && (
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase font-mono tracking-wider text-yellow-300 font-bold block text-center">Bir Profil Karakteri Seç</label>
+                <div className="grid grid-cols-6 gap-2">
+                  {AVATARS.map(item => (
+                    <button 
+                      key={item.emoji}
+                      onClick={() => setSelectedAvatar(item.emoji)}
+                      type="button"
+                      className={`aspect-square rounded-2xl text-2xl flex items-center justify-center bg-white/5 border transition-all hover:bg-white/10 hover:scale-105 active:scale-95 ${selectedAvatar === item.emoji ? 'border-yellow-400 bg-yellow-400/10 ring-2 ring-yellow-400/30' : 'border-white/10'}`}
+                      title={item.label}
+                    >
+                      {item.emoji}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Login Form Card */}
+            {/* Login/Register Form Card */}
             <div className="space-y-3.5 bg-black/40 border border-white/5 p-4 sm:p-5 rounded-2xl">
               <div className="flex items-center gap-2 border-b border-white/5 pb-2">
                 <Mail size={14} className="text-yellow-400" />
-                <span className="text-[10px] font-bold font-mono tracking-wider text-white/70">E-POSTA İLE GİRİŞ YAP</span>
+                <span className="text-[10px] font-bold font-mono tracking-wider text-white/70">
+                  {isRegistering ? 'E-POSTA İLE KAYIT OL (KAYDET)' : 'E-POSTA İLE GİRİŞ YAP'}
+                </span>
               </div>
 
               {/* Email Input */}
@@ -300,8 +455,21 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
               onClick={handleNextStep}
               className="w-full py-3 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:opacity-95 text-black font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-yellow-500/10 active:scale-95 cursor-pointer"
             >
-              <span>Giriş Yap & Devam Et</span>
+              <span>{isRegistering ? 'Kaydol & Devam Et' : 'Giriş Yap'}</span>
               <ChevronRight size={16} />
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm("Tüm verileri ve kayıtlı hesapları sıfırlamak istediğinize emin misiniz?")) {
+                  localStorage.clear();
+                  window.location.reload();
+                }
+              }}
+              className="w-full text-center text-[10px] text-white/40 hover:text-red-400 mt-2 underline transition-colors"
+            >
+              Şifremi Unuttum / Tüm Verileri Sıfırla
             </button>
 
             {/* Social Logins Section */}

@@ -1,0 +1,14 @@
+ArchWeb OS for macOS Installer
+==================================
+Version: 20.1.2
+Architecture: universal (Intel & Apple Silicon M1/M2/M3 compatible)
+Format: Apple Disk Image (.dmg) simulated engine wrapper
+
+HOW TO INSTALL ON macOS:
+1. Double-click the downloaded "archweb.dmg" or unzip your downloaded project.
+2. Drag "ArchWeb OS" to your /Applications folder.
+3. Open Terminal and run:
+   chmod +x ./baslat.sh
+   ./baslat.sh
+4. If macOS Gatekeeper blocks execution (Unidentified Developer), go to:
+   System Settings -> Privacy & Security -> Click "Open Anyway"

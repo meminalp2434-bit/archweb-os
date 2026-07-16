@@ -12,10 +12,10 @@ import { PowerDialog } from './components/PowerDialog';
 import { EmailApp } from './components/EmailApp';
 import { KidLogin } from './components/KidLogin';
 import { KidApp } from './components/KidApp';
-import { PlayStore } from './components/PlayStore';
+import { PlayStore, playStoreApps, Minecraft2D, PianoKids, SpaceExplorer, ColoringBook, YTKids, BunnyPet } from './components/PlayStore';
 import { ApkInstaller } from './components/ApkInstaller';
 import { motion, AnimatePresence } from 'motion/react';
-import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock, Mail, Sparkles, Play, Cpu, ShoppingBag, Smartphone, Download, Package } from 'lucide-react';
+import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock, Mail, Sparkles, Play, Cpu, ShoppingBag, Smartphone, Download, Package, X } from 'lucide-react';
 
 const getWallpaperGradient = (wallpaper: number, accentColor: string) => {
   switch (wallpaper) {
@@ -55,6 +55,7 @@ const LockScreenClock = () => {
 export default function App() {
   // Kid OS states
   const [isKidAppOpen, setIsKidAppOpen] = useState(false);
+  const [activePlayApps, setActivePlayApps] = useState<Record<string, boolean>>({});
   const [isSetupComplete, setIsSetupComplete] = useState<boolean>(() => {
     return localStorage.getItem('archweb_kid_setup_complete') === 'true';
   });
@@ -92,7 +93,7 @@ export default function App() {
   const [isShutDown, setIsShutDown] = useState(true);
   const [isRestarting, setIsRestarting] = useState(false);
   const [isSafeMode, setIsSafeMode] = useState<boolean>(() => {
-    return localStorage.getItem('archweb_safe_mode') === 'true' || import.meta.env.VITE_SAFE_MODE === 'true';
+    return localStorage.getItem('archweb_safe_mode') === 'true' || (import.meta as any).env.VITE_SAFE_MODE === 'true';
   });
   const [accentColor, setAccentColor] = useState('#1793d1');
   const [editingFile, setEditingFile] = useState({ name: 'notlar.txt', content: 'ArchWeb OS\'e Hoş Geldiniz!\n\nBu, Arch Linux ortamının tamamen işlevsel bir web simülasyonudur.\n\nKeyfini çıkarın!' });
@@ -113,6 +114,31 @@ export default function App() {
     const saved = localStorage.getItem('archweb_volume');
     return saved !== null ? parseInt(saved) : 80;
   });
+
+  const [installedPlayStoreApps, setInstalledPlayStoreApps] = useState<Record<string, boolean>>(() => {
+    const saved = localStorage.getItem('playstore_installed_apps');
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  useEffect(() => {
+    const handleAppsChanged = () => {
+      const saved = localStorage.getItem('playstore_installed_apps');
+      if (saved) setInstalledPlayStoreApps(JSON.parse(saved));
+    };
+    window.addEventListener('playstore_apps_changed', handleAppsChanged);
+    return () => window.removeEventListener('playstore_apps_changed', handleAppsChanged);
+  }, []);
+
+  useEffect(() => {
+    const handleLaunchApp = (e: any) => {
+      const appId = e.detail;
+      if (appId) {
+        setActivePlayApps(prev => ({ ...prev, [appId]: true }));
+      }
+    };
+    window.addEventListener('playstore_launch_app', handleLaunchApp);
+    return () => window.removeEventListener('playstore_launch_app', handleLaunchApp);
+  }, []);
   const [isMuted, setIsMuted] = useState<boolean>(() => {
     const saved = localStorage.getItem('archweb_muted');
     return saved !== null ? saved === 'true' : false;
@@ -465,6 +491,19 @@ export default function App() {
         setLockInput('');
         setTimeout(() => setLockError(false), 800);
       }
+    } else if (gmailPassword) {
+      if (lockInput === gmailPassword) {
+        setIsLocked(false);
+        setLockInput('');
+        setLockError(false);
+        if (startupSoundEnabled) {
+          playWindows11StartupSound(volume, isMuted);
+        }
+      } else {
+        setLockError(true);
+        setLockInput('');
+        setTimeout(() => setLockError(false), 800);
+      }
     } else {
       setIsLocked(false);
       if (startupSoundEnabled) {
@@ -525,12 +564,47 @@ export default function App() {
                 Giriş Yap
               </button>
             </div>
+          ) : gmailPassword ? (
+            <div className="w-full space-y-3">
+              <input 
+                type="password"
+                value={lockInput}
+                onChange={(e) => setLockInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
+                placeholder="E-Posta Şifrenizi Girin"
+                className={`w-full bg-black/40 border rounded px-3 py-2 text-center text-white text-xs focus:border-[var(--accent)] outline-none transition-all ${lockError ? 'border-red-500 animate-bounce' : 'border-white/10'}`}
+                autoFocus
+              />
+              {lockError && (
+                <p className="text-red-400 text-[10px] font-mono text-center">Hatalı Şifre! Lütfen tekrar deneyin.</p>
+              )}
+              <button 
+                onClick={handleUnlock}
+                className="w-full py-2 rounded-lg bg-[var(--accent)] text-white font-bold text-xs hover:opacity-90 transition-opacity"
+              >
+                Giriş Yap
+              </button>
+            </div>
           ) : (
             <button 
               onClick={handleUnlock}
               className="w-full py-2 rounded-lg bg-[var(--accent)] text-white font-bold text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5"
             >
               Kilidi Aç
+            </button>
+          )}
+
+          {(pinRequired || gmailPassword) && (
+            <button
+              onClick={() => {
+                if (window.confirm("Şifrenizi unuttunuz mu? Tüm kayıtlı kullanıcı hesapları ve veriler silinecektir. Devam etmek istiyor musunuz?")) {
+                  localStorage.clear();
+                  window.location.reload();
+                }
+              }}
+              className="mt-1 text-[10px] text-white/40 hover:text-red-400 underline cursor-pointer transition-colors font-mono"
+            >
+              Şifremi Unuttum / Sıfırla
             </button>
           )}
         </div>
@@ -593,6 +667,7 @@ export default function App() {
       <TopBar 
         onLauncherToggle={toggleLauncher} 
         onPowerToggle={() => setIsPowerDialogOpen(true)}
+        onLockScreen={() => setIsLocked(true)}
         firewallActive={firewallActive}
         volume={volume}
         setVolume={setVolume}
@@ -683,6 +758,8 @@ export default function App() {
                   setIsSettingsOpen(false);
                   setIsLocked(true);
                 }}
+                gmailPassword={gmailPassword}
+                setGmailPassword={setGmailPassword}
                 mobileMode={mobileMode}
                 setMobileMode={setMobileMode}
                 volume={volume}
@@ -940,6 +1017,47 @@ export default function App() {
           )}
         </AnimatePresence>
 
+        {playStoreApps.map((app) => {
+          const isOpen = activePlayApps[app.id];
+          if (!isOpen) return null;
+          const AppContent = app.id === 'minecraft2d' ? Minecraft2D :
+                             app.id === 'piano_kids' ? PianoKids :
+                             app.id === 'space_explorer' ? SpaceExplorer :
+                             app.id === 'coloring_book' ? ColoringBook :
+                             app.id === 'yt_kids' ? YTKids :
+                             BunnyPet;
+          return (
+            <AnimatePresence key={app.id}>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className={`absolute w-full h-full transition-all duration-300 z-[80] ${mobileMode ? 'inset-0 max-w-none max-h-none rounded-none' : 'inset-0 m-auto max-w-3xl max-h-[600px] rounded-lg border border-white/10 shadow-2xl bg-[#1e2022] overflow-hidden flex flex-col'}`}
+              >
+                {/* Window Title Bar */}
+                <div className="bg-gray-900 text-white px-4 py-3 flex items-center justify-between border-b border-white/5 select-none shrink-0 font-sans">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-xs font-mono font-bold">{app.name}</span>
+                  </div>
+                  <button 
+                    onClick={() => setActivePlayApps(prev => ({ ...prev, [app.id]: false }))}
+                    className="flex items-center gap-1 px-2.5 py-1 text-[10px] bg-red-500 hover:bg-red-600 text-white font-bold rounded-md transition-colors border-none outline-none cursor-pointer"
+                  >
+                    <X size={12} />
+                    Uygulamayı Kapat
+                  </button>
+                </div>
+                {/* Window Content */}
+                <div className="flex-1 overflow-auto bg-gray-50">
+                  <AppContent />
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          );
+        })}
+
         <AnimatePresence>
           {isTrashOpen && (
             <motion.div 
@@ -1115,12 +1233,34 @@ export default function App() {
               <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center group-hover:bg-emerald-500/20 group-hover:border-emerald-400 transition-all shadow-[0_0_12px_rgba(16,185,129,0.15)]">
                 <Package size={24} className="text-emerald-400 group-hover:scale-110 transition-transform" />
               </div>
-              <span className="text-[10px] font-mono text-emerald-300 group-hover:text-emerald-200 font-bold">APK Yükle</span>
+              <span className="text-[10px] font-mono text-emerald-300 group-hover:text-emerald-200 font-bold">Sistem Yükle</span>
               <div className="absolute -top-1.5 -right-1 px-1 bg-emerald-500 rounded-full border border-emerald-400 text-[8px] font-bold text-white scale-90 px-1 py-0.5 leading-none">
-                APK
+                YÜKLE
               </div>
             </button>
           </motion.div>
+
+          {/* Installed Play Store Apps */}
+          {playStoreApps
+            .filter((app) => installedPlayStoreApps[app.id])
+            .map((app) => {
+              const Icon = app.icon;
+              return (
+                <motion.div key={app.id} drag dragMomentum={false}>
+                  <button 
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('playstore_launch_app', { detail: app.id }));
+                    }}
+                    className="flex flex-col items-center gap-1 group relative cursor-pointer"
+                  >
+                    <div className={`w-12 h-12 ${app.iconBg} border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 group-hover:border-[var(--accent)] transition-all`}>
+                      <Icon size={24} style={{ color: app.iconColor }} className="group-hover:scale-110 transition-transform" />
+                    </div>
+                    <span className="text-[10px] font-mono text-white/60 group-hover:text-white max-w-[64px] text-center truncate">{app.name}</span>
+                  </button>
+                </motion.div>
+              );
+            })}
         </div>
       </main>
 

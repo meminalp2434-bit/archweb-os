@@ -27,6 +27,8 @@ interface SettingsProps {
   pinCode: string;
   setPinCode: (val: string) => void;
   onLockScreen: () => void;
+  gmailPassword: string;
+  setGmailPassword: (val: string) => void;
   
   // Mobile / APK
   mobileMode: boolean;
@@ -62,6 +64,8 @@ export const Settings: React.FC<SettingsProps> = ({
   pinCode,
   setPinCode,
   onLockScreen,
+  gmailPassword,
+  setGmailPassword,
   mobileMode,
   setMobileMode,
   volume,
@@ -103,7 +107,7 @@ export const Settings: React.FC<SettingsProps> = ({
       case 'appearance': return 'Görünüm Ayarları';
       case 'display': return 'Ekran & Ses Ayarları';
       case 'security': return 'Sistem Güvenliği';
-      case 'mobile': return 'Mobil & APK Ayarları';
+      case 'mobile': return 'Mobil & Masaüstü Kurulumu';
       case 'about': return 'Sistem Hakkında';
       default: return 'Sistem Ayarları';
     }
@@ -161,7 +165,7 @@ export const Settings: React.FC<SettingsProps> = ({
             className={`flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-colors ${activeTab === 'mobile' ? 'bg-[var(--accent)]/20 text-[var(--accent)]' : 'hover:bg-white/5 text-white/60'}`}
           >
             <Smartphone size={14} />
-            Mobil / APK
+            Mobil & Masaüstü
           </button>
           <div className="mt-auto">
             <button 
@@ -432,6 +436,21 @@ export const Settings: React.FC<SettingsProps> = ({
                     <Lock size={12} />
                     Sistemi Şimdi Kilitle
                   </button>
+                  
+                  {gmailPassword && (
+                    <button 
+                      onClick={() => {
+                        if (window.confirm("Şifreyi kaldırmak istediğinize emin misiniz? Artık kilit ekranında şifre sorulmayacak.")) {
+                          setGmailPassword('');
+                          localStorage.removeItem('archweb_gmail_password');
+                        }
+                      }}
+                      className="w-full mt-2 py-2 rounded-lg bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-500 font-bold text-xs flex items-center justify-center gap-2 transition-all"
+                    >
+                      <Lock size={12} />
+                      Şifreyi Kaldır
+                    </button>
+                  )}
                 </div>
               </section>
 
@@ -564,6 +583,83 @@ export const Settings: React.FC<SettingsProps> = ({
                       </p>
                     </div>
                   </div>
+                </div>
+              </section>
+
+              {/* Desktop Runner Packages Section */}
+              <section className="mb-8">
+                <h3 className="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider text-white/50">
+                  <Monitor size={14} className="text-[var(--accent)]" />
+                  Masaüstü Yerel Paketleri (Windows, macOS, Linux)
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  
+                  {/* Windows .bat Download */}
+                  <div className="bg-white/5 border border-white/5 rounded-lg p-4 flex flex-col justify-between space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] uppercase font-bold text-blue-400">Windows</span>
+                        <span className="text-[9px] font-mono text-white/30">.bat</span>
+                      </div>
+                      <h4 className="text-xs font-bold text-white">Windows Başlatıcı</h4>
+                      <p className="text-[10px] text-white/50 leading-relaxed">Sistemi yapılandırıp Electron masaüstü motorunu tek tıkla çalıştırır.</p>
+                    </div>
+                    <a 
+                      href="/baslat.bat" 
+                      download="baslat.bat"
+                      className="w-full text-center py-1.5 bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 hover:text-blue-200 border border-blue-500/30 text-[10px] font-bold rounded-md transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <Download size={11} /> baslat.bat İndir
+                    </a>
+                  </div>
+
+                  {/* macOS .dmg Download */}
+                  <div className="bg-white/5 border border-white/5 rounded-lg p-4 flex flex-col justify-between space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] uppercase font-bold text-purple-400">macOS</span>
+                        <span className="text-[9px] font-mono text-white/30">.dmg</span>
+                      </div>
+                      <h4 className="text-xs font-bold text-white">macOS Disk Image</h4>
+                      <p className="text-[10px] text-white/50 leading-relaxed">Apple Intel ve M1/M2/M3 işlemcilerle tam uyumlu dmg yükleyici paketi.</p>
+                    </div>
+                    <a 
+                      href="/archweb.dmg" 
+                      download="archweb.dmg"
+                      className="w-full text-center py-1.5 bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 hover:text-purple-200 border border-purple-500/30 text-[10px] font-bold rounded-md transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <Download size={11} /> archweb.dmg İndir
+                    </a>
+                  </div>
+
+                  {/* Linux .deb/.dev Download */}
+                  <div className="bg-white/5 border border-white/5 rounded-lg p-4 flex flex-col justify-between space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] uppercase font-bold text-orange-400">Debian / Linux</span>
+                        <span className="text-[9px] font-mono text-white/30">.deb / .dev</span>
+                      </div>
+                      <h4 className="text-xs font-bold text-white">Linux Debian Paketi</h4>
+                      <p className="text-[10px] text-white/50 leading-relaxed">Debian ve Ubuntu tabanlı dağıtımlarda çalışan yerel sistem paketi.</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <a 
+                        href="/archweb.deb" 
+                        download="archweb.deb"
+                        className="text-center py-1.5 bg-orange-500/15 hover:bg-orange-500/25 text-orange-300 hover:text-orange-200 border border-orange-500/30 text-[9px] font-bold rounded-md transition-all flex items-center justify-center gap-1"
+                      >
+                        <Download size={10} /> .deb İndir
+                      </a>
+                      <a 
+                        href="/archweb.dev" 
+                        download="archweb.dev"
+                        className="text-center py-1.5 bg-orange-500/15 hover:bg-orange-500/25 text-orange-300 hover:text-orange-200 border border-orange-500/30 text-[9px] font-bold rounded-md transition-all flex items-center justify-center gap-1"
+                      >
+                        <Download size={10} /> .dev İndir
+                      </a>
+                    </div>
+                  </div>
+
                 </div>
               </section>
             </motion.div>

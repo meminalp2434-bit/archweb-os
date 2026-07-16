@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Cpu, HardDrive, Wifi, Battery, Clock, Search, LayoutGrid, Terminal as TerminalIcon, Shield, Volume2, VolumeX, Smartphone } from 'lucide-react';
+import { Cpu, HardDrive, Wifi, Battery, Clock, Search, LayoutGrid, Terminal as TerminalIcon, Shield, Volume2, VolumeX, Smartphone, Lock } from 'lucide-react';
 
 interface TopBarProps {
   onLauncherToggle: () => void;
   onPowerToggle?: () => void;
+  onLockScreen?: () => void;
   firewallActive?: boolean;
   volume: number;
   setVolume: (val: number) => void;
@@ -32,6 +33,7 @@ const TopBarClock = () => {
 export const TopBar: React.FC<TopBarProps> = ({ 
   onLauncherToggle, 
   onPowerToggle, 
+  onLockScreen,
   firewallActive,
   volume,
   setVolume,
@@ -117,6 +119,15 @@ export const TopBar: React.FC<TopBarProps> = ({
           >
             <Smartphone size={14} />
           </button>
+          {onLockScreen && (
+            <button 
+              onClick={onLockScreen}
+              className="p-1 text-white/60 hover:text-white hover:scale-110 transition-all cursor-pointer flex items-center justify-center"
+              title="Sistemi Kilitle (Kilit Ekranı)"
+            >
+              <Lock size={13} />
+            </button>
+          )}
           <Search size={14} className="hover:text-white cursor-pointer" />
           <div 
             onClick={onPowerToggle}

@@ -1,0 +1,22 @@
+Package: archweb-os
+Version: 20.1.2
+Section: utils
+Priority: optional
+Architecture: amd64
+Depends: nodejs (>= 18), electron (>= 22)
+Maintainer: ArchWeb OS Development Team <support@archweb.local>
+Description: ArchWeb OS for Kids / Linux Desktop Version
+ ArchWeb OS is a highly customized and beautiful desktop simulation of Arch Linux
+ crafted in React, Vite and Electron, optimized for education and productivity.
+ This package includes the native system runners, file manager integrations,
+ terminal interfaces, and desktop widgets.
+
+HOW TO INSTALL ON LINUX (Debian/Ubuntu/Arch):
+1. Debian/Ubuntu/Mint (.deb):
+   sudo dpkg -i archweb.deb
+   sudo apt-get install -f # install missing dependencies
+2. Arch Linux:
+   pacman -U archweb.pkg.tar.zst (compiled via makepkg)
+3. Running manually:
+   chmod +x ./baslat.sh
+   ./baslat.sh
