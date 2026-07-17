@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, AlertTriangle, Chrome, Share2, AppWindow, Package, Download, CheckCircle2, ArrowDownToLine, Monitor, Smartphone, Terminal, Cpu } from 'lucide-react';
 import { playWindows11StartupSound } from '../utils/audio';
 
@@ -11,6 +11,38 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
   const [downloadingFile, setDownloadingFile] = useState<string | null>(null);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadedFiles, setDownloadedFiles] = useState<Record<string, boolean>>({});
+
+  const [canInstallPWA, setCanInstallPWA] = useState(!!(window as any).deferredPrompt);
+
+  useEffect(() => {
+    const handlePromptAvailable = () => {
+      setCanInstallPWA(true);
+    };
+    window.addEventListener('pwa-install-prompt-available', handlePromptAvailable);
+    return () => {
+      window.removeEventListener('pwa-install-prompt-available', handlePromptAvailable);
+    };
+  }, []);
+
+  const handleInstallPWA = async () => {
+    const promptEvent = (window as any).deferredPrompt;
+    if (!promptEvent) {
+      alert("Yerel kurulum adımları şu an aktif değil veya uygulama bu cihazda zaten yüklü durumda.\n\nEğer kurulu değilse, tarayıcınızın menüsünden (sağ üstteki üç nokta veya paylaş butonu) 'Uygulamayı yükle' ya da 'Ana ekrana ekle' seçeneğini kullanarak uygulamayı telefonunuza / bilgisayarınıza saniyeler içinde kurabilirsiniz!");
+      return;
+    }
+    try {
+      // Show the install prompt
+      promptEvent.prompt();
+      // Wait for the user to respond to the prompt
+      const { outcome } = await promptEvent.userChoice;
+      console.log(`User response to the install prompt: ${outcome}`);
+      // We've used the prompt, and can't use it again, discard it
+      (window as any).deferredPrompt = null;
+      setCanInstallPWA(false);
+    } catch (err) {
+      console.error("Installation prompt failed:", err);
+    }
+  };
 
   const handleDownloadFile = (fileType: 'apk' | 'bat' | 'dmg' | 'deb' | 'dev' | 'server_apk') => {
     if (downloadingFile) return;
@@ -124,16 +156,53 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
         
         {activeTab === 'mobile' ? (
           <>
-            {/* Intro Banner */}
-            <div id="mobile_banner" className="bg-gradient-to-r from-[var(--accent)]/10 to-purple-500/10 border border-[var(--accent)]/20 rounded-xl p-4 flex flex-col items-center text-center gap-4">
+            {/* Intro Banner with Unified PWA Install Button */}
+            <div id="mobile_banner" className="bg-gradient-to-r from-emerald-500/15 via-[var(--accent)]/5 to-purple-500/15 border border-emerald-500/30 rounded-xl p-5 flex flex-col items-center text-center gap-4">
               <div className="w-20 h-20 rounded-3xl bg-black flex items-center justify-center shrink-0 border border-white/10 shadow-xl overflow-hidden p-2">
                 <img src="/icon.svg" alt="ArchWeb OS Icon" className="w-full h-full object-contain" />
               </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-bold text-white tracking-tight">ArchWeb OS Artık Cebinizde!</h3>
-                <p className="text-xs text-white/60 leading-relaxed max-w-sm mx-auto">
-                  ArchWeb OS'i cihazınızda <b>tam ekran ve yerel bir uygulama (Native PWA)</b> olarak çalıştırabilirsiniz. Uygulama; Android 10 ve üstü sürümlerle tam uyumludur.
+              <div className="space-y-2 max-w-lg">
+                <h3 className="text-base font-bold text-white tracking-tight flex items-center justify-center gap-2">
+                  <span>📱 ArchWeb OS'i Telefonunuza Kurun!</span>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-black text-[9px] font-extrabold uppercase animate-pulse">Önerilen</span>
+                </h3>
+                <p className="text-xs text-white/80 leading-relaxed">
+                  İndirdiğiniz simüle edilmiş <strong>.apk</strong> dosyaları tarayıcı sanal ortamında üretilen test dosyalarıdır. Gerçek Android telefonunuzda açtığınızda <strong>"paket ayrıştırılamadı"</strong> (parsing error) hatası almanız normaldir.
                 </p>
+                <p className="text-xs text-emerald-300 font-bold bg-emerald-500/10 border border-emerald-500/20 py-2 px-3 rounded-lg leading-relaxed">
+                  Bunun yerine uygulamayı gerçek telefonunuza (Android/iOS) <strong>birebir yerel, tam ekran, bağımsız bir mobil uygulama</strong> olarak kurmak için aşağıdaki yükleme seçeneğini kullanın!
+                </p>
+              </div>
+
+              {/* Native PWA Install Button Box */}
+              <div className="w-full max-w-md bg-black/40 p-4 rounded-xl border border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                    <Smartphone size={20} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white">Yerel Mobil Kurulum (PWA)</p>
+                    <p className="text-[10px] text-white/50">Bağımsız ekran, yüksek hız ve tam ekran deneyimi.</p>
+                  </div>
+                </div>
+
+                {canInstallPWA ? (
+                  <button
+                    onClick={handleInstallPWA}
+                    className="w-full sm:w-auto px-5 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black font-extrabold text-xs rounded-lg shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shrink-0"
+                  >
+                    <Download size={13} className="stroke-[2.5]" />
+                    <span>BU TELEFONA KUR</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleInstallPWA}
+                    className="w-full sm:w-auto px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                  >
+                    <Chrome size={13} />
+                    <span>Nasıl Kurulur?</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -312,16 +381,53 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
           </>
         ) : (
           <>
-            {/* Desktop Intro Banner */}
-            <div id="desktop_banner" className="bg-gradient-to-r from-emerald-500/10 to-[var(--accent)]/10 border border-emerald-500/20 rounded-xl p-4 flex flex-col items-center text-center gap-4">
+            {/* Desktop Intro Banner with PWA Option */}
+            <div id="desktop_banner" className="bg-gradient-to-r from-emerald-500/15 via-[var(--accent)]/5 to-blue-500/15 border border-emerald-500/30 rounded-xl p-5 flex flex-col items-center text-center gap-4">
               <div className="w-16 h-16 rounded-2xl bg-black flex items-center justify-center shrink-0 border border-white/10 shadow-xl p-2 text-emerald-400">
                 <Monitor size={32} />
               </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-bold text-white tracking-tight">Masaüstü Yerel Kurulum Paketleri</h3>
-                <p className="text-xs text-white/60 leading-relaxed max-w-sm mx-auto">
-                  ArchWeb OS'i Windows, macOS veya Linux bilgisayarınıza yerel bir uygulama gibi kurup çift tıklayarak anında çalıştırabilirsiniz!
+              <div className="space-y-2 max-w-lg">
+                <h3 className="text-base font-bold text-white tracking-tight flex items-center justify-center gap-2">
+                  <span>💻 ArchWeb OS'i Bilgisayarınıza Kurun!</span>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-black text-[9px] font-extrabold uppercase animate-pulse">Önerilen</span>
+                </h3>
+                <p className="text-xs text-white/80 leading-relaxed">
+                  İndirilen <strong>.bat</strong>, <strong>.dmg</strong> ve <strong>.deb</strong> dosyaları tarayıcı simülasyonunun parçasıdır. Uygulamayı gerçek bilgisayarınıza (Windows, macOS, Linux) <strong>tek tıkla açılan bağımsız bir masaüstü uygulaması</strong> olarak kurmak için PWA yöntemini kullanın!
                 </p>
+                <p className="text-xs text-emerald-300 font-bold bg-emerald-500/10 border border-emerald-500/20 py-2 px-3 rounded-lg leading-relaxed">
+                  Bu sayede uygulama tarayıcı sekmelerinden kurtulur, bilgisayarınızda kendi penceresine ve masaüstü kısayoluna sahip olur.
+                </p>
+              </div>
+
+              {/* Native PWA Desktop Install Button Box */}
+              <div className="w-full max-w-md bg-black/40 p-4 rounded-xl border border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                    <Monitor size={20} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white">Masaüstü Yerel Kurulum (PWA)</p>
+                    <p className="text-[10px] text-white/50">Kendi masaüstü kısayolu, bağımsız pencere ve yüksek performans.</p>
+                  </div>
+                </div>
+
+                {canInstallPWA ? (
+                  <button
+                    onClick={handleInstallPWA}
+                    className="w-full sm:w-auto px-5 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black font-extrabold text-xs rounded-lg shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shrink-0"
+                  >
+                    <Download size={13} className="stroke-[2.5]" />
+                    <span>BİLGİSAYARIMA KUR</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleInstallPWA}
+                    className="w-full sm:w-auto px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                  >
+                    <Chrome size={13} />
+                    <span>Nasıl Kurulur?</span>
+                  </button>
+                )}
               </div>
             </div>
 
