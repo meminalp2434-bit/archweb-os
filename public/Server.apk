@@ -1,0 +1,31 @@
+ArchWeb OS Server Android Package (.APK)
+===================================
+App Name: ArchWeb OS Server Client / Server Controller
+Package Name: com.archweb.server
+Version: 2.0.0
+Release Date: 2026-07-17
+Platform: Android 10+ (Termux / Native WebView Client)
+
+Bu paket, ArchWeb OS yerel sunucunuzu (http://192.168.1.105:3000/) mobil cihazinizdan yonetmenizi ve mobil cihazinizda calistirilan Node.js sunucusuna baglanmanizi saglar.
+
+KURULUM VE KULLANIM ADIMLARI:
+-----------------------------
+1. Bu Server.apk dosyasini telefonunuza indirin.
+2. Telefonunuzda "Bilinmeyen Kaynaklardan Yukleme" iznini aktif ederek APK'yi yukleyin.
+3. Uygulamayi actiginizda, "Local IP" alanina sunucunun kurulu oldugu bilgisayarinizin yerel IP'sini girin:
+   -> http://192.168.1.105:3000/
+4. "Baglan" butonuna basarak, bilgisayarinizda calisan yerel Node.js sunucunuza dogrudan telefonunuzdan baglanin!
+
+ALTERNATIF (TELEFONDA YEREL SUNUCU CALISTIRMA - Termux ile Node.js):
+-----------------------------------------------------------------
+Eger Node.js sunucusunu dogrudan telefonunuzun icinde calistirmak isterseniz:
+1. Google Play veya F-Droid uzerinden "Termux" uygulamasini indirin.
+2. Termux terminalinde su komutlari sirasiyla calistirin:
+   $ pkg update && pkg upgrade
+   $ pkg install nodejs git
+   $ git clone https://github.com/meminalp2434/archweb-os.git
+   $ cd archweb-os
+   $ npm install
+   $ npm run build
+   $ node server.js
+3. Tarayicinizdan http://localhost:3000/ adresine girerek mobil sunucunuzu kullanin!

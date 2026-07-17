@@ -71,7 +71,11 @@ function initializeServerStorage() {
     },
     {
       relPath: "İndirilenler/baslat.bat",
-      content: "@echo off\ntitle ArchWeb OS Baslatici\necho ====================================================\n"
+      content: "@echo off\ntitle ArchWeb OS Baslatici\necho ====================================================\necho ArchWeb OS Baslatiliyor...\necho ====================================================\necho Lutfen acilis modunu secin:\necho [1] Online Web Surumu (Node.js gerektirmez)\necho [2] Yerel Sunucu Modu - http://192.168.1.105:3000/ (Node.js gerektirir)\necho ====================================================\nset /p secim=\"Seciminiz (1 veya 2): \"\n\nif \"%secim%\"==\"1\" (\n    echo Tarayici aciliyor...\n    start https://ais-pre-xjjumj5lom3t4danhihlde-579357512949.europe-west2.run.app\n) else if \"%secim%\"==\"2\" (\n    echo Bagimliliklar yukleniyor...\n    call npm install\n    echo Yerel sunucu baslatiliyor...\n    start http://192.168.1.105:3000/\n    call npm run dev\n) else (\n    echo Gecersiz secim.\n)\npause"
+    },
+    {
+      relPath: "İndirilenler/Server.apk",
+      content: "ArchWeb OS Server Android Package (.APK)\n===================================\nApp Name: ArchWeb OS Server Client / Server Controller\nPackage Name: com.archweb.server\nVersion: 2.0.0\nRelease Date: 2026-07-17\nPlatform: Android 10+ (Termux / Native WebView Client)\n\nBu paket, ArchWeb OS yerel sunucunuzu (http://192.168.1.105:3000/) mobil cihazinizdan yonetmenizi ve mobil cihazinizda calistirilan Node.js sunucusuna baglanmanizi saglar."
     },
     {
       relPath: "İndirilenler/archweb.dmg",
