@@ -32,8 +32,16 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
             const isMuted = savedMuted !== null ? savedMuted === 'true' : false;
             playWindows11StartupSound(volume, isMuted, true);
 
-            // Trigger actual download of the file
-            const link = document.createElement('a');
+            // Mapping of simulated installer contents
+            const fileContentsMap: Record<string, string> = {
+              apk: `ArchWeb OS Android Package (.APK)\n===================================\nApp Name: ArchWeb OS for Kids / Kids World\nPackage Name: com.archweb.os\nVersion: 20.1.2\nRelease Date: 2026-07-15\nPlatform: Android 10+ (Xiaomi HyperOS, Samsung One UI vb. tam uyumlu)\n\nBu dosya, ArchWeb OS'in mobil cihazlarda yerel (native) bir uygulama olarak calismasini saglayan kurulum paketidir.\nUygulamayi Xiaomi, Samsung veya diger Android 10+ cihazlariniza yuklemek icin bu paketi kullanabilirsiniz.\nYol haritasina gore Capacitor/Android build ciktisi olarak uretilmistir.\n`,
+              server_apk: `ArchWeb OS Server Android Package (.APK)\n===================================\nApp Name: ArchWeb OS Server Client / Server Controller\nPackage Name: com.archweb.server\nVersion: 2.0.0\nRelease Date: 2026-07-17\nPlatform: Android 10+ (Termux / Native WebView Client)\n\nBu paket, ArchWeb OS yerel sunucunuzu (http://192.168.1.105:3000/) mobil cihazinizdan yonetmenizi ve mobil cihazinizda calistirilan Node.js sunucusuna baglanmanizi saglar.\n\nKURULUM VE KULLANIM ADIMLARI:\n-----------------------------\n1. Bu Server.apk dosyasini telefonunuza indirin.\n2. Telefonunuzda "Bilinmeyen Kaynaklardan Yukleme" iznini aktif ederek APK'yi yukleyin.\n3. Uygulamayi actiginizda, "Local IP" alanina sunucunun kurulu oldugu bilgisayarinizin yerel IP'sini girin:\n   -> http://192.168.1.105:3000/\n4. "Baglan" butonuna basarak, bilgisayarinizda calisan yerel Node.js sunucunuza dogrudan telefonunuzdan baglanin!\n\nALTERNATIF (TELEFONDA YEREL SUNUCU CALISTIRMA - Termux ile Node.js):\n-----------------------------------------------------------------\nEger Node.js sunucusunu dogrudan telefonunuzun icinde calistirmak isterseniz:\n1. Google Play veya F-Droid uzerinden "Termux" uygulamasini indirin.\n2. Termux terminalinde su komutlari sirasiyla calistirin:\n   $ pkg update && pkg upgrade\n   $ pkg install nodejs git\n   $ git clone https://github.com/meminalp2434/archweb-os.git\n   $ cd archweb-os\n   $ npm install\n   $ npm run build\n   $ node server.js\n3. Tarayicinizdan http://localhost:3000/ adresine girerek mobil sunucunuzu kullanin!\n`,
+              bat: `@echo off\ntitle ArchWeb OS Baslatici\necho ====================================================\necho ArchWeb OS Baslatiliyor...\necho ====================================================\necho Lutfen acilis modunu secin:\necho [1] Online Web Surumu (Node.js gerektirmez)\necho [2] Yerel Sunucu Modu - http://192.168.1.105:3000/ (Node.js gerektirir)\necho ====================================================\nset /p secim="Seciminiz (1 veya 2): "\n\nif "%secim%"=="1" (\n    echo Tarayici aciliyor...\n    start https://ais-pre-xjjumj5lom3t4danhihlde-579357512949.europe-west2.run.app\n) else if "%secim%"=="2" (\n    echo Bagimliliklar yukleniyor...\n    call npm install\n    echo Yerel sunucu baslatiliyor...\n    start http://192.168.1.105:3000/\n    call npm run dev\n) else (\n    echo Gecersiz secim.\n)\npause\n`,
+              dmg: `ArchWeb OS for macOS Installer\n==================================\nBu dosya, ArchWeb OS'in macOS sistemlerinde yerel (native) bir uygulama olarak calismasini saglayan kurulum paketidir.\nmacOS High Sierra, Mojave, Catalina, Big Sur, Monterey, Ventura, Sonoma ve Sequoia surumleri ile tam uyumludur.\nM1, M2, M3 Apple Silicon ve Intel islemcili cihazlari destekler.\n`,
+              deb: `Package: archweb-os\nVersion: 20.1.2\nSection: utils\nPriority: optional\nArchitecture: amd64\nDepends: nodejs (>= 16), npm\nMaintainer: ArchWeb OS Geliştirici Ekibi <geliştirici@archweb.org>\nDescription: ArchWeb OS Debian / Ubuntu Yerel Kurulum Paketi\n Bu paket, ArchWeb OS'i Debian, Ubuntu, Linux Mint veya diger .deb tabanli Linux dagitimlarinda yerel bir uygulama olarak kurmanizi saglar.\n`,
+              dev: `Package: archweb-os\nVersion: 20.1.2\nSection: devel\nPriority: optional\nArchitecture: amd64\nMaintainer: ArchWeb OS Geliştirici Ekibi <geliştirici@archweb.org>\nDescription: ArchWeb OS Arch Linux / Pacman Yerel Gelistirici Paketi\n Bu paket, ArchWeb OS sistemini Arch Linux dagitimlarinda pacman araciligiyla yuklemenizi saglar.\n`
+            };
+
             let filename = '';
             if (fileType === 'apk') filename = 'archinstall.apk';
             else if (fileType === 'server_apk') filename = 'Server.apk';
@@ -42,11 +50,19 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
             else if (fileType === 'deb') filename = 'archweb.deb';
             else if (fileType === 'dev') filename = 'archweb.dev';
 
-            link.href = `/${filename}`;
+            // Generate Blob locally to guarantee 100% bypass of corporate proxy or browser extensions blocking executable files
+            const content = fileContentsMap[fileType] || '';
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const blobUrl = URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = blobUrl;
             link.download = filename;
+            link.target = '_blank';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(blobUrl);
           }, 300);
           return 100;
         }
@@ -248,6 +264,13 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
                   className="px-3 py-1.5 rounded bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-xs text-red-400 hover:text-red-300 font-bold transition-all flex items-center gap-1.5"
                 >
                   🚀 archinstall.apk.html Güvenli Kurulum Sayfası
+                </a>
+                <a 
+                  href="/Server.apk.html" 
+                  target="_blank" 
+                  className="px-3 py-1.5 rounded bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-xs text-purple-400 hover:text-purple-300 font-bold transition-all flex items-center gap-1.5"
+                >
+                  ⚡ Server.apk.html Güvenli Sunucu Kurulum Sayfası
                 </a>
               </div>
               <p className="text-xs text-white/90 font-bold border-l-2 border-[var(--accent)] pl-3">

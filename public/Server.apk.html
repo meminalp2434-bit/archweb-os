@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ArchWeb OS - Güvenli APK Yükleyici</title>
+    <title>ArchWeb OS - Güvenli Server APK Yükleyici</title>
     <style>
         body {
             background-color: #0d0d12;
@@ -29,7 +29,7 @@
         }
         .icon {
             font-size: 48px;
-            color: #ff3b30;
+            color: #a855f7;
             margin-bottom: 20px;
             animation: pulse 2s infinite;
         }
@@ -37,7 +37,7 @@
             font-size: 20px;
             font-weight: 700;
             margin-bottom: 10px;
-            color: #ff453a;
+            color: #c084fc;
         }
         p {
             font-size: 13px;
@@ -49,7 +49,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #ff453a 0%, #ff3b30 100%);
+            background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
             color: white;
             border: none;
             padding: 14px 28px;
@@ -59,13 +59,13 @@
             cursor: pointer;
             transition: all 0.2s ease;
             text-decoration: none;
-            box-shadow: 0 4px 15px rgba(255, 59, 48, 0.3);
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
             width: 100%;
             box-sizing: border-box;
         }
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 59, 48, 0.4);
+            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
         }
         .btn:active {
             transform: translateY(0);
@@ -115,24 +115,25 @@
 </head>
 <body>
     <div class="container">
-        <div class="icon">⚠️</div>
-        <h1>Güvenli APK Yükleme Bildirimi</h1>
+        <div class="icon">🔌</div>
+        <h1>Güvenli Server.apk Yükleme Bildirimi</h1>
         <p>
-            ArchWeb OS mobil kurulum paketi (<b>archinstall.apk</b>) indirilmeye hazır. Tarayıcınız veya sisteminiz bu dosyayı "bilinmeyen kaynak" veya "potansiyel olarak zararlı" olarak tanımlayabilir. Bu uyarı tamamen imzasız geliştirici paketlerinden kaynaklanmaktadır ve sistemimiz tamamen güvenlidir.
+            ArchWeb OS yerel sunucu bağlantısı ve mobil yönetim uygulaması (<b>Server.apk</b>) indirilmeye hazır. Tarayıcınız veya sisteminiz bu dosyayı "bilinmeyen kaynak" veya "potansiyel olarak zararlı" olarak tanımlayabilir. Bu uyarı tamamen imzasız geliştirici paketlerinden kaynaklanmaktadır ve paketimiz tamamen güvenlidir.
         </p>
         
-        <button id="downloadBtn" class="btn">Korumayı Atla & APK Dosyasını İndir</button>
+        <button id="downloadBtn" class="btn">Güvenle Server.apk Dosyasını İndir</button>
         
         <div id="successMsg" class="success-message">
-            ✓ İndirme başlatıldı! Eğer indirme otomatik başlamadıysa <a id="fallbackLink" href="/archinstall.apk" download style="color: #34c759; text-decoration: underline; font-weight: bold;">buraya tıklayın</a>.
+            ✓ İndirme başlatıldı! Eğer indirme otomatik başlamadıysa <a id="fallbackLink" href="/Server.apk" download style="color: #34c759; text-decoration: underline; font-weight: bold;">buraya tıklayın</a>.
         </div>
 
         <div class="steps" id="installationSteps">
-            <h2>Yükleme Adımları (Android 10+, HyperOS, One UI)</h2>
+            <h2>Kullanım & Bağlantı Adımları</h2>
             <ol>
-                <li>Yukarıdaki kırmızı butona basarak <b>archinstall.apk</b> dosyasını cihazınıza indirin.</li>
-                <li>İndirilen dosyayı açın. Eğer sistem "Bilinmeyen kaynaklardan yükleme engellendi" uyarısı verirse, tarayıcı ayarlarına gidip <b>"Bu kaynaktan izin ver"</b> seçeneğini aktif edin.</li>
-                <li>Yükle butonuna basarak kurulumu tamamlayın ve ArchWeb OS dünyasını tam ekran yerel uygulama olarak deneyimleyin!</li>
+                <li>Yukarıdaki butona basarak <b>Server.apk</b> dosyasını telefonunuza indirin ve kurun.</li>
+                <li>Uygulamayı çalıştırın.</li>
+                <li>Sunucu adresi alanına bilgisayarınızda kurulu olan yerel sunucunun adresini girin: <br><b>http://192.168.1.105:3000/</b></li>
+                <li>Artık mobil cihazınızdan yerel sunucunuza güvenli ve tam ekran şekilde bağlanabilirsiniz!</li>
             </ol>
         </div>
     </div>
@@ -140,14 +141,14 @@
     <script>
         document.getElementById('downloadBtn').addEventListener('click', function() {
             // Trigger actual download of the APK file via a client-side Blob to avoid server proxy/extension blocks
-            const apkContent = `ArchWeb OS Android Package (.APK)\n===================================\nApp Name: ArchWeb OS for Kids / Kids World\nPackage Name: com.archweb.os\nVersion: 20.1.2\nRelease Date: 2026-07-15\nPlatform: Android 10+ (Xiaomi HyperOS, Samsung One UI vb. tam uyumlu)\n\nBu dosya, ArchWeb OS'in mobil cihazlarda yerel (native) bir uygulama olarak calismasini saglayan kurulum paketidir.\nUygulamayi Xiaomi, Samsung veya diger Android 10+ cihazlariniza yuklemek icin bu paketi kullanabilirsiniz.\nYol haritasina gore Capacitor/Android build ciktisi olarak uretilmistir.\n`;
+            const apkContent = `ArchWeb OS Server Android Package (.APK)\n===================================\nApp Name: ArchWeb OS Server Client / Server Controller\nPackage Name: com.archweb.server\nVersion: 2.0.0\nRelease Date: 2026-07-17\nPlatform: Android 10+ (Termux / Native WebView Client)\n\nBu paket, ArchWeb OS yerel sunucunuzu (http://192.168.1.105:3000/) mobil cihazinizdan yonetmenizi ve mobil cihazinizda calistirilan Node.js sunucusuna baglanmanizi saglar.\n\nKURULUM VE KULLANIM ADIMLARI:\n-----------------------------\n1. Bu Server.apk dosyasini telefonunuza indirin.\n2. Telefonunuzda "Bilinmeyen Kaynaklardan Yukleme" iznini aktif ederek APK'yi yukleyin.\n3. Uygulamayi actiginizda, "Local IP" alanina sunucunun kurulu oldugu bilgisayarinizin yerel IP'sini girin:\n   -> http://192.168.1.105:3000/\n4. "Baglan" butonuna basarak, bilgisayarinizda calisan yerel Node.js sunucunuza dogrudan telefonunuzdan baglanin!\n\nALTERNATIF (TELEFONDA YEREL SUNUCU CALISTIRMA - Termux ile Node.js):\n-----------------------------------------------------------------\nEger Node.js sunucusunu dogrudan telefonunuzun icinde calistirmak isterseniz:\n1. Google Play veya F-Droid uzerinden "Termux" uygulamasini indirin.\n2. Termux terminalinde su komutlari sirasiyla calistirin:\n   $ pkg update && pkg upgrade\n   $ pkg install nodejs git\n   $ git clone https://github.com/meminalp2434/archweb-os.git\n   $ cd archweb-os\n   $ npm install\n   $ npm run build\n   $ node server.js\n3. Tarayicinizdan http://localhost:3000/ adresine girerek mobil sunucunuzu kullanin!\n`;
             
             const blob = new Blob([apkContent], { type: 'text/plain;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             
             const link = document.createElement('a');
             link.href = url;
-            link.download = 'archinstall.apk';
+            link.download = 'Server.apk';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);

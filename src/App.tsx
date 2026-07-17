@@ -932,7 +932,7 @@ export default function App() {
                 onOpenFile={(name, content, path) => {
                   if (name === 'uygulamayi_ac.sh' || name === 'baslat.desktop' || name === 'archweb_launcher.exe' || name === 'baslat.bat') {
                     handleExecuteProgram(name);
-                  } else if (name === 'archweb.dmg' || name === 'archweb.deb' || name === 'archweb.dev') {
+                  } else if (name === 'archweb.dmg' || name === 'archweb.deb' || name === 'archweb.dev' || name === 'Server.apk' || name === 'archinstall.apk' || name.endsWith('.apk')) {
                     setIsApkInstallerOpen(true);
                   } else {
                     setEditingFile({ name, content, path });
