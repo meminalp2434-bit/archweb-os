@@ -68,7 +68,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
             const fileContentsMap: Record<string, string> = {
               apk: `ArchWeb OS Android Package (.APK)\n===================================\nApp Name: ArchWeb OS for Kids / Kids World\nPackage Name: com.archweb.os\nVersion: 20.1.2\nRelease Date: 2026-07-15\nPlatform: Android 10+ (Xiaomi HyperOS, Samsung One UI vb. tam uyumlu)\n\nBu dosya, ArchWeb OS'in mobil cihazlarda yerel (native) bir uygulama olarak calismasini saglayan kurulum paketidir.\nUygulamayi Xiaomi, Samsung veya diger Android 10+ cihazlariniza yuklemek icin bu paketi kullanabilirsiniz.\nYol haritasina gore Capacitor/Android build ciktisi olarak uretilmistir.\n`,
               server_apk: `ArchWeb OS Server Android Package (.APK)\n===================================\nApp Name: ArchWeb OS Server Client / Server Controller\nPackage Name: com.archweb.server\nVersion: 2.0.0\nRelease Date: 2026-07-17\nPlatform: Android 10+ (Termux / Native WebView Client)\n\nBu paket, ArchWeb OS yerel sunucunuzu (http://192.168.1.105:3000/) mobil cihazinizdan yonetmenizi ve mobil cihazinizda calistirilan Node.js sunucusuna baglanmanizi saglar.\n\nKURULUM VE KULLANIM ADIMLARI:\n-----------------------------\n1. Bu Server.apk dosyasini telefonunuza indirin.\n2. Telefonunuzda "Bilinmeyen Kaynaklardan Yukleme" iznini aktif ederek APK'yi yukleyin.\n3. Uygulamayi actiginizda, "Local IP" alanina sunucunun kurulu oldugu bilgisayarinizin yerel IP'sini girin:\n   -> http://192.168.1.105:3000/\n4. "Baglan" butonuna basarak, bilgisayarinizda calisan yerel Node.js sunucunuza dogrudan telefonunuzdan baglanin!\n\nALTERNATIF (TELEFONDA YEREL SUNUCU CALISTIRMA - Termux ile Node.js):\n-----------------------------------------------------------------\nEger Node.js sunucusunu dogrudan telefonunuzun icinde calistirmak isterseniz:\n1. Google Play veya F-Droid uzerinden "Termux" uygulamasini indirin.\n2. Termux terminalinde su komutlari sirasiyla calistirin:\n   $ pkg update && pkg upgrade\n   $ pkg install nodejs git\n   $ git clone https://github.com/meminalp2434/archweb-os.git\n   $ cd archweb-os\n   $ npm install\n   $ npm run build\n   $ node server.js\n3. Tarayicinizdan http://localhost:3000/ adresine girerek mobil sunucunuzu kullanin!\n`,
-              bat: `@echo off\ntitle ArchWeb OS Baslatici\necho ====================================================\necho ArchWeb OS Baslatiliyor...\necho ====================================================\necho Lutfen acilis modunu secin:\necho [1] Online Web Surumu (Node.js gerektirmez)\necho [2] Yerel Sunucu Modu - http://192.168.1.105:3000/ (Node.js gerektirir)\necho ====================================================\nset /p secim="Seciminiz (1 veya 2): "\n\nif "%secim%"=="1" (\n    echo Tarayici aciliyor...\n    start https://ais-pre-xjjumj5lom3t4danhihlde-579357512949.europe-west2.run.app\n) else if "%secim%"=="2" (\n    echo Bagimliliklar yukleniyor...\n    call npm install\n    echo Yerel sunucu baslatiliyor...\n    start http://192.168.1.105:3000/\n    call npm run dev\n) else (\n    echo Gecersiz secim.\n)\npause\n`,
+              bat: `@echo off\ntitle ArchWeb OS Baslatici\necho ====================================================\necho ArchWeb OS Baslatiliyor...\necho ====================================================\necho Guncellemeler kontrol ediliyor...\ngit pull\ncall npm install\necho ====================================================\necho Lutfen acilis modunu secin:\necho [1] Online Web Surumu (Node.js gerektirmez)\necho [2] Yerel Sunucu Modu - http://192.168.1.105:3000/ (Node.js gerektirir)\necho [3] Electron Masaustu (.exe) Modu (Node.js gerektirir)\necho ====================================================\nset /p secim="Seciminiz (1, 2 veya 3): "\n\nif "%secim%"=="1" (\n    echo Tarayici aciliyor...\n    start https://ais-pre-xjjumj5lom3t4danhihlde-579357512949.europe-west2.run.app\n) else if "%secim%"=="2" (\n    echo Yerel sunucu baslatiliyor...\n    start http://192.168.1.105:3000/\n    call npm run dev\n) else if "%secim%"=="3" (\n    echo Electron masaustu uygulamasi baslatiliyor...\n    call npm run electron:start\n) else (\n    echo Gecersiz secim.\n)\npause\n`,
               dmg: `ArchWeb OS for macOS Installer\n==================================\nBu dosya, ArchWeb OS'in macOS sistemlerinde yerel (native) bir uygulama olarak calismasini saglayan kurulum paketidir.\nmacOS High Sierra, Mojave, Catalina, Big Sur, Monterey, Ventura, Sonoma ve Sequoia surumleri ile tam uyumludur.\nM1, M2, M3 Apple Silicon ve Intel islemcili cihazlari destekler.\n`,
               deb: `Package: archweb-os\nVersion: 20.1.2\nSection: utils\nPriority: optional\nArchitecture: amd64\nDepends: nodejs (>= 16), npm\nMaintainer: ArchWeb OS Geliştirici Ekibi <geliştirici@archweb.org>\nDescription: ArchWeb OS Debian / Ubuntu Yerel Kurulum Paketi\n Bu paket, ArchWeb OS'i Debian, Ubuntu, Linux Mint veya diger .deb tabanli Linux dagitimlarinda yerel bir uygulama olarak kurmanizi saglar.\n`,
               dev: `Package: archweb-os\nVersion: 20.1.2\nSection: devel\nPriority: optional\nArchitecture: amd64\nMaintainer: ArchWeb OS Geliştirici Ekibi <geliştirici@archweb.org>\nDescription: ArchWeb OS Arch Linux / Pacman Yerel Gelistirici Paketi\n Bu paket, ArchWeb OS sistemini Arch Linux dagitimlarinda pacman araciligiyla yuklemenizi saglar.\n`
@@ -77,7 +77,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
             let filename = '';
             if (fileType === 'apk') filename = 'archinstall.apk';
             else if (fileType === 'server_apk') filename = 'Server.apk';
-            else if (fileType === 'bat') filename = 'baslat.bat';
+            else if (fileType === 'bat') filename = 'archweb kids setup.bat';
             else if (fileType === 'dmg') filename = 'archweb.dmg';
             else if (fileType === 'deb') filename = 'archweb.deb';
             else if (fileType === 'dev') filename = 'archweb.dev';
@@ -462,14 +462,14 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
                       onClick={() => handleDownloadFile('bat')}
                       className="w-full py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <CheckCircle2 size={12} /> baslat.bat İndirildi
+                      <CheckCircle2 size={12} /> archweb kids setup.bat İndirildi
                     </button>
                   ) : (
                     <button
                       onClick={() => handleDownloadFile('bat')}
                       className="w-full py-2 bg-blue-500/20 hover:bg-blue-500/35 text-blue-300 border border-blue-500/30 hover:border-blue-400 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <Download size={12} /> baslat.bat İndir
+                      <Download size={12} /> archweb kids setup.bat İndir
                     </button>
                   )}
                 </div>
@@ -602,7 +602,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
               <p className="text-[11px] text-amber-400/90 leading-relaxed bg-amber-500/5 border border-amber-500/20 p-2.5 rounded-lg flex items-start gap-2">
                 <span>⚠️</span>
                 <span>
-                  <b>macOS/Linux Kullanıcıları:</b> Dosya izinleri nedeniyle çalıştırmadan önce terminalde <code>chmod +x ./baslat.sh</code> komutuyla çalıştırılabilir izinlerini vermelidir. Windows kullanıcıları doğrudan <code>baslat.bat</code> dosyasına çift tıklayabilir.
+                  <b>macOS/Linux Kullanıcıları:</b> Dosya izinleri nedeniyle çalıştırmadan önce terminalde <code>chmod +x ./baslat.sh</code> komutuyla çalıştırılabilir izinlerini vermelidir. Windows kullanıcıları doğrudan <code>archweb kids setup.bat</code> dosyasına çift tıklayabilir.
                 </span>
               </p>
             </div>

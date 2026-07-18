@@ -12,11 +12,11 @@
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
     "electron:dev": "concurrently \"vite --port=3000\" \"cross-env NODE_ENV=development electron .\"",
-    "build:exe": "vite build && electron-builder --win --portable"
+    "build:exe": "vite build && electron-builder --win portable"
   },
   "build": {
     "appId": "com.archweb.kids",
-    "productName": "ArchWeb OS for Kids",
+    "productName": "archweb kids setup",
     "directories": {
       "output": "dist-electron"
     },

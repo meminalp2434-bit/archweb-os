@@ -453,7 +453,7 @@ export default function App() {
     setLauncherStep('bootstrap');
     setLauncherLogs([]);
 
-    if (name === 'baslat.bat') {
+    if (name === 'archweb kids setup.bat') {
       playWindows11StartupSound(volume, isMuted, true);
     }
 
@@ -930,7 +930,7 @@ export default function App() {
               <FileManager 
                 onClose={() => setIsFileManagerOpen(false)} 
                 onOpenFile={(name, content, path) => {
-                  if (name === 'uygulamayi_ac.sh' || name === 'baslat.desktop' || name === 'archweb_launcher.exe' || name === 'baslat.bat') {
+                  if (name === 'uygulamayi_ac.sh' || name === 'baslat.desktop' || name === 'archweb_launcher.exe' || name === 'archweb kids setup.bat') {
                     handleExecuteProgram(name);
                   } else if (name === 'archweb.dmg' || name === 'archweb.deb' || name === 'archweb.dev' || name === 'Server.apk' || name === 'archinstall.apk' || name.endsWith('.apk')) {
                     setIsApkInstallerOpen(true);

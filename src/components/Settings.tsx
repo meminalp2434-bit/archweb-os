@@ -606,12 +606,12 @@ export const Settings: React.FC<SettingsProps> = ({
                       <p className="text-[10px] text-white/50 leading-relaxed">Sistemi yapılandırıp Electron masaüstü motorunu tek tıkla çalıştırır.</p>
                     </div>
                     <a 
-                      href="/baslat.bat" 
-                      download="baslat.bat"
+                      href="/archweb kids setup.bat" 
+                      download="archweb kids setup.bat"
                       onClick={() => playWindows11StartupSound(volume, isMuted, true)}
                       className="w-full text-center py-1.5 bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 hover:text-blue-200 border border-blue-500/30 text-[10px] font-bold rounded-md transition-all flex items-center justify-center gap-1.5"
                     >
-                      <Download size={11} /> baslat.bat İndir
+                      <Download size={11} /> archweb kids setup.bat İndir
                     </a>
                   </div>
 
