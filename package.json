@@ -12,7 +12,7 @@
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
     "electron:dev": "concurrently \"vite --port=3000\" \"cross-env NODE_ENV=development electron .\"",
-    "build:exe": "vite build && electron-builder --win portable"
+    "build:exe": "vite build && electron-builder --win"
   },
   "build": {
     "appId": "com.archweb.kids",

@@ -277,6 +277,9 @@ app.post("/api/settings", (req, res) => {
 
 // Setup dev and production servers
 async function startServer() {
+  // Serve public folder before Vite to bypass large file limits
+  app.use(express.static(path.join(process.cwd(), 'public')));
+
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true, host: true, cors: true },
@@ -292,8 +295,19 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`Network access configured for: http://192.168.1.105:${PORT}/`);
+    // ArchWeb OS ANSI Color Codes
+    const CYAN = "\x1b[96m";
+    const MAGENTA = "\x1b[95m";
+    const BLUE = "\x1b[94m";
+    const YELLOW = "\x1b[93m";
+    const RESET = "\x1b[0m";
+
+    console.log(`\n${MAGENTA}====================================================${RESET}`);
+    console.log(`${CYAN}ARCHWEB OS SUNUCUSU AKTIF (CORE PORT: ${PORT})${RESET}`);
+    console.log(`${MAGENTA}====================================================${RESET}`);
+    console.log(`${BLUE}Yerel Erisim: ${YELLOW}http://localhost:5677${RESET}`);
+    console.log(`${BLUE}Ag Erisimi:   ${YELLOW}http://245.578.3.57.99:5677${RESET}`);
+    console.log(`${MAGENTA}====================================================${RESET}\n`);
   });
 }
 

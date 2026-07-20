@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { HelpDialog } from './components/HelpDialog';
 import { playWindows11StartupSound } from './utils/audio';
 import { getApiUrl } from './utils/api';
 import { getOfflineSettings, saveOfflineSettings, saveOfflineFile } from './utils/localFileSystem';
@@ -16,8 +17,9 @@ import { KidLogin } from './components/KidLogin';
 import { KidApp } from './components/KidApp';
 import { PlayStore, playStoreApps, Minecraft2D, PianoKids, SpaceExplorer, ColoringBook, YTKids, BunnyPet } from './components/PlayStore';
 import { ApkInstaller } from './components/ApkInstaller';
+import { IsoInstaller } from './components/IsoInstaller';
 import { motion, AnimatePresence } from 'motion/react';
-import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock, Mail, Sparkles, Play, Cpu, ShoppingBag, Smartphone, Download, Package, X } from 'lucide-react';
+import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock, Mail, Sparkles, Play, Cpu, ShoppingBag, Smartphone, Download, Package, X, ShieldCheck } from 'lucide-react';
 
 const getWallpaperGradient = (wallpaper: number, accentColor: string) => {
   switch (wallpaper) {
@@ -87,6 +89,8 @@ export default function App() {
   const [isTrashOpen, setIsTrashOpen] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isApkInstallerOpen, setIsApkInstallerOpen] = useState(false);
+  const [isIsoInstallerOpen, setIsIsoInstallerOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isPowerDialogOpen, setIsPowerDialogOpen] = useState(false);
   const [isAppLauncherOpen, setIsAppLauncherOpen] = useState(false);
   const [launchedProgramName, setLaunchedProgramName] = useState('');
@@ -424,7 +428,6 @@ export default function App() {
   const toggleSettings = () => setIsSettingsOpen(!isSettingsOpen);
   const toggleBrowser = () => {
     if (!isBrowserOpen && isSafeMode) {
-      alert("Güvenli Mod: Bu uygulamanın hizmeti şu anda kapalıdır.");
       return;
     }
     setIsBrowserOpen(!isBrowserOpen);
@@ -432,14 +435,12 @@ export default function App() {
   const toggleFileManager = () => setIsFileManagerOpen(!isFileManagerOpen);
   const toggleEmail = () => {
     if (!isEmailOpen && isSafeMode) {
-      alert("Güvenli Mod: Bu uygulamanın hizmeti şu anda kapalıdır.");
       return;
     }
     setIsEmailOpen(!isEmailOpen);
   };
   const togglePlayStore = () => {
     if (!isPlayStoreOpen && isSafeMode) {
-      alert("Güvenli Mod: Bu uygulamanın hizmeti şu anda kapalıdır.");
       return;
     }
     setIsPlayStoreOpen(!isPlayStoreOpen);
@@ -486,18 +487,16 @@ export default function App() {
       case 'terminal': setIsTerminalOpen(true); break;
       case 'settings': setIsSettingsOpen(true); break;
       case 'browser': 
-        if (isSafeMode) { alert("Güvenli Mod: Bu uygulamanın hizmeti şu anda kapalıdır."); }
-        else { setIsBrowserOpen(true); }
+        if (!isSafeMode) { setIsBrowserOpen(true); }
         break;
       case 'files': setIsFileManagerOpen(true); break;
       case 'email': 
-        if (isSafeMode) { alert("Güvenli Mod: Bu uygulamanın hizmeti şu anda kapalıdır."); }
-        else { setIsEmailOpen(true); }
+        if (!isSafeMode) { setIsEmailOpen(true); }
         break;
       case 'playstore': 
-        if (isSafeMode) { alert("Güvenli Mod: Bu uygulamanın hizmeti şu anda kapalıdır."); }
-        else { setIsPlayStoreOpen(true); }
+        if (!isSafeMode) { setIsPlayStoreOpen(true); }
         break;
+      case 'help': setIsHelpOpen(true); break;
       case 'trash': setIsTrashOpen(true); break;
     }
   };
@@ -645,7 +644,6 @@ export default function App() {
 
   const handleAppOpen = (appName: string, openSetter: (v: boolean) => void) => {
     if (isSafeMode && !['terminal', 'settings', 'filemanager', 'trash'].includes(appName)) {
-      alert("Güvenli Mod: Bu uygulamanın hizmeti şu anda kapalıdır.");
       return;
     }
     openSetter(true);
@@ -797,6 +795,7 @@ export default function App() {
       {/* Top Status Bar */}
       <TopBar 
         onLauncherToggle={toggleLauncher} 
+        onHelpToggle={() => setIsHelpOpen(true)}
         onPowerToggle={() => setIsPowerDialogOpen(true)}
         onLockScreen={() => setIsLocked(true)}
         firewallActive={firewallActive}
@@ -934,6 +933,8 @@ export default function App() {
                     handleExecuteProgram(name);
                   } else if (name === 'archweb.dmg' || name === 'archweb.deb' || name === 'archweb.dev' || name === 'Server.apk' || name === 'archinstall.apk' || name.endsWith('.apk')) {
                     setIsApkInstallerOpen(true);
+                  } else if (name.endsWith('.iso')) {
+                    setIsIsoInstallerOpen(true);
                   } else {
                     setEditingFile({ name, content, path });
                     setIsEditorOpen(true);
@@ -1280,6 +1281,28 @@ export default function App() {
           )}
         </AnimatePresence>
 
+        <AnimatePresence>
+          {isIsoInstallerOpen && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className={`absolute w-full h-full transition-all duration-300 z-[75] ${mobileMode ? 'inset-0 max-w-none max-h-none rounded-none' : 'inset-0 m-auto max-w-4xl max-h-[640px] rounded-2xl overflow-hidden shadow-2xl'}`}
+            >
+              <IsoInstaller onClose={() => setIsIsoInstallerOpen(false)} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {isHelpOpen && (
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+              <HelpDialog onClose={() => setIsHelpOpen(false)} />
+            </div>
+          )}
+        </AnimatePresence>
+
         {/* Desktop Icons */}
         <div className="absolute top-8 left-8 bottom-24 flex flex-col flex-wrap content-start gap-x-6 gap-y-8">
           <motion.div drag dragMomentum={false}>
@@ -1480,6 +1503,14 @@ export default function App() {
             title="Telefon Modu"
           >
             <Smartphone size={20} className={mobileMode ? 'text-[var(--accent)]' : 'text-white/70'} />
+          </button>
+
+          <button 
+            onClick={() => setIsHelpOpen(!isHelpOpen)}
+            className={`p-2 rounded-xl transition-all hover:scale-110 ${isHelpOpen ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-white/5 border border-white/10 hover:bg-white/10'}`}
+            title="Yardım ve Destek"
+          >
+            <ShieldCheck size={20} className={isHelpOpen ? 'text-emerald-400' : 'text-white/70'} />
           </button>
 
           <div className="w-px h-6 bg-white/10 mx-1" />

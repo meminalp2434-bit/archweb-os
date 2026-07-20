@@ -10,8 +10,8 @@ export const getApiUrl = (endpoint: string): string => {
     window.location.hostname.startsWith('192.168.');
 
   if (!isLocalhost) {
-    // Inside Google AI Studio - route requests to the local network server
-    return `http://192.168.1.105:3000${endpoint}`;
+    // Inside Google AI Studio - route requests to the local network server on port 3000
+    return `http://localhost:3000${endpoint}`;
   }
 
   // Running locally - relative path

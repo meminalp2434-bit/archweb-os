@@ -1,0 +1,3 @@
+ArchWeb OS'e Hoş Geldiniz!
+
+Bu, Arch Linux ortamının tamamen işlevsel bir web simülasyonudur.

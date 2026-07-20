@@ -38,6 +38,7 @@ export const Launcher: React.FC<LauncherProps> = ({
     { id: 'files', name: 'Dosyalar', icon: Folder, color: '#ff9800' },
     { id: 'email', name: 'E-posta', icon: Mail, color: '#00bcd4' },
     { id: 'playstore', name: 'Play Store', icon: ShoppingBag, color: '#01875f' },
+    { id: 'help', name: 'Yardım', icon: ShieldCheck, color: '#4caf50' },
     { id: 'trash', name: 'Çöp Kutusu', icon: Trash2, color: '#f44336' },
   ];
 

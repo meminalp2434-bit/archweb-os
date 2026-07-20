@@ -1,0 +1,9 @@
+ArchWeb OS Server Android Package (.APK)
+===================================
+App Name: ArchWeb OS Server Client / Server Controller
+Package Name: com.archweb.server
+Version: 2.0.0
+Release Date: 2026-07-17
+Platform: Android 10+ (Termux / Native WebView Client)
+
+Bu paket, ArchWeb OS yerel sunucunuzu (http://192.168.1.105:3000/) mobil cihazinizdan yonetmenizi ve mobil cihazinizda calistirilan Node.js sunucusuna baglanmanizi saglar.

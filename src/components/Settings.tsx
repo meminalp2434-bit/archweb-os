@@ -595,12 +595,12 @@ export const Settings: React.FC<SettingsProps> = ({
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   
-                  {/* Windows .bat Download */}
+                  {/* Windows .exe Download */}
                   <div className="bg-white/5 border border-white/5 rounded-lg p-4 flex flex-col justify-between space-y-3">
                     <div className="space-y-1.5">
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] uppercase font-bold text-blue-400">Windows</span>
-                        <span className="text-[9px] font-mono text-white/30">.bat</span>
+                        <span className="text-[9px] font-mono text-white/30">.exe</span>
                       </div>
                       <h4 className="text-xs font-bold text-white">Windows Başlatıcı</h4>
                       <p className="text-[10px] text-white/50 leading-relaxed">Sistemi yapılandırıp Electron masaüstü motorunu tek tıkla çalıştırır.</p>

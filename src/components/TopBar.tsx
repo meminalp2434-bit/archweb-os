@@ -3,6 +3,7 @@ import { Cpu, HardDrive, Wifi, Battery, Clock, Search, LayoutGrid, Terminal as T
 
 interface TopBarProps {
   onLauncherToggle: () => void;
+  onHelpToggle?: () => void;
   onPowerToggle?: () => void;
   onLockScreen?: () => void;
   firewallActive?: boolean;
@@ -32,6 +33,7 @@ const TopBarClock = () => {
 
 export const TopBar: React.FC<TopBarProps> = ({ 
   onLauncherToggle, 
+  onHelpToggle,
   onPowerToggle, 
   onLockScreen,
   firewallActive,
@@ -56,6 +58,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           <span className="hover:text-white cursor-pointer">Etkinlikler</span>
           <span className="hover:text-white cursor-pointer">Uçbirim</span>
           <span className="hover:text-white cursor-pointer">Tarayıcı</span>
+          <span onClick={onHelpToggle} className="hover:text-white cursor-pointer text-[var(--accent)] font-bold">Yardım</span>
         </div>
       </div>
 
