@@ -175,7 +175,51 @@ function getFilesState() {
   return { allFiles, subFolders };
 }
 
-// API Routes
+// API routes go here FIRST
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", environment: process.env.NODE_ENV || "development", time: new Date().toISOString() });
+});
+
+// 0. Auth Endpoints
+const SESSION_CODE = "AW-7788"; // YouTube Canlı Yayın Kodu
+
+app.get("/api/auth/identify", (req, res) => {
+  const host = req.headers.host || "";
+  const isLocal = host.includes("localhost") || host.includes("127.0.0.1") || host.includes("192.168.");
+  
+  // Simulated environment check for AI Studio
+  const isAiStudio = host.includes("europe-west2.run.app") || host.includes("google.com");
+  
+  res.json({
+    isLocal,
+    isAiStudio,
+    message: isLocal ? "Yerel erişim tespit edildi. Otomatik yönetici girişi yapıldı." : "Uzak erişim tespit edildi. Lütfen oturum kodu girin."
+  });
+});
+
+app.post("/api/auth/verify", (req, res) => {
+  const { code, email } = req.body;
+  
+  // 1. Admin Email Check (AI Studio)
+  if (email === "meminalp2434@gmail.com") {
+    return res.json({ 
+      success: true, 
+      role: "admin", 
+      message: "Yönetici hesabı doğrulandı (meminalp2434@gmail.com)" 
+    });
+  }
+
+  // 2. Session Code Check (Remote)
+  if (code === SESSION_CODE) {
+    return res.json({ 
+      success: true, 
+      role: "user", 
+      message: "Oturum kodu başarılı. Kısıtlı erişim sağlandı." 
+    });
+  }
+
+  res.status(401).json({ success: false, error: "Geçersiz oturum kodu!" });
+});
 
 // 1. Get all files and subfolders
 app.get("/api/files", (req, res) => {
@@ -280,18 +324,29 @@ async function startServer() {
   // Serve public folder before Vite to bypass large file limits
   app.use(express.static(path.join(process.cwd(), 'public')));
 
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV === "production") {
+    const distPath = path.join(process.cwd(), "dist");
+    console.log(`[PROD] Statik dosyalar sunuluyor: ${distPath}`);
+    
+    // Serve static files from dist
+    app.use(express.static(distPath));
+    
+    // SPA fallback
+    app.get("*", (req, res) => {
+      const indexPath = path.join(distPath, "index.html");
+      if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+      } else {
+        res.status(404).send("index.html bulunamadı! Lütfen build işlemini kontrol edin.");
+      }
+    });
+  } else {
+    console.log("[DEV] Vite middleware başlatılıyor...");
     const vite = await createViteServer({
       server: { middlewareMode: true, host: true, cors: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
   }
 
   app.listen(PORT, "0.0.0.0", () => {
@@ -303,10 +358,10 @@ async function startServer() {
     const RESET = "\x1b[0m";
 
     console.log(`\n${MAGENTA}====================================================${RESET}`);
-    console.log(`${CYAN}ARCHWEB OS SUNUCUSU AKTIF (CORE PORT: ${PORT})${RESET}`);
+    console.log(`${CYAN}ARCHWEB OS SUNUCUSU AKTIF (PORT: ${PORT})${RESET}`);
     console.log(`${MAGENTA}====================================================${RESET}`);
-    console.log(`${BLUE}Yerel Erisim: ${YELLOW}http://localhost:5677${RESET}`);
-    console.log(`${BLUE}Ag Erisimi:   ${YELLOW}http://245.578.3.57.99:5677${RESET}`);
+    console.log(`${BLUE}Erisim: ${YELLOW}http://localhost:${PORT}${RESET}`);
+    console.log(`${BLUE}Ag:     ${YELLOW}http://192.168.1.105:${PORT}${RESET}`);
     console.log(`${MAGENTA}====================================================${RESET}\n`);
   });
 }

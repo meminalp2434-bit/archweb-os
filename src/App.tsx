@@ -96,15 +96,25 @@ export default function App() {
   const [launchedProgramName, setLaunchedProgramName] = useState('');
   const [launcherStep, setLauncherStep] = useState<'bootstrap' | 'menu'>('bootstrap');
   const [launcherLogs, setLauncherLogs] = useState<string[]>([]);
-  const [isShutDown, setIsShutDown] = useState(true);
+  const [isShutDown, setIsShutDown] = useState(false);
   const [isSystemBooting, setIsSystemBooting] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isSafeMode, setIsSafeMode] = useState<boolean>(() => {
     return localStorage.getItem('archweb_safe_mode') === 'true' || (import.meta as any).env.VITE_SAFE_MODE === 'true';
   });
   const [accentColor, setAccentColor] = useState('#1793d1');
   const [editingFile, setEditingFile] = useState({ name: 'notlar.txt', content: 'ArchWeb OS\'e Hoş Geldiniz!\n\nBu, Arch Linux ortamının tamamen işlevsel bir web simülasyonudur.\n\nKeyfini çıkarın!', path: '/home/user/notlar.txt' });
   const [isSettingsLoadedFromServer, setIsSettingsLoadedFromServer] = useState(false);
+
+  // Access Control States
+  const [isRemote, setIsRemote] = useState(false);
+  const [isRemoteVerified, setIsRemoteVerified] = useState(false);
+  const [userRole, setUserRole] = useState<'admin' | 'user'>(() => {
+    return (localStorage.getItem('archweb_user_role') as 'admin' | 'user') || 'user';
+  });
+  const [isControlPanelOpen, setIsControlPanelOpen] = useState(false);
 
   // System settings state variables
   const [wallpaper, setWallpaper] = useState(0);
@@ -115,7 +125,9 @@ export default function App() {
   const [pinRequired, setPinRequired] = useState(false);
   const [pinCode, setPinCode] = useState('1234');
   const [mobileMode, setMobileMode] = useState(false);
-  const [isLocked, setIsLocked] = useState(true);
+  const [isLocked, setIsLocked] = useState<boolean>(() => {
+    return localStorage.getItem('archweb_is_locked') === 'true';
+  });
 
   // Sound and Volume Settings
   const [volume, setVolume] = useState<number>(() => {
@@ -174,12 +186,14 @@ export default function App() {
     category: 'education' | 'gaming' | 'creativity' | 'science',
     avatar: string,
     method: 'email' | 'google' | 'microsoft' | 'apple' = 'email',
-    password?: string
+    password?: string,
+    role: 'admin' | 'user' = 'user'
   ) => {
     setGmailUser(gmail);
     setKidCategory(category);
     setKidAvatar(avatar);
     setLoginMethod(method);
+    setUserRole(role);
     if (password) {
       setGmailPassword(password);
       localStorage.setItem('archweb_gmail_password', password);
@@ -190,6 +204,8 @@ export default function App() {
     localStorage.setItem('archweb_kid_category', category);
     localStorage.setItem('archweb_kid_avatar', avatar);
     localStorage.setItem('archweb_kid_setup_complete', 'true');
+    localStorage.setItem('archweb_user_role', role);
+    setIsLocked(false);
 
     // Automatically theme the system based on selected category!
     if (category === 'education') {
@@ -210,6 +226,25 @@ export default function App() {
 
     setIsKidAppOpen(true); // Open the Kids App Hub immediately!
     setIsTerminalOpen(false); // Close terminal
+  };
+
+  const handleRemoteVerify = async (code: string, email?: string) => {
+    try {
+      const res = await fetch(getApiUrl('/api/auth/verify'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, email })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsRemoteVerified(true);
+        setUserRole(data.role || 'user');
+        return { success: true };
+      }
+      return { success: false, error: data.error };
+    } catch (e) {
+      return { success: false, error: 'Bağlantı hatası!' };
+    }
   };
 
   const handleKidLogout = () => {
@@ -281,6 +316,32 @@ export default function App() {
       setIsSettingsLoadedFromServer(true);
     };
     loadSettings();
+
+    // Access Control Identification
+    const checkAccess = async () => {
+      try {
+        const res = await fetch(getApiUrl('/api/auth/identify'));
+        const data = await res.json();
+        
+        if (data.isLocal) {
+          setIsRemote(false);
+          setIsRemoteVerified(true);
+          setUserRole('admin');
+        } else {
+          setIsRemote(true);
+          // Auto-admin for the specific email in AI Studio environment
+          // In a real app, this would be checked via actual auth headers or session
+          // For this simulation, we'll check if the host is AI Studio and if we can identify the user
+          if (data.isAiStudio) {
+            // We assume the platform identifies the user or the user logs in
+            // But as per request, we'll allow a way to verify this email
+          }
+        }
+      } catch (e) {
+        console.error("Access check failed", e);
+      }
+    };
+    checkAccess();
   }, []);
 
   // Save settings to the server and local fallback when they change
@@ -508,6 +569,29 @@ export default function App() {
     setIsSafeMode(false);
   };
 
+  const handleSystemReset = () => {
+    setIsResetting(true);
+    setShowResetConfirm(false);
+    
+    setTimeout(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+      // Clear all known keys specifically just in case clear() has issues in some contexts
+      const keys = [
+        'archweb_kid_setup_complete', 'archweb_gmail_user', 'archweb_gmail_password',
+        'archweb_login_method', 'archweb_kid_category', 'archweb_kid_avatar',
+        'archweb_registered_users', 'archweb_safe_mode', 'archweb_wallpaper',
+        'archweb_accent_color', 'archweb_brightness', 'archweb_font_size',
+        'archweb_firewall_active', 'archweb_is_locked', 'archweb_pin_code',
+        'archweb_pin_required', 'archweb_launcher_first_run'
+      ];
+      keys.forEach(k => localStorage.removeItem(k));
+      
+      // Force reload to root
+      window.location.assign('/');
+    }, 1500);
+  };
+
   const handleRestart = () => {
     setIsPowerDialogOpen(false);
     setIsRestarting(true);
@@ -550,64 +634,8 @@ export default function App() {
     }, 3000);
   };
 
-  if (isShutDown) {
-    return (
-      <div className="h-screen w-screen bg-black flex flex-col items-center justify-center gap-4 animate-in fade-in duration-1000">
-        <div className="text-white/20 font-mono text-sm">Sistem kapandı.</div>
-        <button 
-          onClick={() => {
-            setIsShutDown(false);
-            setIsSystemBooting(true);
-          }}
-          className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all text-xs"
-        >
-          Sistemi Başlat
-        </button>
-      </div>
-    );
-  }
 
-  if (isSystemBooting) {
-    return (
-      <div id="boot-loader-container" className="h-screen w-screen bg-black flex flex-col items-center justify-center gap-5 font-sans select-none z-[9999]">
-        <div className="w-10 h-10 rounded-full border-2 border-t-[var(--accent)] border-white/10 animate-spin" />
-        <div className="text-white/40 text-xs font-mono tracking-widest uppercase animate-pulse">Sistem Başlatılıyor...</div>
-      </div>
-    );
-  }
-
-  if (isRestarting) {
-    const isSafe = localStorage.getItem('archweb_safe_mode') === 'true';
-    return (
-      <div className="h-screen w-screen bg-black flex flex-col items-center justify-center gap-6 font-mono">
-        <div className="flex flex-col gap-1 text-[var(--accent)] text-xs">
-          {isSafe ? (
-            <>
-              <div>[  OK  ] Reached target Safe Graphical Interface.</div>
-              <div>[  OK  ] Loaded minimal system modules.</div>
-              <div>[  OK  ] Mounted recovery and diagnostic mode.</div>
-              <div className="animate-pulse mt-4 text-amber-500 font-bold">Sistem GÜVENLİ MODDA başlatılıyor...</div>
-            </>
-          ) : (
-            <>
-              <div>[  OK  ] Reached target Graphical Interface.</div>
-              <div>[  OK  ] Stopped Getty on tty1.</div>
-              <div>[  OK  ] Stopped User Manager for UID 1000.</div>
-              <div className="animate-pulse mt-4">Sistem yeniden başlatılıyor...</div>
-            </>
-          )}
-        </div>
-        <RotateCcw size={32} className="text-[var(--accent)] animate-spin" />
-      </div>
-    );
-  }
-
-  // Inject KidLogin if kid is not configured or gmail setup is missing
-  if (!isSetupComplete) {
-    return <KidLogin onComplete={handleSetupComplete} />;
-  }
-
-  const handleUnlock = () => {
+  function handleUnlock() {
     if (pinRequired) {
       if (lockInput === pinCode) {
         setIsLocked(false);
@@ -640,8 +668,9 @@ export default function App() {
         playWindows11StartupSound(volume, isMuted);
       }
     }
-  };
+  }
 
+  // App definitions moved up to be accessible
   const handleAppOpen = (appName: string, openSetter: (v: boolean) => void) => {
     if (isSafeMode && !['terminal', 'settings', 'filemanager', 'trash'].includes(appName)) {
       return;
@@ -649,102 +678,6 @@ export default function App() {
     openSetter(true);
   };
 
-  if (isLocked) {
-    return (
-      <div 
-        className="h-screen w-screen relative flex flex-col items-center justify-between p-12 bg-cover bg-center select-none transition-all duration-700"
-        style={{ 
-          background: getWallpaperGradient(wallpaper, accentColor),
-          fontSize: fontSize === 'small' ? '12px' : fontSize === 'large' ? '16px' : '14px',
-          filter: `brightness(${brightness}%)`
-        }}
-      >
-        <LockScreenClock />
-
-        {/* Center Password Form */}
-        <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-6 w-80 shadow-2xl flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-[var(--accent)]/20 border border-[var(--accent)]/40 flex items-center justify-center text-2xl">
-            {isSetupComplete ? kidAvatar : '🦊'}
-          </div>
-          <div className="text-center">
-            <span className="text-xs font-bold text-white font-mono block">{isSetupComplete ? gmailUser.split('@')[0] : 'arch-user'}</span>
-            <span className="text-[10px] text-white/40 font-mono">{isSetupComplete ? `${kidCategory} modu` : 'localhost'}</span>
-          </div>
-
-          {pinRequired ? (
-            <div className="w-full space-y-3">
-              <input 
-                type="password"
-                maxLength={4}
-                value={lockInput}
-                onChange={(e) => setLockInput(e.target.value.replace(/[^0-9]/g, ''))}
-                onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
-                placeholder="PIN Kodu"
-                className={`w-full bg-black/40 border rounded px-3 py-2 text-center text-white text-xs font-mono tracking-widest focus:border-[var(--accent)] outline-none transition-all ${lockError ? 'border-red-500 animate-bounce' : 'border-white/10'}`}
-                autoFocus
-              />
-              {lockError && (
-                <p className="text-red-400 text-[10px] font-mono text-center">Hatalı PIN! Lütfen tekrar deneyin.</p>
-              )}
-              <button 
-                onClick={handleUnlock}
-                className="w-full py-2 rounded-lg bg-[var(--accent)] text-white font-bold text-xs hover:opacity-90 transition-opacity"
-              >
-                Giriş Yap
-              </button>
-            </div>
-          ) : gmailPassword ? (
-            <div className="w-full space-y-3">
-              <input 
-                type="password"
-                value={lockInput}
-                onChange={(e) => setLockInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
-                placeholder="E-Posta Şifrenizi Girin"
-                className={`w-full bg-black/40 border rounded px-3 py-2 text-center text-white text-xs focus:border-[var(--accent)] outline-none transition-all ${lockError ? 'border-red-500 animate-bounce' : 'border-white/10'}`}
-                autoFocus
-              />
-              {lockError && (
-                <p className="text-red-400 text-[10px] font-mono text-center">Hatalı Şifre! Lütfen tekrar deneyin.</p>
-              )}
-              <button 
-                onClick={handleUnlock}
-                className="w-full py-2 rounded-lg bg-[var(--accent)] text-white font-bold text-xs hover:opacity-90 transition-opacity"
-              >
-                Giriş Yap
-              </button>
-            </div>
-          ) : (
-            <button 
-              onClick={handleUnlock}
-              className="w-full py-2 rounded-lg bg-[var(--accent)] text-white font-bold text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5"
-            >
-              Kilidi Aç
-            </button>
-          )}
-
-          {(pinRequired || gmailPassword) && (
-            <button
-              onClick={() => {
-                if (window.confirm("Şifrenizi unuttunuz mu? Tüm kayıtlı kullanıcı hesapları ve veriler silinecektir. Devam etmek istiyor musunuz?")) {
-                  localStorage.clear();
-                  window.location.reload();
-                }
-              }}
-              className="mt-1 text-[10px] text-white/40 hover:text-red-400 underline cursor-pointer transition-colors font-mono"
-            >
-              Şifremi Unuttum / Sıfırla
-            </button>
-          )}
-        </div>
-
-        {/* Footer info */}
-        <div className="text-[10px] font-mono text-white/30 text-center">
-          Arch Linux &bull; {firewallActive ? 'Güvenlik Duvarı Aktif' : 'Güvenlik Duvarı Devre Dışı'}
-        </div>
-      </div>
-    );
-  }
 
   const desktopContent = (
     <div 
@@ -755,42 +688,137 @@ export default function App() {
         filter: `brightness(${brightness}%) ${isSafeMode ? 'grayscale(0.6) contrast(1.05)' : ''}`
       }}
     >
-      {/* Safe Mode Banner & Watermarks */}
-      {isSafeMode && (
-        <>
-          <div className="absolute top-10 left-1/2 -translate-x-1/2 z-[80] w-full max-w-xl px-4 pointer-events-auto">
-            <div className="bg-red-500/10 backdrop-blur-md border border-red-500/30 rounded-xl p-3 flex items-center justify-between text-xs text-red-200 shadow-lg select-none">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                <span><strong>Güvenli Mod Aktif:</strong> Sadece temel sistem özellikleri devrede.</span>
+      <AnimatePresence mode="wait">
+        {isLocked ? (
+          <motion.div 
+            key="lock-screen"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[500] flex flex-col items-center justify-between p-12 select-none"
+          >
+            <LockScreenClock />
+
+            {/* Center Password Form */}
+            <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-6 w-80 shadow-2xl flex flex-col items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-[var(--accent)]/20 border border-[var(--accent)]/40 flex items-center justify-center text-2xl">
+                {isSetupComplete ? kidAvatar : '🦊'}
               </div>
-              <button 
-                onClick={() => {
-                  localStorage.removeItem('archweb_safe_mode');
-                  setIsSafeMode(false);
-                }}
-                className="px-2.5 py-1 rounded bg-red-500/20 hover:bg-red-500/40 border border-red-500/40 font-bold transition-all text-[10px] text-white whitespace-nowrap cursor-pointer"
-              >
-                Normal Moda Dön
-              </button>
+              <div className="text-center">
+                <span className="text-xs font-bold text-white font-mono block">{isSetupComplete ? gmailUser.split('@')[0] : 'arch-user'}</span>
+                <span className="text-[10px] text-white/40 font-mono">{isSetupComplete ? `${kidCategory} modu` : 'localhost'}</span>
+              </div>
+
+              {pinRequired ? (
+                <div className="w-full space-y-3">
+                  <input 
+                    type="password"
+                    maxLength={4}
+                    value={lockInput}
+                    onChange={(e) => setLockInput(e.target.value.replace(/[^0-9]/g, ''))}
+                    onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
+                    placeholder="PIN Kodu"
+                    className={`w-full bg-black/40 border rounded px-3 py-2 text-center text-white text-xs font-mono tracking-widest focus:border-[var(--accent)] outline-none transition-all ${lockError ? 'border-red-500 animate-bounce' : 'border-white/10'}`}
+                    autoFocus
+                  />
+                  {lockError && (
+                    <p className="text-red-400 text-[10px] font-mono text-center">Hatalı PIN! Lütfen tekrar deneyin.</p>
+                  )}
+                  <button 
+                    onClick={handleUnlock}
+                    className="w-full py-2 rounded-lg bg-[var(--accent)] text-white font-bold text-xs hover:opacity-90 transition-opacity"
+                  >
+                    Giriş Yap
+                  </button>
+                </div>
+              ) : gmailPassword ? (
+                <div className="w-full space-y-3">
+                  <input 
+                    type="password"
+                    value={lockInput}
+                    onChange={(e) => setLockInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
+                    placeholder="E-Posta Şifrenizi Girin"
+                    className={`w-full bg-black/40 border rounded px-3 py-2 text-center text-white text-xs focus:border-[var(--accent)] outline-none transition-all ${lockError ? 'border-red-500 animate-bounce' : 'border-white/10'}`}
+                    autoFocus
+                  />
+                  {lockError && (
+                    <p className="text-red-400 text-[10px] font-mono text-center">Hatalı Şifre! Lütfen tekrar deneyin.</p>
+                  )}
+                  <button 
+                    onClick={handleUnlock}
+                    className="w-full py-2 rounded-lg bg-[var(--accent)] text-white font-bold text-xs hover:opacity-90 transition-opacity"
+                  >
+                    Giriş Yap
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  onClick={handleUnlock}
+                  className="w-full py-2 rounded-lg bg-[var(--accent)] text-white font-bold text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5"
+                >
+                  Kilidi Aç
+                </button>
+              )}
+
+              {(pinRequired || gmailPassword) && (
+                <button
+                  onClick={() => setShowResetConfirm(true)}
+                  className="mt-1 text-[10px] text-white/40 hover:text-red-400 underline cursor-pointer transition-colors font-mono"
+                >
+                  Şifremi Unuttum / Sıfırla
+                </button>
+              )}
             </div>
-          </div>
-          <div className="absolute inset-0 pointer-events-none select-none z-[10] overflow-hidden">
-            <div className="absolute top-12 left-4 text-[10px] font-mono font-bold text-red-500/15 uppercase tracking-widest">Güvenli Mod</div>
-            <div className="absolute top-12 right-4 text-[10px] font-mono font-bold text-red-500/15 uppercase tracking-widest">Güvenli Mod</div>
-            <div className="absolute bottom-20 left-4 text-[10px] font-mono font-bold text-red-500/15 uppercase tracking-widest">Güvenli Mod</div>
-            <div className="absolute bottom-20 right-4 text-[10px] font-mono font-bold text-red-500/15 uppercase tracking-widest">Güvenli Mod</div>
-          </div>
-        </>
-      )}
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-20 pointer-events-none">
-        <div 
-          className="absolute inset-0 bg-[radial-gradient(var(--accent)_1px,transparent_1px)] [background-size:40px_40px]" 
-          style={{ backgroundImage: `radial-gradient(${accentColor}33 1px, transparent 1px)` }}
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] [background-size:100px_100px]" />
-      </div>
+
+            {/* Footer info */}
+            <div className="text-[10px] font-mono text-white/30 text-center">
+              Arch Linux &bull; {firewallActive ? 'Güvenlik Duvarı Aktif' : 'Güvenlik Duvarı Devre Dışı'}
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="desktop-ui"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex-1 flex flex-col relative"
+          >
+            {/* Safe Mode Banner & Watermarks */}
+            {isSafeMode && (
+              <>
+                <div className="absolute top-10 left-1/2 -translate-x-1/2 z-[80] w-full max-w-xl px-4 pointer-events-auto">
+                  <div className="bg-red-500/10 backdrop-blur-md border border-red-500/30 rounded-xl p-3 flex items-center justify-between text-xs text-red-200 shadow-lg select-none">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                      <span><strong>Güvenli Mod Aktif:</strong> Sadece temel sistem özellikleri devrede.</span>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        localStorage.removeItem('archweb_safe_mode');
+                        setIsSafeMode(false);
+                      }}
+                      className="px-2.5 py-1 rounded bg-red-500/20 hover:bg-red-500/40 border border-red-500/40 font-bold transition-all text-[10px] text-white whitespace-nowrap cursor-pointer"
+                    >
+                      Normal Moda Dön
+                    </button>
+                  </div>
+                </div>
+                <div className="absolute inset-0 pointer-events-none select-none z-[10] overflow-hidden">
+                  <div className="absolute top-12 left-4 text-[10px] font-mono font-bold text-red-500/15 uppercase tracking-widest">Güvenli Mod</div>
+                  <div className="absolute top-12 right-4 text-[10px] font-mono font-bold text-red-500/15 uppercase tracking-widest">Güvenli Mod</div>
+                </div>
+              </>
+            )}
+
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-20 pointer-events-none">
+              <div 
+                className="absolute inset-0 bg-[radial-gradient(var(--accent)_1px,transparent_1px)] [background-size:40px_40px]" 
+                style={{ backgroundImage: `radial-gradient(${accentColor}33 1px, transparent 1px)` }}
+              />
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] [background-size:100px_100px]" />
+            </div>
 
       {/* Top Status Bar */}
       <TopBar 
@@ -1404,6 +1432,23 @@ export default function App() {
             </button>
           </motion.div>
 
+          {userRole === 'admin' && (
+            <motion.div drag dragMomentum={false}>
+              <button 
+                onClick={() => setIsControlPanelOpen(true)}
+                className="flex flex-col items-center gap-1 group relative cursor-pointer"
+              >
+                <div className="w-12 h-12 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center justify-center group-hover:bg-red-500/20 group-hover:border-red-400 transition-all shadow-[0_0_12px_rgba(239,68,68,0.15)]">
+                  <SettingsIcon size={24} className="text-red-400 group-hover:scale-110 transition-transform" />
+                </div>
+                <span className="text-[10px] font-mono text-red-300 group-hover:text-red-200 font-bold uppercase tracking-tighter">Kontrol Paneli</span>
+                <div className="absolute -top-1.5 -right-1 px-1 bg-red-500 rounded-full border border-red-400 text-[8px] font-bold text-white scale-90 px-1 py-0.5 leading-none">
+                  ADMİN
+                </div>
+              </button>
+            </motion.div>
+          )}
+
           <motion.div drag dragMomentum={false}>
             <button 
               onClick={() => handleAppOpen('apkinstaller', setIsApkInstallerOpen)}
@@ -1523,11 +1568,13 @@ export default function App() {
           </button>
         </div>
       </div>
-    </div>
-  );
+    </motion.div>
+  )}
+</AnimatePresence>
+</div>
+);
 
-  if (mobileMode) {
-    return (
+  const mobileUI = (
       <div className="h-[100dvh] w-screen bg-[#070707] flex items-center justify-center sm:p-4 overflow-hidden">
         {/* Outer Phone Frame - Responsive: Fullscreen on mobile, framed on desktop */}
         <div className="w-full h-full sm:w-[380px] sm:h-[780px] sm:max-h-[95dvh] sm:border-[10px] sm:border-neutral-800 bg-[#0d0d0d] rounded-none sm:rounded-[48px] overflow-hidden sm:shadow-[0_0_50px_rgba(0,0,0,0.8)] relative flex flex-col">
@@ -1561,9 +1608,425 @@ export default function App() {
         </div>
       </div>
     );
+
+    // Final Main UI Logic
+    let mainUI: React.ReactNode;
+
+    if (isShutDown) {
+      mainUI = (
+        <div className="h-screen w-screen bg-black flex flex-col items-center justify-center gap-4 animate-in fade-in duration-1000">
+          <div className="text-white/20 font-mono text-sm">Sistem kapandı.</div>
+          <button 
+            onClick={() => {
+              setIsShutDown(false);
+              setIsSystemBooting(true);
+            }}
+            className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all text-xs"
+          >
+            Sistemi Başlat
+          </button>
+        </div>
+      );
+    } else if (isSystemBooting) {
+      mainUI = (
+        <div id="boot-loader-container" className="h-screen w-screen bg-black flex flex-col items-center justify-center gap-5 font-sans select-none z-[9999]">
+          <div className="w-10 h-10 rounded-full border-2 border-t-[var(--accent)] border-white/10 animate-spin" />
+          <div className="text-white/40 text-xs font-mono tracking-widest uppercase animate-pulse">Sistem Başlatılıyor...</div>
+        </div>
+      );
+    } else if (isRestarting) {
+      const isSafe = localStorage.getItem('archweb_safe_mode') === 'true';
+      mainUI = (
+        <div className="h-screen w-screen bg-black flex flex-col items-center justify-center gap-6 font-mono">
+          <div className="flex flex-col gap-1 text-[var(--accent)] text-xs">
+            {isSafe ? (
+              <>
+                <div>[  OK  ] Reached target Safe Graphical Interface.</div>
+                <div>[  OK  ] Loaded minimal system modules.</div>
+                <div>[  OK  ] Mounted recovery and diagnostic mode.</div>
+                <div className="animate-pulse mt-4 text-amber-500 font-bold">Sistem GÜVENLİ MODDA başlatılıyor...</div>
+              </>
+            ) : (
+              <>
+                <div>[  OK  ] Reached target Graphical Interface.</div>
+                <div>[  OK  ] Stopped Getty on tty1.</div>
+                <div>[  OK  ] Stopped User Manager for UID 1000.</div>
+                <div className="animate-pulse mt-4">Sistem yeniden başlatılıyor...</div>
+              </>
+            )}
+          </div>
+          <RotateCcw size={32} className="text-[var(--accent)] animate-spin" />
+        </div>
+      );
+    } else if (!isSetupComplete) {
+      mainUI = <KidLogin onComplete={handleSetupComplete} />;
+    } else if (mobileMode) {
+      mainUI = mobileUI;
+    } else {
+      mainUI = desktopContent;
+    }
+
+    return (
+      <RemoteAccessGate 
+        isRemote={isRemote} 
+        isVerified={isRemoteVerified} 
+        onVerify={handleRemoteVerify}
+      >
+        {mainUI}
+        
+        <AnimatePresence>
+          {isResetting && (
+            <div className="fixed inset-0 z-[100000] bg-black flex flex-col items-center justify-center gap-6">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                className="w-16 h-16 border-4 border-red-500/20 border-t-red-500 rounded-full"
+              />
+              <div className="text-center space-y-2">
+                <h2 className="text-white text-lg font-bold uppercase tracking-widest">Sistem Sıfırlanıyor</h2>
+                <p className="text-white/40 text-xs font-mono">Tüm veriler temizleniyor ve yeniden başlatılıyor...</p>
+              </div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showResetConfirm && (
+            <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="w-full max-w-sm bg-[#1a1a1a] border border-red-500/30 rounded-2xl p-6 shadow-2xl space-y-6"
+              >
+                <div className="flex flex-col items-center text-center gap-4">
+                  <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center border border-red-500/30">
+                    <Trash2 size={32} className="text-red-400" />
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-lg font-bold text-white">Sistemi Sıfırla?</h2>
+                    <p className="text-xs text-white/60 leading-relaxed">
+                      Şifrenizi unuttuysanız sistemi tamamen sıfırlayabilirsiniz. <br />
+                      <span className="text-red-400 font-bold">TÜM KAYITLI HESAPLAR VE VERİLER SİLİNECEKTİR.</span>
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setShowResetConfirm(false)}
+                    className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-xs hover:bg-white/10 transition-all"
+                  >
+                    Vazgeç
+                  </button>
+                  <button 
+                    onClick={handleSystemReset}
+                    className="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold text-xs hover:bg-red-700 transition-all shadow-lg shadow-red-600/20"
+                  >
+                    Sıfırla
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {isControlPanelOpen && userRole === 'admin' && (
+            <ControlPanel 
+              isOpen={isControlPanelOpen} 
+              onClose={() => setIsControlPanelOpen(false)} 
+              onRestart={handleRestart}
+            />
+          )}
+        </AnimatePresence>
+      </RemoteAccessGate>
+    );
   }
 
-  return desktopContent;
+  function RemoteAccessGate({ children, isRemote, isVerified, onVerify }: any) {
+  const [code, setCode] = useState('');
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+
+  if (!isRemote || isVerified) return children;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    const result = await onVerify(code, showAdminLogin ? email : undefined);
+    if (!result.success) {
+      setError(result.error);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[9999] bg-[#070707] flex items-center justify-center p-6 font-sans">
+      <div className="w-full max-w-md bg-[#111] border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden relative">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500" />
+        
+        <div className="flex flex-col items-center gap-6">
+          <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10">
+            <ShieldCheck size={40} className="text-cyan-400" />
+          </div>
+          
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-white mb-2">ArchWeb OS Erişimi</h1>
+            <p className="text-sm text-white/50 leading-relaxed">
+              Uzak bir ağdan erişim sağladığınız için oturum koduna ihtiyacınız var.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="w-full space-y-4">
+            {showAdminLogin ? (
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-wider font-bold text-white/40 ml-1">Yönetici E-Postası</label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
+                  <input 
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="meminalp2434@gmail.com"
+                    className="w-full h-12 bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 text-white placeholder:text-white/20 focus:border-cyan-500/50 outline-none transition-all"
+                    required
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-wider font-bold text-white/40 ml-1">Oturum Kodu</label>
+                <div className="relative">
+                  <TerminalIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
+                  <input 
+                    type="text"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    placeholder="YouTube yayınındaki kodu girin..."
+                    className="w-full h-12 bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 text-white placeholder:text-white/20 focus:border-cyan-500/50 outline-none transition-all"
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
+            {error && <p className="text-xs text-red-400 font-medium text-center">{error}</p>}
+
+            <button 
+              type="submit"
+              disabled={loading}
+              className="w-full h-12 bg-white text-black font-bold rounded-xl hover:bg-white/90 active:scale-95 transition-all disabled:opacity-50"
+            >
+              {loading ? 'Doğrulanıyor...' : 'Erişimi Başlat'}
+            </button>
+          </form>
+
+          <div className="w-full pt-4 border-t border-white/5 flex flex-col gap-3">
+            <p className="text-[10px] text-white/30 text-center uppercase tracking-widest font-bold">Açıklama</p>
+            <p className="text-[11px] text-white/50 text-center italic">
+              "Youtube canlı yayındaki kod ile giriş yapabilirsiniz. Yerel ağdan erişenler otomatik olarak yönetici yetkisi alır."
+            </p>
+            <button 
+              onClick={() => setShowAdminLogin(!showAdminLogin)}
+              className="text-[10px] text-cyan-400/60 hover:text-cyan-400 font-bold uppercase tracking-tighter"
+            >
+              {showAdminLogin ? 'Kullanıcı Girişine Dön' : 'Google AI Studio Yönetici Girişi'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ControlPanel({ isOpen, onClose, onRestart }: any) {
+  const [logs, setLogs] = useState<string[]>([
+    '[SİSTEM] Kontrol paneli başlatıldı...',
+    '[INFO] Sunucu: 192.168.1.105:3000 aktif.',
+    '[INFO] Google AI Studio erişimi doğrulandı: meminalp2434@gmail.com',
+    '[LOG] Uzak kullanıcı #342 bağlandı (Bursa, TR)',
+    '[LOG] Session Code AW-7788 aktif.'
+  ]);
+  const [firewall, setFirewall] = useState(true);
+  const [cpuUsage, setCpuUsage] = useState(45);
+  const [ramUsage, setRamUsage] = useState(1.2);
+  const [isScanning, setIsScanning] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCpuUsage(Math.floor(Math.random() * 20) + 30);
+      setRamUsage(parseFloat((1.1 + Math.random() * 0.4).toFixed(1)));
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const addLog = (msg: string) => {
+    setLogs(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev].slice(0, 20));
+  };
+
+  const handleScan = () => {
+    setIsScanning(true);
+    addLog('Güvenlik taraması başlatıldı...');
+    setTimeout(() => {
+      setIsScanning(false);
+      addLog('Güvenlik taraması tamamlandı: Tehdit bulunamadı.');
+    }, 3000);
+  };
+
+  const handleClearLogs = () => {
+    setLogs(['[SİSTEM] Loglar temizlendi.']);
+  };
+
+  const handleBackup = () => {
+    addLog('Sistem yedeği alınıyor...');
+    setTimeout(() => addLog('Yedekleme başarılı: backup_20240723.iso'), 2000);
+  };
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-8"
+    >
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={onClose} />
+      
+      <div className="w-full max-w-4xl h-[80vh] bg-[#0d0d0d] border border-white/10 rounded-[32px] shadow-2xl flex flex-col overflow-hidden relative z-10 font-sans">
+        <div className="h-14 border-b border-white/10 flex items-center justify-between px-6 bg-white/5">
+          <div className="flex items-center gap-3">
+            <div className="p-1.5 bg-red-500/20 rounded-lg">
+              <SettingsIcon size={16} className="text-red-400" />
+            </div>
+            <span className="text-sm font-bold text-white uppercase tracking-widest">Sistem Kontrol Paneli</span>
+            <span className="px-2 py-0.5 bg-red-500/20 text-red-400 text-[8px] font-bold rounded-full border border-red-500/30">ADMİNİSTRATOR</span>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors">
+            <X size={20} className="text-white/40" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-6 bg-white/5 border border-white/10 rounded-2xl">
+              <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">Sunucu Durumu</p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <p className="text-xl font-bold text-white">AKTİF</p>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="text-[8px] text-white/40 uppercase font-bold">Firewall</span>
+                  <button 
+                    onClick={() => {
+                      setFirewall(!firewall);
+                      addLog(`Firewall ${!firewall ? 'etkinleştirildi' : 'devre dışı bırakıldı'}`);
+                    }}
+                    className={`w-8 h-4 rounded-full relative transition-colors ${firewall ? 'bg-cyan-500' : 'bg-white/10'}`}
+                  >
+                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${firewall ? 'right-0.5' : 'left-0.5'}`} />
+                  </button>
+                </div>
+              </div>
+              <p className="text-[10px] text-green-400 mt-2 font-mono">Uptime: 14h 22m</p>
+            </div>
+            <div className="p-6 bg-white/5 border border-white/10 rounded-2xl">
+              <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">Bağlı Kullanıcılar</p>
+              <p className="text-xl font-bold text-white">24</p>
+              <p className="text-[10px] text-white/30 mt-2 font-mono">Local: 1 | Remote: 23</p>
+            </div>
+            <div className="p-6 bg-white/5 border border-white/10 rounded-2xl">
+              <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">Sistem Kaynakları</p>
+              <div className="h-2 w-full bg-white/5 rounded-full mt-2 overflow-hidden">
+                <motion.div 
+                  animate={{ width: `${cpuUsage}%` }}
+                  className="h-full bg-cyan-500 transition-all duration-1000" 
+                />
+              </div>
+              <p className="text-[10px] text-cyan-400 mt-2 font-mono">CPU: %{cpuUsage} | RAM: {ramUsage}GB</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold text-white uppercase tracking-widest border-b border-white/10 pb-2">Hızlı İşlemler</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <button 
+                onClick={() => {
+                  addLog('Sistem yeniden başlatılıyor...');
+                  setTimeout(onRestart, 1000);
+                }}
+                className="flex flex-col items-center justify-center p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all gap-2 group"
+              >
+                <RotateCcw size={20} className="text-orange-400 group-hover:rotate-180 transition-transform duration-500" />
+                <span className="text-[10px] font-bold text-white/60">Yeniden Başlat</span>
+              </button>
+              <button 
+                onClick={handleScan}
+                disabled={isScanning}
+                className={`flex flex-col items-center justify-center p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all gap-2 group ${isScanning ? 'opacity-50' : ''}`}
+              >
+                <ShieldCheck size={20} className={`text-cyan-400 ${isScanning ? 'animate-pulse' : ''}`} />
+                <span className="text-[10px] font-bold text-white/60">{isScanning ? 'Taranıyor...' : 'Güvenlik Taraması'}</span>
+              </button>
+              <button 
+                onClick={handleBackup}
+                className="flex flex-col items-center justify-center p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all gap-2 group"
+              >
+                <Download size={20} className="text-emerald-400" />
+                <span className="text-[10px] font-bold text-white/60">Yedek Al</span>
+              </button>
+              <button 
+                onClick={handleClearLogs}
+                className="flex flex-col items-center justify-center p-4 bg-red-500/10 border border-red-500/20 rounded-2xl hover:bg-red-500/20 transition-all gap-2 group"
+              >
+                <Trash2 size={20} className="text-red-400" />
+                <span className="text-[10px] font-bold text-red-400/80">Logları Temizle</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold text-white uppercase tracking-widest border-b border-white/10 pb-2">Gelişmiş Ayarlar</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold text-white uppercase">Güvenli Mod</span>
+                  <span className="text-[8px] text-white/40">Sistemi minimal servislerle başlat</span>
+                </div>
+                <button 
+                  onClick={() => {
+                    const isSafe = localStorage.getItem('archweb_safe_mode') === 'true';
+                    localStorage.setItem('archweb_safe_mode', isSafe ? 'false' : 'true');
+                    addLog(`Güvenli Mod ${!isSafe ? 'aktif edildi (Yeniden başlatma gerekir)' : 'kapatıldı'}`);
+                  }}
+                  className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[8px] text-white/60 font-bold hover:bg-white/10"
+                >
+                  DEĞİŞTİR
+                </button>
+              </div>
+              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold text-white uppercase">Hız Sınırı</span>
+                  <span className="text-[8px] text-white/40">Network bant genişliği kısıtlaması</span>
+                </div>
+                <input type="range" className="w-20 accent-cyan-500" defaultValue={100} />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1 min-h-[150px] bg-black/40 rounded-2xl border border-white/5 p-4 font-mono text-[10px] text-white/40 overflow-y-auto">
+            {logs.map((log, i) => (
+              <p key={i} className={i === 0 ? 'text-green-500/60' : ''}>{log}</p>
+            ))}
+            <p className="animate-pulse">_</p>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
 }
 
 

@@ -1,31 +1,70 @@
-ArchWeb OS Server Android Package (.APK)
-===================================
-App Name: ArchWeb OS Server Client / Server Controller
-Package Name: com.archweb.server
-Version: 2.0.0
-Release Date: 2026-07-17
-Platform: Android 10+ (Termux / Native WebView Client)
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.archweb.server"
+    android:versionCode="20000"
+    android:versionName="2.0.0">
 
-Bu paket, ArchWeb OS yerel sunucunuzu (http://192.168.1.105:3000/) mobil cihazinizdan yonetmenizi ve mobil cihazinizda calistirilan Node.js sunucusuna baglanmanizi saglar.
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-KURULUM VE KULLANIM ADIMLARI:
------------------------------
-1. Bu Server.apk dosyasini telefonunuza indirin.
-2. Telefonunuzda "Bilinmeyen Kaynaklardan Yukleme" iznini aktif ederek APK'yi yukleyin.
-3. Uygulamayi actiginizda, "Local IP" alanina sunucunun kurulu oldugu bilgisayarinizin yerel IP'sini girin:
-   -> http://192.168.1.105:3000/
-4. "Baglan" butonuna basarak, bilgisayarinizda calisan yerel Node.js sunucunuza dogrudan telefonunuzdan baglanin!
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_server_launcher"
+        android:label="ArchWeb Server"
+        android:roundIcon="@mipmap/ic_server_launcher_round"
+        android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
+        android:theme="@style/Theme.ArchWebServer.NoActionBar">
 
-ALTERNATIF (TELEFONDA YEREL SUNUCU CALISTIRMA - Termux ile Node.js):
------------------------------------------------------------------
-Eger Node.js sunucusunu dogrudan telefonunuzun icinde calistirmak isterseniz:
-1. Google Play veya F-Droid uzerinden "Termux" uygulamasini indirin.
-2. Termux terminalinde su komutlari sirasiyla calistirin:
-   $ pkg update && pkg upgrade
-   $ pkg install nodejs git
-   $ git clone https://github.com/meminalp2434/archweb-os.git
-   $ cd archweb-os
-   $ npm install
-   $ npm run build
-   $ node server.js
-3. Tarayicinizdan http://localhost:3000/ adresine girerek mobil sunucunuzu kullanin!
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize"
+            android:hardwareAccelerated="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".BackgroundNodeService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+    </application>
+
+</manifest>
+
+/* MAIN ACTIVITY NATIVE SERVER CONTROLLER CODE (com/archweb/server/MainActivity.java) */
+package com.archweb.server;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        // Start Background Node.js / Express Service
+        Intent serviceIntent = new Intent(this, BackgroundNodeService.class);
+        startForegroundService(serviceIntent);
+
+        WebView webView = this.getBridge().getWebView();
+        if (webView != null) {
+            WebSettings settings = webView.getSettings();
+            settings.setJavaScriptEnabled(true);
+            settings.setDomStorageEnabled(true);
+            settings.setAllowUniversalAccessFromFileURLs(true);
+        }
+    }
+}

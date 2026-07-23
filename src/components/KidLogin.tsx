@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Check, AlertCircle, ChevronRight, ArrowLeft, Star, Sparkles, Brain, Gamepad2, Paintbrush, Rocket, Eye, EyeOff, Lock, User } from 'lucide-react';
+import { Mail, Check, AlertCircle, ChevronRight, ArrowLeft, Star, Sparkles, Brain, Gamepad2, Paintbrush, Rocket, Eye, EyeOff, Lock, User, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface KidLoginProps {
@@ -8,7 +8,8 @@ interface KidLoginProps {
     category: 'education' | 'gaming' | 'creativity' | 'science',
     avatar: string,
     loginMethod: 'email' | 'google' | 'microsoft' | 'apple',
-    password?: string
+    password?: string,
+    role?: 'admin' | 'user'
   ) => void;
 }
 
@@ -75,11 +76,34 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
   const [loginMethod, setLoginMethod] = useState<'email' | 'google' | 'microsoft' | 'apple'>('email');
   const [isRegistering, setIsRegistering] = useState<boolean>(false);
   const [savedUsers, setSavedUsers] = useState<any[]>([]);
+  const [isResetting, setIsResetting] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   useEffect(() => {
     const savedUsersRaw = localStorage.getItem('archweb_registered_users');
     setSavedUsers(savedUsersRaw ? JSON.parse(savedUsersRaw) : []);
   }, []);
+
+  const handleSystemReset = () => {
+    setIsResetting(true);
+    setShowResetConfirm(false);
+    
+    setTimeout(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+      // Clear specific keys just in case
+      const keys = [
+        'archweb_kid_setup_complete', 'archweb_gmail_user', 'archweb_gmail_password',
+        'archweb_login_method', 'archweb_kid_category', 'archweb_kid_avatar',
+        'archweb_registered_users', 'archweb_safe_mode', 'archweb_wallpaper',
+        'archweb_accent_color', 'archweb_brightness', 'archweb_font_size',
+        'archweb_firewall_active', 'archweb_is_locked', 'archweb_pin_code',
+        'archweb_pin_required', 'archweb_launcher_first_run'
+      ];
+      keys.forEach(k => localStorage.removeItem(k));
+      window.location.assign('/');
+    }, 1500);
+  };
 
   const handleAccountSelect = (user: any) => {
     // Log in directly! We load their saved preferences
@@ -155,7 +179,9 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
       setError('');
       
       // Let's set it up! We can immediately complete the login!
-      onComplete(fullEmail, foundUser.category || 'education', foundUser.avatar || '🦊', foundUser.loginMethod || 'email', password);
+      const isSpecialAdmin = (fullEmail.toLowerCase() === 'meminalp2434@gmail.com' && password === '2434ytact');
+      const finalRole = isSpecialAdmin ? 'admin' : (foundUser.role || 'user');
+      onComplete(fullEmail, foundUser.category || 'education', foundUser.avatar || '🦊', foundUser.loginMethod || 'email', password, finalRole);
     }
   };
 
@@ -228,6 +254,7 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
       avatar: selectedAvatar,
       category: selectedCategory,
       loginMethod,
+      role: (email.toLowerCase() === 'meminalp2434@gmail.com' && password === '2434ytact') ? 'admin' : 'user' as 'admin' | 'user',
     };
     if (index > -1) {
       savedUsers[index] = newUser;
@@ -236,7 +263,7 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
     }
     localStorage.setItem('archweb_registered_users', JSON.stringify(savedUsers));
 
-    onComplete(email, selectedCategory, selectedAvatar, loginMethod, password);
+    onComplete(email, selectedCategory, selectedAvatar, loginMethod, password, newUser.role);
   };
 
   return (
@@ -285,12 +312,7 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  if (window.confirm("Tüm kayıtlı kullanıcı hesaplarını ve verileri sıfırlamak istediğinize emin misiniz?")) {
-                    localStorage.clear();
-                    window.location.reload();
-                  }
-                }}
+                onClick={() => setShowResetConfirm(true)}
                 className="w-full text-center text-[10px] text-white/40 hover:text-red-400 mt-2 underline transition-colors cursor-pointer"
               >
                 Hesap Kayıtlarını ve Tüm Verileri Sıfırla
@@ -461,12 +483,7 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
             
             <button
               type="button"
-              onClick={() => {
-                if (window.confirm("Tüm verileri ve kayıtlı hesapları sıfırlamak istediğinize emin misiniz?")) {
-                  localStorage.clear();
-                  window.location.reload();
-                }
-              }}
+              onClick={() => setShowResetConfirm(true)}
               className="w-full text-center text-[10px] text-white/40 hover:text-red-400 mt-2 underline transition-colors"
             >
               Şifremi Unuttum / Tüm Verileri Sıfırla
@@ -596,6 +613,48 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
               <span>Sihirli Dünyayı Başlat! 🚀</span>
             </button>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Custom Reset Confirmation Modal */}
+      <AnimatePresence>
+        {showResetConfirm && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="w-full max-w-sm bg-[#1a1a1a] border border-red-500/30 rounded-2xl p-6 shadow-2xl space-y-6"
+            >
+              <div className="flex flex-col items-center text-center gap-4">
+                <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center border border-red-500/30">
+                  <Trash2 size={32} className="text-red-400" />
+                </div>
+                <div className="space-y-2">
+                  <h2 className="text-lg font-bold text-white">Sistemi Sıfırla?</h2>
+                  <p className="text-xs text-white/60 leading-relaxed">
+                    Şifrenizi unuttuysanız sistemi tamamen sıfırlayabilirsiniz. <br />
+                    <span className="text-red-400 font-bold">TÜM KAYITLI HESAPLAR VE VERİLER SİLİNECEKTİR.</span>
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowResetConfirm(false)}
+                  className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-xs hover:bg-white/10 transition-all"
+                >
+                  Vazgeç
+                </button>
+                <button 
+                  onClick={handleSystemReset}
+                  className="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold text-xs hover:bg-red-700 transition-all shadow-lg shadow-red-600/20"
+                >
+                  Sıfırla
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
@@ -743,6 +802,22 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
                 </form>
               )}
             </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isResetting && (
+          <div className="fixed inset-0 z-[100000] bg-black flex flex-col items-center justify-center gap-6">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+              className="w-16 h-16 border-4 border-yellow-500/20 border-t-yellow-500 rounded-full"
+            />
+            <div className="text-center space-y-2">
+              <h2 className="text-white text-lg font-bold uppercase tracking-widest">Sistem Sıfırlanıyor</h2>
+              <p className="text-white/40 text-xs font-mono">Tüm veriler temizleniyor ve yeniden başlatılıyor...</p>
+            </div>
           </div>
         )}
       </AnimatePresence>

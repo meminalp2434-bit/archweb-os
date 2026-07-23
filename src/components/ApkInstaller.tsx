@@ -13,7 +13,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadedFiles, setDownloadedFiles] = useState<Record<string, boolean>>({});
   const [showGuide, setShowGuide] = useState(false);
-  const [selectedGuide, setSelectedGuide] = useState<'windows' | 'mac' | 'linux' | 'android' | null>(null);
+  const [selectedGuide, setSelectedGuide] = useState<'windows' | 'mac' | 'linux' | 'android' | 'ios' | null>(null);
 
   const [canInstallPWA, setCanInstallPWA] = useState(!!(window as any).deferredPrompt);
 
@@ -44,7 +44,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
     }
   };
 
-  const handleDownloadFile = (fileType: 'apk' | 'exe' | 'bat' | 'dmg' | 'deb' | 'dev' | 'server_apk' | 'zip' | 'iso') => {
+  const handleDownloadFile = (fileType: 'apk' | 'ipa' | 'exe' | 'bat' | 'dmg' | 'deb' | 'dev' | 'server_apk' | 'zip' | 'iso') => {
     if (downloadingFile) return;
     setDownloadingFile(fileType);
     setDownloadProgress(0);
@@ -64,11 +64,12 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
             playWindows11StartupSound(volume, isMuted, true);
 
             const fileContentsMap: Record<string, string> = {
-              apk: `ArchWeb OS Android Package (.APK)\n===================================\nApp Name: ArchWeb OS for Kids / Kids World\nPackage Name: com.archweb.os\nVersion: 20.1.2\nRelease Date: 2026-07-15\nPlatform: Android 10+ (Xiaomi HyperOS, Samsung One UI vb. tam uyumlu)\n\nBu dosya, ArchWeb OS'in mobil cihazlarda yerel (native) bir uygulama olarak calismasini saglayan kurulum paketidir.\n`,
-              server_apk: `ArchWeb OS Server Android Package (.APK)\n===================================\nApp Name: ArchWeb OS Server Client / Server Controller\nPackage Name: com.archweb.server\nVersion: 2.0.0\nRelease Date: 2026-07-17\nPlatform: Android 10+ (Termux / Native WebView Client)\n\nBu paket, ArchWeb OS yerel sunucunuzu (http://245.578.3.57.99:5677/) mobil cihazinizdan yonetmenizi saglar.\n`,
-              exe: `import os\nimport subprocess\nimport sys\nimport time\n\n# ArchWeb OS ANSI Color Codes\nCYAN = "\\033[96m"\nMAGENTA = "\\033[95m"\nBLUE = "\\033[94m"\nGREEN = "\\033[92m"\nYELLOW = "\\033[93m"\nRED = "\\033[91m"\nBOLD = "\\033[1m"\nRESET = "\\033[0m"\n\ndef print_banner():\n    print(f"{CYAN}{BOLD}")\n    print("    █████╗ ██████╗  ██████╗██╗  ██╗██╗    ██╗███████╗██████╗ ")\n    print("    ██╔══██╗██╔══██╗██╔════╝██║  ██║██║    ██║██╔════╝██╔══██╗")\n    print("    ███████║██████╔╝██║     ███████║██║ █╗ ██║█████╗  ██████╔╝")\n    print("    ██╔══██║██╔══██╗██║     ██╔══██║██║███╗██║██╔══╝  ██╔══██╗")\n    print("    ██║  ██║██║  ██║╚██████╗██║  ██║╚███╔███╔╝███████╗██████╔╝")\n    print("    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝ ╚══╝╚══╝ ╚══════╝╚═════╝ ")\n    print(f"                                   SYSTEM CORE v20.1.2{RESET}")\n    print(f"{MAGENTA}------------------------------------------------------------{RESET}")\n\ndef start_archweb():\n    os.system('cls' if os.name == 'nt' else 'clear')\n    print_banner()\n    \n    print(f"{BLUE}[SYSTEM]{RESET} Ortam denetleniyor...")\n    \n    # 1. Node.js Kontrolu\n    try:\n        subprocess.run(["node", "--version"], check=True, capture_output=True)\n        print(f"{GREEN}[OK]{RESET} Node.js Runtime Hazir.")\n    except:\n        print(f"{RED}[HATA]{RESET} Node.js bulunamadi!")\n        sys.exit(1)\n\n    # 2. Yapilandirma\n    target_ip = \"245.578.3.57.99\"\n    target_port = \"5677\"\n\n    print(f"{BLUE}[INFO]{RESET} Sunucu Yapilandirmasi:")\n    print(f"       > IP:   {YELLOW}{target_ip}{RESET}")\n    print(f"       > PORT: {YELLOW}{target_port}{RESET}")\n    print(f"       > URL:  {CYAN}http://localhost:{target_port}{RESET}")\n    print(f"{MAGENTA}------------------------------------------------------------{RESET}")\n    print(f"{BOLD}DURUM: {GREEN}AKTIF (ARCHWEB ENGINE CALISIYOR){RESET}")\n    print("")\n\n    try:\n        subprocess.run(["npm", "run", "dev"], shell=True)\n    except KeyboardInterrupt:\n        print(f"\\n{YELLOW}[SYSTEM]{RESET} Sunucu guvenli bir sekilde kapatildi.")\n\nif __name__ == \"__main__\":\n    start_archweb()\n`,
-              bat: `@echo off\nsetlocal enabledelayedexpansion\ntitle ArchWeb OS System Launcher\ncd /d \"%~dp0\"\n\n:: 1. Try Python\nwhere python >nul 2>nul\nif %errorlevel% equ 0 (\n    if exist \"ArchWeb_OS_Setup.exe\" (\n        python ArchWeb_OS_Setup.exe\n        if %errorlevel% neq 0 pause\n        exit /b\n    )\n)\n\n:: 2. Fallback\ncolor 0B\necho [BILGI] Klasik modda baslatiliyor...\ncall npm run dev\npause\n`,
-              iso: `ARCHWEB OS ISO IMAGE\nVersion: 20.1.2\nEdition: Chromebook Edition\nBuild: Beta Test Stage\n\nBu dosya Chromebook ve diger x86_64 sistemler icin canli (live) kurulum imajidir.\n`,
+              apk: `<?xml version="1.0" encoding="utf-8"?>\n<manifest xmlns:android="http://schemas.android.com/apk/res/android"\n    package="com.archweb.os"\n    android:versionCode="20102"\n    android:versionName="20.1.2">\n\n    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\n\n    <application\n        android:label="ArchWeb OS"\n        android:icon="@mipmap/ic_launcher"\n        android:theme="@style/Theme.ArchWeb.NoActionBar">\n        \n        <activity android:name=".MainActivity"\n            android:exported="true"\n            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale">\n            <intent-filter>\n                <action android:name="android.intent.action.MAIN" />\n                <category android:name="android.intent.category.LAUNCHER" />\n            </intent-filter>\n        </activity>\n    </application>\n</manifest>\n\n/* MAIN ACTIVITY CODE */\npackage com.archweb.os;\nimport com.getcapacitor.BridgeActivity;\npublic class MainActivity extends BridgeActivity {}`,
+              ipa: `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n    <key>CFBundleIdentifier</key>\n    <string>com.archweb.os.ios</string>\n    <key>CFBundleDisplayName</key>\n    <string>ArchWeb OS</string>\n    <key>CFBundleShortVersionString</key>\n    <string>20.1.2</string>\n    <key>CodeSigningIdentity</key>\n    <string>Apple Development: Signed Distribution (ArchWeb OS Team)</string>\n    <key>ProvisionedDevices</key>\n    <string>All Devices (Universal Ad-Hoc / Enterprise Signed)</string>\n</dict>\n</plist>`,
+              server_apk: `package com.archweb.server;\n\nimport android.os.Bundle;\nimport com.getcapacitor.BridgeActivity;\n\npublic class MainActivity extends BridgeActivity {\n    @Override\n    public void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        this.getBridge().getWebView().getSettings().setDomStorageEnabled(true);\n    }\n}`,
+              exe: `#include <iostream>\n#include <windows.h>\n#include <string>\n\nint main() {\n    SetConsoleTitleA("ArchWeb OS - Desktop Core v20.1.2");\n    \n    std::cout << "========================================" << std::endl;\n    std::cout << "       ARCHWEB OS - DESKTOP CORE        " << std::endl;\n    std::cout << "========================================" << std::endl;\n    std::cout << "[SYSTEM] C++ Native Kernel baslatiliyor..." << std::endl;\n    \n    std::cout << "[INFO] Port 3000 kontrol ediliyor..." << std::endl;\n    Sleep(1000);\n    \n    std::cout << "[INFO] Yerel sunucu adresi: http://localhost:3000" << std::endl;\n    std::cout << "[SYSTEM] Arayuz motoru yukleniyor..." << std::endl;\n    \n    system("npm run dev");\n\n    return 0;\n}`,
+              bat: `@echo off\nsetlocal enabledelayedexpansion\ntitle ArchWeb OS - System Launcher & Updater\ncd /d "%~dp0"\n\necho [1/4] Gereksinimler kontrol ediliyor...\nwhere node >nul 2>nul\nif %errorlevel% neq 0 ( color 0C & echo [HATA] Node.js bulunamadi! & pause & exit /b )\n\necho [2/4] Guncelleme Kontrolu\nset /p upd="Sistemi guncellemek ister misiniz? (E/H): "\nif /i "%upd%"=="E" ( \n    echo [GUNCELLEME] Paketler yukleniyor...\n    call npm install \n)\n\necho [3/4] Sistem baslatiliyor...\ncall npm run dev\n`,
+              iso: `ARCHWEB OS ISO IMAGE\nVersion: 20.1.2\nEdition: Chromebook Edition\nBuild: Beta Test Stage\n`,
               zip: `ArchWeb OS Standalone System Package (.ZIP)\n==========================================\nVersion: 20.1.2\nType: Recovery & Offline Support\n`,
               dmg: `ArchWeb OS for macOS Installer\n==================================\n`,
               deb: `Package: archweb-os\nVersion: 20.1.2\n`,
@@ -77,8 +78,9 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
 
             let filename = '';
             if (fileType === 'apk') filename = 'archinstall.apk';
+            else if (fileType === 'ipa') filename = 'archweb.ipa';
             else if (fileType === 'server_apk') filename = 'Server.apk';
-            else if (fileType === 'exe') filename = 'ArchWeb_OS_Setup.exe';
+            else if (fileType === 'exe') filename = 'ArchWeb_Desktop.exe';
             else if (fileType === 'bat') filename = 'ArchWeb_OS_Launcher.bat';
             else if (fileType === 'iso') filename = 'archweb_v20_chromebook.iso';
             else if (fileType === (('zip' as any) as typeof fileType)) filename = 'archweb_system.zip';
@@ -88,7 +90,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
 
             const link = document.createElement('a');
 
-            if (fileType === 'exe' || fileType === 'zip' || fileType === 'bat' || fileType === 'iso') {
+            if (fileType === 'apk' || fileType === 'ipa' || fileType === 'server_apk' || fileType === 'exe' || fileType === 'zip' || fileType === 'bat' || fileType === 'iso' || fileType === 'dmg' || fileType === 'deb') {
               link.href = '/' + filename;
             } else {
               const content = fileContentsMap[fileType] || '';
@@ -101,7 +103,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            if (fileType !== 'exe' && fileType !== 'zip' && fileType !== 'iso' && fileType !== 'bat') {
+            if (fileType !== 'apk' && fileType !== 'ipa' && fileType !== 'server_apk' && fileType !== 'exe' && fileType !== 'zip' && fileType !== 'iso' && fileType !== 'bat' && fileType !== 'dmg' && fileType !== 'deb') {
               URL.revokeObjectURL(link.href);
             }
           }, 300);
@@ -189,10 +191,11 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
               </button>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8 shrink-0">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8 shrink-0">
               {[
                 { id: 'windows', icon: Monitor, name: 'Windows', color: 'text-blue-400' },
                 { id: 'android', icon: Smartphone, name: 'Android', color: 'text-emerald-400' },
+                { id: 'ios', icon: Apple, name: 'iOS / iPhone', color: 'text-sky-400' },
                 { id: 'mac', icon: Apple, name: 'macOS', color: 'text-white' },
                 { id: 'linux', icon: Terminal, name: 'Linux', color: 'text-orange-400' },
               ].map((plat) => (
@@ -248,6 +251,21 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
                         <p>4. Kurulum tamamlandığında ana ekranınızdaki ArchWeb ikonuna tıklayarak başlatın.</p>
                         <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-[12px]">
                           <b>Alternatif:</b> Tarayıcı üzerinden "Uygulamayı Yükle" (PWA) seçeneğini kullanmak daha hızlı ve güncel bir deneyim sunar.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedGuide === 'ios' && (
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-bold text-sky-400">iOS (iPhone / iPad) İmzalanmış .IPA Kurulumu</h3>
+                      <div className="space-y-3 text-sm text-white/80 leading-relaxed">
+                        <p>1. <b>archweb.ipa</b> (Apple İmzalanmış iOS Paketi) dosyasını indirin.</p>
+                        <p>2. AltStore, Sideloadly veya TrollStore uygulamasını açıp <b>archweb.ipa</b> dosyasını seçin.</p>
+                        <p>3. iPhone Ayarlar -&gt; Genel -&gt; VPN ve Cihaz Yönetimi bölümünden geliştirici sertifikasına "Güven" seçeneğine dokunun.</p>
+                        <p>4. Ana ekranınıza eklenen ArchWeb OS ikonuna tıklayarak tam ekran kullanın.</p>
+                        <div className="p-3 bg-sky-500/10 border border-sky-500/20 rounded-lg text-[12px]">
+                          <b>Safari PWA Yöntemi:</b> Safari'de Paylaş ikonuna dokunup "Ana Ekrana Ekle" seçeneğiyle de saniyeler içinde iPhone'unuza yerel uygulama gibi yükleyebilirsiniz.
                         </div>
                       </div>
                     </div>
@@ -533,9 +551,9 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
                       />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-white">ArchWeb_OS_Setup.exe</h4>
+                      <h4 className="text-xs font-bold text-white">ArchWeb_Desktop.exe</h4>
                       <p className="text-[11px] text-white/60 leading-relaxed">
-                        Sistem bilesenlerini, Node.js denetleyicisini ve sunucu konsolunu iceren tumlesik kurulum paketi.
+                        ArchWeb OS Masaüstü Deneyimi. Node.js denetleyicisi ve masaüstü arayüzü ile tam entegre çalışır.
                       </p>
                     </div>
                   </div>
@@ -554,14 +572,14 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
                       onClick={() => handleDownloadFile('exe')}
                       className="w-full py-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <CheckCircle2 size={12} /> ArchWeb_OS_Setup.exe İndirildi
+                      <CheckCircle2 size={12} /> ArchWeb_Desktop.exe İndirildi
                     </button>
                   ) : (
                     <button
                       onClick={() => handleDownloadFile('exe')}
                       className="w-full py-2.5 bg-blue-500/20 hover:bg-blue-500/35 text-blue-300 border border-blue-500/30 hover:border-blue-400 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <Download size={14} /> ArchWeb_OS_Setup.exe (Full Pack)
+                      <Download size={14} /> ArchWeb_Desktop.exe (Full Pack)
                     </button>
                   )}
                 </div>
