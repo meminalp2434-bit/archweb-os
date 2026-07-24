@@ -37,7 +37,9 @@ function initializeServerStorage() {
     "Müzik",
     "Resimler",
     "Videolar",
-    "Çocuk Dünyası"
+    "Çocuk Dünyası",
+    "Sunucu",
+    "archweb"
   ];
 
   defaultFolders.forEach(folder => {

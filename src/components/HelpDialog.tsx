@@ -7,25 +7,47 @@ interface HelpDialogProps {
 }
 
 export const HelpDialog: React.FC<HelpDialogProps> = ({ onClose }) => {
+  const [isMaximized, setIsMaximized] = React.useState(false);
+
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      className="w-full max-w-2xl bg-[#0f0f13] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
+      className={isMaximized ? "fixed inset-0 z-[100] bg-[#0f0f13] border border-white/10 shadow-2xl overflow-hidden flex flex-col transition-all duration-300" : "w-full max-w-2xl bg-[#0f0f13] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] transition-all duration-300"}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-black/40 border-b border-white/5">
-        <div className="flex items-center gap-3 text-[var(--accent)]">
-          <HelpCircle size={20} />
-          <h2 className="text-sm font-bold uppercase tracking-widest font-mono">Yardım Merkezi</h2>
+        <div className="flex items-center gap-4">
+          <div className="flex gap-2">
+            <button 
+              onClick={onClose} 
+              className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors flex items-center justify-center text-[8px] text-red-900 font-bold group"
+              title="Kapat"
+            >
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity">✕</span>
+            </button>
+            <button 
+              onClick={onClose}
+              className="w-3 h-3 rounded-full bg-yellow-500/50 hover:bg-yellow-500 transition-colors cursor-pointer flex items-center justify-center text-[8px] text-yellow-900 font-bold group"
+              title="Küçült"
+            >
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity">−</span>
+            </button>
+            <button 
+              onClick={() => setIsMaximized(!isMaximized)}
+              className="w-3 h-3 rounded-full bg-green-500/50 hover:bg-green-500 transition-colors cursor-pointer flex items-center justify-center text-[8px] text-green-900 font-bold group"
+              title={isMaximized ? "Küçült" : "Ekranı Kapla"}
+            >
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity">{isMaximized ? '❐' : '+'}</span>
+            </button>
+          </div>
+          <div className="flex items-center gap-3 text-[var(--accent)]">
+            <HelpCircle size={20} />
+            <h2 className="text-sm font-bold uppercase tracking-widest font-mono">Yardım Merkezi</h2>
+          </div>
         </div>
-        <button 
-          onClick={onClose}
-          className="p-1.5 hover:bg-white/5 rounded-lg text-white/40 hover:text-white transition-colors"
-        >
-          <X size={18} />
-        </button>
+        <div className="w-10" />
       </div>
 
       {/* Content */}

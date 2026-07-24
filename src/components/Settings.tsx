@@ -31,9 +31,12 @@ interface SettingsProps {
   gmailPassword: string;
   setGmailPassword: (val: string) => void;
   
-  // Mobile / APK
+  // Mobile / Device Modes
   mobileMode: boolean;
   setMobileMode: (val: boolean) => void;
+  deviceMode?: 'desktop' | 'mobile' | 'tablet' | 'tv';
+  setDeviceMode?: (val: 'desktop' | 'mobile' | 'tablet' | 'tv') => void;
+  onChangeDeviceMode?: (val: 'desktop' | 'mobile' | 'tablet' | 'tv') => void;
 
   // Audio (Ses)
   volume: number;
@@ -69,6 +72,8 @@ export const Settings: React.FC<SettingsProps> = ({
   setGmailPassword,
   mobileMode,
   setMobileMode,
+  deviceMode = 'desktop',
+  setDeviceMode,
   volume,
   setVolume,
   isMuted,
@@ -77,6 +82,7 @@ export const Settings: React.FC<SettingsProps> = ({
   setStartupSoundEnabled,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('appearance');
+  const [isMaximized, setIsMaximized] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
 
@@ -116,7 +122,7 @@ export const Settings: React.FC<SettingsProps> = ({
 
   return (
     <div 
-      className="flex flex-col h-full w-full border border-white/10 rounded-lg overflow-hidden shadow-2xl transition-all"
+      className={`flex flex-col border border-white/10 overflow-hidden shadow-2xl transition-all duration-300 ${isMaximized ? 'fixed inset-0 z-[100] rounded-none' : 'h-full w-full rounded-lg'}`}
       style={{ 
         backgroundColor: `rgba(18, 18, 18, ${windowOpacity / 100})`,
         backdropFilter: 'blur(20px)',
@@ -125,16 +131,36 @@ export const Settings: React.FC<SettingsProps> = ({
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-white/5 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <Palette size={16} className="text-[var(--accent)]" />
-          <span className="text-sm font-bold text-white/90">{getTabTitle()}</span>
+        <div className="flex items-center gap-4">
+          <div className="flex gap-2">
+            <button 
+              onClick={onClose} 
+              className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors flex items-center justify-center text-[8px] text-red-900 font-bold group"
+              title="Kapat"
+            >
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity">✕</span>
+            </button>
+            <button 
+              onClick={onClose}
+              className="w-3 h-3 rounded-full bg-yellow-500/50 hover:bg-yellow-500 transition-colors cursor-pointer flex items-center justify-center text-[8px] text-yellow-900 font-bold group"
+              title="Küçült"
+            >
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity">−</span>
+            </button>
+            <button 
+              onClick={() => setIsMaximized(!isMaximized)}
+              className="w-3 h-3 rounded-full bg-green-500/50 hover:bg-green-500 transition-colors cursor-pointer flex items-center justify-center text-[8px] text-green-900 font-bold group"
+              title={isMaximized ? "Küçült" : "Ekranı Kapla"}
+            >
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity">{isMaximized ? '❐' : '+'}</span>
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Palette size={16} className="text-[var(--accent)]" />
+            <span className="text-sm font-bold text-white/90">{getTabTitle()}</span>
+          </div>
         </div>
-        <button 
-          onClick={onClose}
-          className="p-1 hover:bg-white/10 rounded-md transition-colors text-white/50 hover:text-white"
-        >
-          <X size={18} />
-        </button>
+        <div className="w-10" />
       </div>
 
       <div className="flex flex-1 overflow-hidden">
@@ -485,24 +511,41 @@ export const Settings: React.FC<SettingsProps> = ({
               animate={{ opacity: 1, x: 0 }}
               className="space-y-6"
             >
-              {/* Mobile Mode Simulation */}
+              {/* Device Modes Selection */}
               <section className="bg-white/5 p-4 rounded-xl border border-white/5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-xl ${mobileMode ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'bg-white/5 text-white/40'}`}>
-                      <Smartphone size={20} />
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider text-white/50 flex items-center gap-2">
+                  <Smartphone size={14} className="text-[var(--accent)]" />
+                  Sistem & Cihaz Modu Seçimi
+                </h3>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { id: 'desktop', name: 'Masaüstü (Desktop)', desc: 'Klasik Arch Linux pencere yöneticisi ve masaüstü', icon: '💻', color: 'from-blue-500/20 to-sky-500/10' },
+                    { id: 'mobile', name: 'Samsung S8 & Mobil', desc: 'S8 18.5:9 tam ekran dikey telefon görünümü', icon: '📱', color: 'from-emerald-500/20 to-teal-500/10' },
+                    { id: 'tablet', name: 'Tablet Modu (10" Touch)', desc: 'Büyük dokunmatik ekran & widget düzeni', icon: '📑', color: 'from-purple-500/20 to-indigo-500/10' },
+                    { id: 'tv', name: 'Android TV & Google TV', desc: '4K Smart TV & Kumanda (D-Pad) Leanback arayüzü', icon: '📺', color: 'from-amber-500/20 to-orange-500/10' },
+                  ].map((dev) => (
+                    <div 
+                      key={dev.id}
+                      onClick={() => {
+                        if (setDeviceMode) setDeviceMode(dev.id as any);
+                        if (dev.id === 'mobile') setMobileMode(true);
+                        else setMobileMode(false);
+                      }}
+                      className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-start gap-3 bg-gradient-to-br ${dev.color} ${deviceMode === dev.id ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/50 scale-[1.02]' : 'border-white/10 hover:border-white/30'}`}
+                    >
+                      <span className="text-2xl">{dev.icon}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-bold text-white">{dev.name}</h4>
+                          {deviceMode === dev.id && (
+                            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[var(--accent)] text-white font-bold">AKTİF</span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-white/60 mt-0.5">{dev.desc}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-white">Mobil Cihaz Simülasyonu</h4>
-                      <p className="text-[10px] text-white/40">ArchWeb OS'i şık bir Android/iOS çerçevesinde test edin!</p>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => setMobileMode(!mobileMode)}
-                    className={`relative w-12 h-6 rounded-full transition-colors ${mobileMode ? 'bg-[var(--accent)]' : 'bg-white/10'}`}
-                  >
-                    <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${mobileMode ? 'translate-x-6' : ''}`} />
-                  </button>
+                  ))}
                 </div>
               </section>
 

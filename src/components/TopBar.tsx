@@ -13,6 +13,8 @@ interface TopBarProps {
   setIsMuted: (val: boolean) => void;
   mobileMode?: boolean;
   onMobileToggle?: () => void;
+  deviceMode?: 'desktop' | 'mobile' | 'tablet' | 'tv';
+  onChangeDeviceMode?: (mode: 'desktop' | 'mobile' | 'tablet' | 'tv') => void;
 }
 
 const TopBarClock = () => {
@@ -42,19 +44,21 @@ export const TopBar: React.FC<TopBarProps> = ({
   isMuted,
   setIsMuted,
   mobileMode = false,
-  onMobileToggle
+  onMobileToggle,
+  deviceMode = 'desktop',
+  onChangeDeviceMode
 }) => {
   return (
     <div className="h-8 w-full bg-black/40 backdrop-blur-sm border-b border-white/5 flex items-center justify-between px-4 text-[11px] font-mono text-white/60 z-50">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         <div 
           onClick={onLauncherToggle}
-          className="flex items-center gap-1.5 hover:text-white cursor-pointer transition-colors group"
+          className="flex items-center gap-1.5 hover:text-white cursor-pointer transition-colors group shrink-0"
         >
           <LayoutGrid size={14} className="text-[var(--accent)] group-hover:scale-110 transition-transform" />
-          <span className="font-bold text-white/80">ArchWeb Kids</span>
+          <span className="font-bold text-white/80 whitespace-nowrap">ArchWeb Kids</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-3">
           <span className="hover:text-white cursor-pointer">Etkinlikler</span>
           <span className="hover:text-white cursor-pointer">Uçbirim</span>
           <span className="hover:text-white cursor-pointer">Tarayıcı</span>
@@ -64,18 +68,18 @@ export const TopBar: React.FC<TopBarProps> = ({
 
       <TopBarClock />
 
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="hidden sm:flex items-center gap-1">
             <Cpu size={12} />
             <span>12%</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="hidden sm:flex items-center gap-1">
             <HardDrive size={12} />
             <span>45GB</span>
           </div>
-          <Wifi size={14} />
-          <Battery size={14} />
+          <Wifi size={14} className="shrink-0" />
+          <Battery size={14} className="shrink-0" />
           
           {/* Hover-expandable Volume Control */}
           <div className="relative flex items-center gap-1.5 group/vol px-1">
@@ -114,14 +118,48 @@ export const TopBar: React.FC<TopBarProps> = ({
           )}
         </div>
         <div className="w-px h-3 bg-white/10" />
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={onMobileToggle}
-            className={`p-1 rounded-md transition-all cursor-pointer flex items-center justify-center ${mobileMode ? 'text-[var(--accent)] bg-[var(--accent)]/15 border border-[var(--accent)]/30 scale-110' : 'text-white/60 hover:text-white'}`}
-            title={mobileMode ? "Masaüstü Moduna Geç" : "Telefon Moduna Geç"}
-          >
-            <Smartphone size={14} />
-          </button>
+        <div className="flex items-center gap-1.5">
+          {onChangeDeviceMode && (
+            <div className="flex items-center bg-white/5 border border-white/10 rounded-md p-0.5 text-[10px]">
+              <button
+                onClick={() => onChangeDeviceMode('desktop')}
+                className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${deviceMode === 'desktop' ? 'bg-[var(--accent)] text-white font-bold' : 'text-white/50 hover:text-white'}`}
+                title="Masaüstü Modu"
+              >
+                💻
+              </button>
+              <button
+                onClick={() => onChangeDeviceMode('mobile')}
+                className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${deviceMode === 'mobile' ? 'bg-[var(--accent)] text-white font-bold' : 'text-white/50 hover:text-white'}`}
+                title="Samsung S8 Mobil Modu"
+              >
+                📱
+              </button>
+              <button
+                onClick={() => onChangeDeviceMode('tablet')}
+                className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${deviceMode === 'tablet' ? 'bg-purple-500 text-white font-bold' : 'text-white/50 hover:text-white'}`}
+                title="Tablet Modu"
+              >
+                📑
+              </button>
+              <button
+                onClick={() => onChangeDeviceMode('tv')}
+                className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${deviceMode === 'tv' ? 'bg-amber-500 text-white font-bold' : 'text-white/50 hover:text-white'}`}
+                title="Android TV & Google TV Modu"
+              >
+                📺
+              </button>
+            </div>
+          )}
+          {!onChangeDeviceMode && (
+            <button 
+              onClick={onMobileToggle}
+              className={`p-1 rounded-md transition-all cursor-pointer flex items-center justify-center ${mobileMode ? 'text-[var(--accent)] bg-[var(--accent)]/15 border border-[var(--accent)]/30 scale-110' : 'text-white/60 hover:text-white'}`}
+              title={mobileMode ? "Masaüstü Moduna Geç" : "Telefon Moduna Geç"}
+            >
+              <Smartphone size={14} />
+            </button>
+          )}
           {onLockScreen && (
             <button 
               onClick={onLockScreen}

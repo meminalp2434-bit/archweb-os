@@ -18,8 +18,10 @@ import { KidApp } from './components/KidApp';
 import { PlayStore, playStoreApps, Minecraft2D, PianoKids, SpaceExplorer, ColoringBook, YTKids, BunnyPet } from './components/PlayStore';
 import { ApkInstaller } from './components/ApkInstaller';
 import { IsoInstaller } from './components/IsoInstaller';
+import { TvLauncher } from './components/TvLauncher';
+import { TabletView } from './components/TabletView';
 import { motion, AnimatePresence } from 'motion/react';
-import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock, Mail, Sparkles, Play, Cpu, ShoppingBag, Smartphone, Download, Package, X, ShieldCheck } from 'lucide-react';
+import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock, Mail, Sparkles, Play, Cpu, ShoppingBag, Smartphone, Download, Package, X, ShieldCheck, Tv, Tablet, Monitor } from 'lucide-react';
 
 const getWallpaperGradient = (wallpaper: number, accentColor: string) => {
   switch (wallpaper) {
@@ -125,6 +127,20 @@ export default function App() {
   const [pinRequired, setPinRequired] = useState(false);
   const [pinCode, setPinCode] = useState('1234');
   const [mobileMode, setMobileMode] = useState(false);
+  const [deviceMode, setDeviceMode] = useState<'desktop' | 'mobile' | 'tablet' | 'tv'>(() => {
+    const saved = localStorage.getItem('archweb_device_mode');
+    return (saved as any) || 'desktop';
+  });
+
+  const handleChangeDeviceMode = (mode: 'desktop' | 'mobile' | 'tablet' | 'tv') => {
+    setDeviceMode(mode);
+    localStorage.setItem('archweb_device_mode', mode);
+    if (mode === 'mobile') {
+      setMobileMode(true);
+    } else {
+      setMobileMode(false);
+    }
+  };
   const [isLocked, setIsLocked] = useState<boolean>(() => {
     return localStorage.getItem('archweb_is_locked') === 'true';
   });
@@ -832,7 +848,12 @@ export default function App() {
         isMuted={isMuted}
         setIsMuted={setIsMuted}
         mobileMode={mobileMode}
-        onMobileToggle={() => setMobileMode(!mobileMode)}
+        onMobileToggle={() => {
+          const next = deviceMode === 'mobile' ? 'desktop' : 'mobile';
+          handleChangeDeviceMode(next);
+        }}
+        deviceMode={deviceMode}
+        onChangeDeviceMode={handleChangeDeviceMode}
       />
 
       {/* Main Workspace */}
@@ -919,7 +940,13 @@ export default function App() {
                 gmailPassword={gmailPassword}
                 setGmailPassword={setGmailPassword}
                 mobileMode={mobileMode}
-                setMobileMode={setMobileMode}
+                setMobileMode={(val) => {
+                  if (typeof val === 'boolean') {
+                    handleChangeDeviceMode(val ? 'mobile' : 'desktop');
+                  }
+                }}
+                deviceMode={deviceMode}
+                onChangeDeviceMode={handleChangeDeviceMode}
                 volume={volume}
                 setVolume={setVolume}
                 isMuted={isMuted}
@@ -1324,6 +1351,48 @@ export default function App() {
         </AnimatePresence>
 
         <AnimatePresence>
+          {deviceMode === 'tv' && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 z-[95] bg-slate-950"
+            >
+              <TvLauncher 
+                onClose={() => handleChangeDeviceMode('desktop')} 
+                onLaunchApp={(appId) => handleLaunch(appId)}
+                onOpenApp={(appId) => handleLaunch(appId)}
+                onChangeDeviceMode={handleChangeDeviceMode}
+                gmailUser={gmailUser}
+                kidAvatar={kidAvatar}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {deviceMode === 'tablet' && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 z-[95] bg-slate-950"
+            >
+              <TabletView 
+                onClose={() => handleChangeDeviceMode('desktop')} 
+                onLaunchApp={(appId) => handleLaunch(appId)}
+                onOpenApp={(appId) => handleLaunch(appId)}
+                onChangeDeviceMode={handleChangeDeviceMode}
+                gmailUser={gmailUser}
+                kidAvatar={kidAvatar}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
           {isHelpOpen && (
             <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
               <HelpDialog onClose={() => setIsHelpOpen(false)} />
@@ -1332,7 +1401,7 @@ export default function App() {
         </AnimatePresence>
 
         {/* Desktop Icons */}
-        <div className="absolute top-8 left-8 bottom-24 flex flex-col flex-wrap content-start gap-x-6 gap-y-8">
+        <div className="absolute top-3 left-3 sm:top-8 sm:left-8 bottom-20 sm:bottom-24 flex flex-col flex-wrap content-start gap-x-3 gap-y-4 sm:gap-x-6 sm:gap-y-8 max-h-[calc(100vh-110px)] overflow-y-auto p-1 scrollbar-hide z-10">
           <motion.div drag dragMomentum={false}>
             <button 
               onClick={() => handleAppOpen('kidapp', setIsKidAppOpen)}
@@ -1489,8 +1558,32 @@ export default function App() {
       </main>
 
       {/* Bottom Dock */}
-      <div className="h-16 w-full flex items-center justify-center pb-4 z-[100] px-2">
+      <div className="h-16 w-full flex items-center justify-center pb-[calc(1rem+var(--sab))] z-[100] px-2 shrink-0">
         <div className="bg-black/40 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-2xl flex items-center gap-2 sm:gap-4 shadow-2xl max-w-full overflow-x-auto overflow-y-hidden" style={{ scrollbarWidth: 'none' }}>
+          <button 
+            onClick={() => handleChangeDeviceMode(deviceMode === 'mobile' ? 'desktop' : 'mobile')}
+            className={`p-2 rounded-xl transition-all hover:scale-110 ${deviceMode === 'mobile' ? 'bg-[var(--accent)]/20 border border-[var(--accent)]/40' : 'bg-white/5 border border-white/10 hover:bg-white/10'}`}
+            title="Telefon Modu (Samsung S8)"
+          >
+            <Smartphone size={20} className={deviceMode === 'mobile' ? 'text-[var(--accent)]' : 'text-white/70'} />
+          </button>
+
+          <button 
+            onClick={() => handleChangeDeviceMode(deviceMode === 'tablet' ? 'desktop' : 'tablet')}
+            className={`p-2 rounded-xl transition-all hover:scale-110 ${deviceMode === 'tablet' ? 'bg-purple-500/20 border border-purple-500/40' : 'bg-white/5 border border-white/10 hover:bg-white/10'}`}
+            title="Tablet Modu"
+          >
+            <Tablet size={20} className={deviceMode === 'tablet' ? 'text-purple-400' : 'text-white/70'} />
+          </button>
+
+          <button 
+            onClick={() => handleChangeDeviceMode(deviceMode === 'tv' ? 'desktop' : 'tv')}
+            className={`p-2 rounded-xl transition-all hover:scale-110 ${deviceMode === 'tv' ? 'bg-amber-500/20 border border-amber-500/40' : 'bg-white/5 border border-white/10 hover:bg-white/10'}`}
+            title="Android TV & Google TV Modu"
+          >
+            <Tv size={20} className={deviceMode === 'tv' ? 'text-amber-400' : 'text-white/70'} />
+          </button>
+
           <button 
             onClick={toggleTerminal}
             className={`p-2 rounded-xl transition-all hover:scale-110 ${isTerminalOpen ? 'bg-[var(--accent)]/20 border border-[var(--accent)]/40' : 'bg-white/5 border border-white/10 hover:bg-white/10'}`}
@@ -1540,14 +1633,6 @@ export default function App() {
             title="Çocuk Dünyası"
           >
             <Sparkles size={20} className={isKidAppOpen ? 'text-yellow-400' : 'text-white/70'} />
-          </button>
-
-          <button 
-            onClick={() => setMobileMode(!mobileMode)}
-            className={`p-2 rounded-xl transition-all hover:scale-110 ${mobileMode ? 'bg-[var(--accent)]/20 border border-[var(--accent)]/40' : 'bg-white/5 border border-white/10 hover:bg-white/10'}`}
-            title="Telefon Modu"
-          >
-            <Smartphone size={20} className={mobileMode ? 'text-[var(--accent)]' : 'text-white/70'} />
           </button>
 
           <button 
@@ -1614,16 +1699,26 @@ export default function App() {
 
     if (isShutDown) {
       mainUI = (
-        <div className="h-screen w-screen bg-black flex flex-col items-center justify-center gap-4 animate-in fade-in duration-1000">
-          <div className="text-white/20 font-mono text-sm">Sistem kapandı.</div>
+        <div className="h-screen w-screen bg-slate-950 flex flex-col items-center justify-center gap-6 animate-in fade-in duration-500">
+          <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 shadow-lg shadow-red-500/10">
+            <Cpu size={32} />
+          </div>
+          <div className="text-center space-y-1">
+            <div className="text-white font-bold text-lg">ArchWeb OS Kapalı</div>
+            <div className="text-white/40 font-mono text-xs">Sistemi başlatmak için aşağıdaki düğmeye tıklayın</div>
+          </div>
           <button 
             onClick={() => {
               setIsShutDown(false);
               setIsSystemBooting(true);
+              setTimeout(() => {
+                setIsSystemBooting(false);
+              }, 1200);
             }}
-            className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all text-xs"
+            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-sm shadow-xl shadow-sky-500/20 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
           >
-            Sistemi Başlat
+            <Play size={16} />
+            <span>Sistemi Aç / Başlat</span>
           </button>
         </div>
       );

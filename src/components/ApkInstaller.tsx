@@ -13,7 +13,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadedFiles, setDownloadedFiles] = useState<Record<string, boolean>>({});
   const [showGuide, setShowGuide] = useState(false);
-  const [selectedGuide, setSelectedGuide] = useState<'windows' | 'mac' | 'linux' | 'android' | 'ios' | null>(null);
+  const [selectedGuide, setSelectedGuide] = useState<'windows' | 'mac' | 'linux' | 'android' | 'ios' | 'tv' | null>(null);
 
   const [canInstallPWA, setCanInstallPWA] = useState(!!(window as any).deferredPrompt);
 
@@ -191,10 +191,11 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
               </button>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8 shrink-0">
+            <div className="grid grid-cols-2 sm:grid-cols-6 gap-3 mb-8 shrink-0">
               {[
                 { id: 'windows', icon: Monitor, name: 'Windows', color: 'text-blue-400' },
                 { id: 'android', icon: Smartphone, name: 'Android', color: 'text-emerald-400' },
+                { id: 'tv', icon: AppWindow, name: 'Google / Android TV', color: 'text-amber-400' },
                 { id: 'ios', icon: Apple, name: 'iOS / iPhone', color: 'text-sky-400' },
                 { id: 'mac', icon: Apple, name: 'macOS', color: 'text-white' },
                 { id: 'linux', icon: Terminal, name: 'Linux', color: 'text-orange-400' },
@@ -236,6 +237,24 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
                         <p>4. Sunucu başlatıldığında tarayıcınızda <b>http://localhost:5677</b> adresi otomatik olarak açılacaktır.</p>
                         <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[12px]">
                           <b>Not:</b> Windows 10/11 kullanıcıları için .exe kurulumu en stabil yöntemdir.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedGuide === 'tv' && (
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-bold text-red-400 flex items-center gap-2">
+                        <span className="px-1.5 py-0.5 rounded bg-red-600 text-white text-xs font-black">TCL</span>
+                        <span>TCL Android TV & Google TV Kurulum Rehberi</span>
+                      </h3>
+                      <div className="space-y-3 text-sm text-white/80 leading-relaxed">
+                        <p>1. <b>ArchWeb_TV_v20.apk</b> (TCL Android TV Leanback Paketi) dosyasını indirin veya USB belleğe aktarın.</p>
+                        <p>2. TCL Televizyonunuzda (TCL Google TV / TCL Android TV) USB belleği takın veya TCL Safety Guard / Downloader uygulamasını açın.</p>
+                        <p>3. TCL TV Ayarlar -&gt; Güvenlik & Kısıtlamalar -&gt; Bilinmeyen Kaynaklara İzin Ver seçeneğini aktifleştirip APK'yı yükleyin.</p>
+                        <p>4. Kurulum sonrası TCL kumandanızdaki Home tuşuna basarak TCL Google TV ana ekranından uygulamayı çalıştırın. TCL D-Pad uzaktan kumanda ile %100 tam uyumludur.</p>
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-[12px] text-red-300">
+                          <b>TCL İpucu:</b> Web simülasyonunda TCL TV moduna geçmek için görev çubuğundaki 📺 ikonuna tıklayabilirsiniz.
                         </div>
                       </div>
                     </div>
@@ -357,7 +376,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
             </div>
 
             {/* APK Download Section */}
-            <div id="apk_section" className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div id="apk_section" className="grid grid-cols-1 md:grid-cols-3 gap-4">
               
               {/* Client APK Box */}
               <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4 flex flex-col justify-between">
@@ -407,6 +426,59 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
                     >
                       <Download size={12} />
                       <span>archinstall.apk İndir</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Android TV & Google TV APK Box */}
+              <div className="bg-white/5 border border-amber-500/30 rounded-xl p-5 space-y-4 flex flex-col justify-between bg-gradient-to-br from-amber-500/5 to-transparent">
+                <div className="space-y-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="text-xs font-bold font-mono tracking-wider text-amber-400 uppercase flex items-center gap-1.5">
+                      <Package size={14} /> Android TV (.APK)
+                    </h4>
+                    <span className="px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/30 text-[8px] text-amber-300 font-mono font-bold uppercase shrink-0">
+                      LEANBACK 4K
+                    </span>
+                  </div>
+                  <p className="text-xs text-white/80 font-bold mt-1">ArchWeb_TV_v20.apk</p>
+                  <p className="text-[11px] text-white/50">Google TV & Smart TV uzaktan kumanda (D-Pad) uyumlu televizyon paketi.</p>
+                </div>
+
+                <div className="pt-2">
+                  {downloadingFile === 'apk' ? (
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[10px] font-mono text-white/60">
+                        <span>İndiriliyor...</span>
+                        <span>%{downloadProgress}</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-amber-400 transition-all duration-150 rounded-full"
+                          style={{ width: `${downloadProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                  ) : downloadedFiles['apk'] ? (
+                    <div className="text-center space-y-2">
+                      <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[11px] text-emerald-400 font-medium">
+                        <CheckCircle2 size={12} /> İndirildi!
+                      </div>
+                      <button 
+                        onClick={() => handleDownloadFile('apk')}
+                        className="text-[11px] text-amber-400 hover:underline flex items-center gap-1 justify-center mx-auto cursor-pointer"
+                      >
+                        <ArrowDownToLine size={10} /> Tekrar İndir
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleDownloadFile('apk')}
+                      className="w-full py-2.5 px-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-450 hover:to-orange-450 text-slate-950 font-bold text-xs rounded-lg shadow transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Download size={12} />
+                      <span>Android TV APK İndir</span>
                     </button>
                   )}
                 </div>

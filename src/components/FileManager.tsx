@@ -12,6 +12,7 @@ interface FileManagerProps {
 
 export const FileManager: React.FC<FileManagerProps> = ({ onClose, onOpenFile, category, gmailUser }) => {
   const [currentPath, setCurrentPath] = useState('/home/user');
+  const [isMaximized, setIsMaximized] = useState(false);
   const [allFiles, setAllFiles] = useState<Record<string, { name: string, size: string, content: string }[]>>({});
   const [subFolders, setSubFolders] = useState<Record<string, { name: string }[]>>({});
   const [loading, setLoading] = useState(true);
@@ -153,14 +154,32 @@ export const FileManager: React.FC<FileManagerProps> = ({ onClose, onOpenFile, c
   const currentFolders = subFolders[currentPath] || [];
 
   return (
-    <div className="flex flex-col h-full w-full bg-[#1a1a1a] rounded-lg overflow-hidden shadow-2xl border border-white/10 text-white/80 font-sans select-none">
+    <div className={`flex flex-col bg-[#1a1a1a] overflow-hidden shadow-2xl border border-white/10 text-white/80 font-sans select-none transition-all duration-300 ${isMaximized ? 'fixed inset-0 z-[100] rounded-none' : 'h-full w-full rounded-lg'}`}>
       {/* Header / Title Bar */}
       <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/10">
         <div className="flex items-center gap-4">
           <div className="flex gap-2">
-            <button onClick={onClose} className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors" />
-            <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-            <div className="w-3 h-3 rounded-full bg-green-500/50" />
+            <button 
+              onClick={onClose} 
+              className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors flex items-center justify-center text-[8px] text-red-900 font-bold group"
+              title="Kapat"
+            >
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity">✕</span>
+            </button>
+            <button 
+              onClick={onClose}
+              className="w-3 h-3 rounded-full bg-yellow-500/50 hover:bg-yellow-500 transition-colors cursor-pointer flex items-center justify-center text-[8px] text-yellow-900 font-bold group"
+              title="Küçült"
+            >
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity">−</span>
+            </button>
+            <button 
+              onClick={() => setIsMaximized(!isMaximized)}
+              className="w-3 h-3 rounded-full bg-green-500/50 hover:bg-green-500 transition-colors cursor-pointer flex items-center justify-center text-[8px] text-green-900 font-bold group"
+              title={isMaximized ? "Küçült" : "Ekranı Kapla"}
+            >
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity">{isMaximized ? '❐' : '+'}</span>
+            </button>
           </div>
           <button 
             onClick={handleBack}

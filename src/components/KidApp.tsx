@@ -518,16 +518,17 @@ export const KidApp: React.FC<KidAppProps> = ({ onClose, category, gmailUser, av
       {/* Main Body with Sidebar */}
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
-        <div className="w-48 bg-black/30 border-r border-white/10 p-3 flex flex-col justify-between shrink-0">
+        <div className="w-14 sm:w-48 bg-black/30 border-r border-white/10 p-1.5 sm:p-3 flex flex-col justify-between shrink-0">
           <div className="space-y-1.5">
-            <div className="px-2 py-1 text-[10px] uppercase font-mono tracking-wider text-white/40">Menü</div>
+            <div className="px-2 py-1 text-[10px] uppercase font-mono tracking-wider text-white/40 hidden sm:block">Menü</div>
             
             <button 
               onClick={() => setActiveTab('main')}
-              className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center gap-2 transition-all ${activeTab === 'main' ? 'bg-yellow-400/20 border border-yellow-400/30 text-yellow-300 font-bold' : 'hover:bg-white/5 text-white/70'}`}
+              className={`w-full text-left px-2 sm:px-3 py-2 rounded-xl text-xs flex items-center justify-center sm:justify-start gap-2 transition-all ${activeTab === 'main' ? 'bg-yellow-400/20 border border-yellow-400/30 text-yellow-300 font-bold' : 'hover:bg-white/5 text-white/70'}`}
+              title="Ana Sayfa"
             >
-              <Award size={14} />
-              <span>Ana Sayfa</span>
+              <Award size={16} className="shrink-0" />
+              <span className="hidden sm:inline">Ana Sayfa</span>
             </button>
 
             {/* Category Custom Sidebar Items */}
@@ -535,17 +536,19 @@ export const KidApp: React.FC<KidAppProps> = ({ onClose, category, gmailUser, av
               <>
                 <button 
                   onClick={() => setActiveTab('math')}
-                  className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center gap-2 transition-all ${activeTab === 'math' ? 'bg-yellow-400/20 border border-yellow-400/30 text-yellow-300 font-bold' : 'hover:bg-white/5 text-white/70'}`}
+                  className={`w-full text-left px-2 sm:px-3 py-2 rounded-xl text-xs flex items-center justify-center sm:justify-start gap-2 transition-all ${activeTab === 'math' ? 'bg-yellow-400/20 border border-yellow-400/30 text-yellow-300 font-bold' : 'hover:bg-white/5 text-white/70'}`}
+                  title="Matematik Dehası"
                 >
-                  <Brain size={14} />
-                  <span>Matematik Dehası</span>
+                  <Brain size={16} className="shrink-0" />
+                  <span className="hidden sm:inline">Matematik Dehası</span>
                 </button>
                 <button 
                   onClick={() => setActiveTab('homework')}
-                  className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center gap-2 transition-all ${activeTab === 'homework' ? 'bg-yellow-400/20 border border-yellow-400/30 text-yellow-300 font-bold' : 'hover:bg-white/5 text-white/70'}`}
+                  className={`w-full text-left px-2 sm:px-3 py-2 rounded-xl text-xs flex items-center justify-center sm:justify-start gap-2 transition-all ${activeTab === 'homework' ? 'bg-yellow-400/20 border border-yellow-400/30 text-yellow-300 font-bold' : 'hover:bg-white/5 text-white/70'}`}
+                  title="Ödev & Görev Takibi"
                 >
-                  <BookOpen size={14} />
-                  <span>Ödev & Görev Takibi</span>
+                  <BookOpen size={16} className="shrink-0" />
+                  <span className="hidden sm:inline">Ödev & Görev Takibi</span>
                 </button>
               </>
             )}
@@ -554,17 +557,19 @@ export const KidApp: React.FC<KidAppProps> = ({ onClose, category, gmailUser, av
               <>
                 <button 
                   onClick={() => setActiveTab('snake')}
-                  className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center gap-2 transition-all ${activeTab === 'snake' ? 'bg-pink-400/20 border border-pink-400/30 text-pink-300 font-bold' : 'hover:bg-white/5 text-white/70'}`}
+                  className={`w-full text-left px-2 sm:px-3 py-2 rounded-xl text-xs flex items-center justify-center sm:justify-start gap-2 transition-all ${activeTab === 'snake' ? 'bg-pink-400/20 border border-pink-400/30 text-pink-300 font-bold' : 'hover:bg-white/5 text-white/70'}`}
+                  title="Yılan Oyunu"
                 >
-                  <Gamepad2 size={14} />
-                  <span>Yılan Oyunu</span>
+                  <Gamepad2 size={16} className="shrink-0" />
+                  <span className="hidden sm:inline">Yılan Oyunu</span>
                 </button>
                 <button 
                   onClick={() => setActiveTab('math')}
-                  className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center gap-2 transition-all ${activeTab === 'math' ? 'bg-pink-400/20 border border-pink-400/30 text-pink-300 font-bold' : 'hover:bg-white/5 text-white/70'}`}
+                  className={`w-full text-left px-2 sm:px-3 py-2 rounded-xl text-xs flex items-center justify-center sm:justify-start gap-2 transition-all ${activeTab === 'math' ? 'bg-pink-400/20 border border-pink-400/30 text-pink-300 font-bold' : 'hover:bg-white/5 text-white/70'}`}
+                  title="Mini Matematik"
                 >
-                  <Brain size={14} />
-                  <span>Mini Matematik</span>
+                  <Brain size={16} className="shrink-0" />
+                  <span className="hidden sm:inline">Mini Matematik</span>
                 </button>
               </>
             )}
@@ -573,17 +578,19 @@ export const KidApp: React.FC<KidAppProps> = ({ onClose, category, gmailUser, av
               <>
                 <button 
                   onClick={() => setActiveTab('paint')}
-                  className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center gap-2 transition-all ${activeTab === 'paint' ? 'bg-teal-400/20 border border-teal-400/30 text-teal-300 font-bold' : 'hover:bg-white/5 text-white/70'}`}
+                  className={`w-full text-left px-2 sm:px-3 py-2 rounded-xl text-xs flex items-center justify-center sm:justify-start gap-2 transition-all ${activeTab === 'paint' ? 'bg-teal-400/20 border border-teal-400/30 text-teal-300 font-bold' : 'hover:bg-white/5 text-white/70'}`}
+                  title="Sihirli Tuval"
                 >
-                  <Paintbrush size={14} />
-                  <span>Sihirli Tuval</span>
+                  <Paintbrush size={16} className="shrink-0" />
+                  <span className="hidden sm:inline">Sihirli Tuval</span>
                 </button>
                 <button 
                   onClick={() => setActiveTab('homework')}
-                  className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center gap-2 transition-all ${activeTab === 'homework' ? 'bg-teal-400/20 border border-teal-400/30 text-teal-300 font-bold' : 'hover:bg-white/5 text-white/70'}`}
+                  className={`w-full text-left px-2 sm:px-3 py-2 rounded-xl text-xs flex items-center justify-center sm:justify-start gap-2 transition-all ${activeTab === 'homework' ? 'bg-teal-400/20 border border-teal-400/30 text-teal-300 font-bold' : 'hover:bg-white/5 text-white/70'}`}
+                  title="Hikaye Defterim"
                 >
-                  <Sparkles size={14} />
-                  <span>Hikaye Defterim</span>
+                  <Sparkles size={16} className="shrink-0" />
+                  <span className="hidden sm:inline">Hikaye Defterim</span>
                 </button>
               </>
             )}
@@ -592,27 +599,29 @@ export const KidApp: React.FC<KidAppProps> = ({ onClose, category, gmailUser, av
               <>
                 <button 
                   onClick={() => setActiveTab('planet')}
-                  className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center gap-2 transition-all ${activeTab === 'planet' ? 'bg-purple-400/20 border border-purple-400/30 text-purple-300 font-bold' : 'hover:bg-white/5 text-white/70'}`}
+                  className={`w-full text-left px-2 sm:px-3 py-2 rounded-xl text-xs flex items-center justify-center sm:justify-start gap-2 transition-all ${activeTab === 'planet' ? 'bg-purple-400/20 border border-purple-400/30 text-purple-300 font-bold' : 'hover:bg-white/5 text-white/70'}`}
+                  title="Gezegen Gezgini"
                 >
-                  <Rocket size={14} />
-                  <span>Gezegen Gezgini</span>
+                  <Rocket size={16} className="shrink-0" />
+                  <span className="hidden sm:inline">Gezegen Gezgini</span>
                 </button>
                 <button 
                   onClick={() => setActiveTab('ai_robot')}
-                  className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center gap-2 transition-all ${activeTab === 'ai_robot' ? 'bg-purple-400/20 border border-purple-400/30 text-purple-300 font-bold' : 'hover:bg-white/5 text-white/70'}`}
+                  className={`w-full text-left px-2 sm:px-3 py-2 rounded-xl text-xs flex items-center justify-center sm:justify-start gap-2 transition-all ${activeTab === 'ai_robot' ? 'bg-purple-400/20 border border-purple-400/30 text-purple-300 font-bold' : 'hover:bg-white/5 text-white/70'}`}
+                  title="Bilim Robotu (AI)"
                 >
-                  <Brain size={14} />
-                  <span>Bilim Robotu (AI)</span>
+                  <Brain size={16} className="shrink-0" />
+                  <span className="hidden sm:inline">Bilim Robotu (AI)</span>
                 </button>
               </>
             )}
           </div>
 
           {/* Profile Card */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-2.5 flex flex-col gap-1.5 w-full">
-            <div className="flex items-center gap-2.5">
-              <span className="text-2xl leading-none">{avatar}</span>
-              <div className="overflow-hidden flex-1">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-1.5 sm:p-2.5 flex flex-col gap-1.5 w-full">
+            <div className="flex items-center justify-center sm:justify-start gap-2">
+              <span className="text-xl sm:text-2xl leading-none">{avatar}</span>
+              <div className="overflow-hidden flex-1 hidden sm:block">
                 <div className="text-[10px] font-bold font-mono text-yellow-300 truncate">{gmailUser.split('@')[0]}</div>
                 <div className="text-[9px] text-white/40 truncate">Çocuk Hesabı</div>
               </div>

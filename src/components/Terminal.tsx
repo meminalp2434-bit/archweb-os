@@ -42,6 +42,7 @@ const defaultFS: Record<string, FSNode> = {
 
 export const Terminal: React.FC<TerminalProps> = ({ onClose }) => {
   const [input, setInput] = useState('');
+  const [isMaximized, setIsMaximized] = useState(false);
   
   // Simulated State Filesystem
   const [fs, setFs] = useState<Record<string, FSNode>>(() => {
@@ -660,7 +661,10 @@ export const Terminal: React.FC<TerminalProps> = ({ onClose }) => {
 
   return (
     <div 
-      className="flex flex-col h-full w-full bg-[#0d0d0d]/90 backdrop-blur-md border border-white/10 rounded-lg overflow-hidden terminal-glow"
+      className={cn(
+        "flex flex-col bg-[#0d0d0d]/90 backdrop-blur-md border border-white/10 overflow-hidden terminal-glow transition-all duration-300",
+        isMaximized ? "fixed inset-0 z-[100] rounded-none" : "h-full w-full rounded-lg"
+      )}
       onClick={() => inputRef.current?.focus()}
     >
       {/* Window Header */}
@@ -668,11 +672,25 @@ export const Terminal: React.FC<TerminalProps> = ({ onClose }) => {
         <div className="flex gap-2">
           <button 
             onClick={onClose}
-            className="w-3 h-3 rounded-full bg-red-500/50 hover:bg-red-500 transition-colors cursor-pointer" 
+            className="w-3 h-3 rounded-full bg-red-500/50 hover:bg-red-500 transition-colors cursor-pointer flex items-center justify-center text-[8px] text-red-900 font-bold group" 
             title="Kapat"
-          />
-          <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-          <div className="w-3 h-3 rounded-full bg-green-500/50" />
+          >
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity">✕</span>
+          </button>
+          <button 
+            onClick={onClose}
+            className="w-3 h-3 rounded-full bg-yellow-500/50 hover:bg-yellow-500 transition-colors cursor-pointer flex items-center justify-center text-[8px] text-yellow-900 font-bold group"
+            title="Küçült"
+          >
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity">−</span>
+          </button>
+          <button 
+            onClick={() => setIsMaximized(!isMaximized)}
+            className="w-3 h-3 rounded-full bg-green-500/50 hover:bg-green-500 transition-colors cursor-pointer flex items-center justify-center text-[8px] text-green-900 font-bold group"
+            title={isMaximized ? "Küçült" : "Ekranı Kapla"}
+          >
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity">{isMaximized ? '❐' : '+'}</span>
+          </button>
         </div>
         <div className="text-[10px] text-white/50 font-mono flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
