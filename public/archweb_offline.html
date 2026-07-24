@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ArchWeb OS - Taşınabilir Sürüm</title>
+    <title>ArchWeb OS - Masaüstü İşletim Sistemi (Çevrimdışı)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
-            --accent: #ef4444; /* TCL Red */
-            --bg: #0f172a;
+            --accent: #0ea5e9;
+            --bg-dark: #090d16;
         }
         body {
             margin: 0;
             padding: 0;
             overflow: hidden;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: radial-gradient(circle at 20% 20%, #1e293b 0%, #0f172a 50%, #020617 100%);
             height: 100vh;
             color: white;
             user-select: none;
@@ -28,11 +28,11 @@
             flex-direction: column;
             flex-wrap: wrap;
             align-content: flex-start;
-            gap: 8px;
+            gap: 12px;
         }
         .icon {
-            width: 90px;
-            height: 90px;
+            width: 96px;
+            height: 96px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -41,74 +41,78 @@
             border-radius: 12px;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid transparent;
+            padding: 8px;
         }
         .icon:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
             transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
         }
         .icon:active {
             transform: scale(0.95);
         }
         .icon svg {
-            width: 42px;
-            height: 42px;
+            width: 44px;
+            height: 44px;
             margin-bottom: 6px;
-            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.4));
         }
         .icon span {
             font-size: 11px;
             font-weight: 500;
             text-align: center;
-            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-            max-width: 80px;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+            max-width: 84px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
         .taskbar {
             height: 48px;
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(24px);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
             display: flex;
             align-items: center;
             padding: 0 12px;
             position: fixed;
             bottom: 0;
             width: 100%;
-            z-index: 1000;
+            z-index: 10000;
             gap: 8px;
         }
         .start-btn {
-            width: 36px;
             height: 36px;
-            background: var(--accent);
+            padding: 0 14px;
+            background: linear-gradient(135deg, #0284c7, #0369a1);
             border-radius: 8px;
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 8px;
             cursor: pointer;
             transition: all 0.2s;
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.3);
+            font-weight: 700;
+            font-size: 13px;
         }
         .start-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+            transform: scale(1.03);
+            box-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
         }
         .window {
             position: absolute;
             background: #0f172a;
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
             display: flex;
             flex-direction: column;
             overflow: hidden;
             z-index: 100;
-            min-width: 300px;
-            min-height: 200px;
-            transition: opacity 0.2s, transform 0.2s;
+            min-width: 320px;
+            min-height: 220px;
         }
         .window-header {
             height: 38px;
@@ -118,6 +122,7 @@
             padding: 0 12px;
             justify-content: space-between;
             cursor: move;
+            border-b: 1px solid rgba(255, 255, 255, 0.08);
         }
         .controls {
             display: flex;
@@ -133,9 +138,8 @@
             justify-content: center;
             font-size: 8px;
             font-weight: bold;
-            color: rgba(0,0,0,0.5);
+            color: rgba(0,0,0,0.6);
         }
-        .control:hover color: rgba(0,0,0,0.8);
         .close { background: #ef4444; }
         .minimize { background: #f59e0b; }
         .maximize { background: #10b981; }
@@ -149,46 +153,48 @@
         
         .terminal-body {
             background: #020617;
-            color: #10b981;
-            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            color: #38bdf8;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
             padding: 16px;
             height: 100%;
             font-size: 13px;
-            line-height: 1.5;
+            line-height: 1.6;
         }
         .start-menu {
             position: absolute;
-            bottom: 60px;
+            bottom: 58px;
             left: 12px;
-            width: 320px;
+            width: 340px;
             background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(24px);
+            backdrop-filter: blur(28px);
             border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-            z-index: 2000;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+            z-index: 20000;
             padding: 16px;
             display: none;
         }
         .start-menu.active {
             display: block;
-            animation: slideUp 0.3s ease-out;
+            animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
         @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
+            from { transform: translateY(15px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
         .menu-item {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 10px;
-            border-radius: 8px;
+            padding: 10px 12px;
+            border-radius: 10px;
             cursor: pointer;
             transition: background 0.2s;
+            font-size: 13px;
+            font-weight: 500;
         }
         .menu-item:hover {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.1);
         }
         .clock-container {
             margin-left: auto;
@@ -204,192 +210,250 @@
 </head>
 <body>
 
+    <!-- Desktop Icons Area -->
     <div class="desktop" id="desktop">
         <div class="icon" onclick="openWindow('terminal')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
             <span>Terminal</span>
         </div>
         <div class="icon" onclick="openWindow('files')">
             <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
             <span>Dosyalar</span>
         </div>
+        <div class="icon" onclick="openWindow('browser')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            <span>Web Tarayıcı</span>
+        </div>
         <div class="icon" onclick="openWindow('notes')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
             <span>Not Defteri</span>
         </div>
+        <div class="icon" onclick="openWindow('calc')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="18"></line><path d="M16 10h.01"></path><path d="M12 10h.01"></path><path d="M8 10h.01"></path><path d="M12 14h.01"></path><path d="M8 14h.01"></path><path d="M12 18h.01"></path><path d="M8 18h.01"></path></svg>
+            <span>Hesap Makinesi</span>
+        </div>
         <div class="icon" onclick="openWindow('update')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
             <span>Güncelleme</span>
         </div>
     </div>
 
     <!-- Start Menu -->
     <div id="start-menu" class="start-menu">
-        <div class="flex items-center gap-3 mb-6 p-2 border-b border-white/10">
-            <div class="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center font-black">TCL</div>
+        <div class="flex items-center gap-3 mb-5 p-3 bg-white/5 rounded-xl border border-white/10">
+            <div class="w-10 h-10 rounded-full bg-sky-600 flex items-center justify-center font-bold text-white text-base">A</div>
             <div>
-                <div class="text-sm font-bold">ArchWeb User</div>
-                <div class="text-[10px] text-white/40">Offline Portable v2.1</div>
+                <div class="text-sm font-bold text-white">ArchWeb User</div>
+                <div class="text-[10px] text-sky-400 font-mono">ArchWeb OS v2.5 Desktop</div>
             </div>
         </div>
         <div class="space-y-1">
             <div class="menu-item" onclick="openWindow('terminal'); toggleStart()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
-                <span class="text-xs">Komut Satırı</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                <span>Komut Satırı (Terminal)</span>
             </div>
             <div class="menu-item" onclick="openWindow('files'); toggleStart()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                <span class="text-xs">Dosya Sistemi</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                <span>Dosya Yöneticisi</span>
+            </div>
+            <div class="menu-item" onclick="openWindow('browser'); toggleStart()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line></svg>
+                <span>Web Tarayıcısı</span>
+            </div>
+            <div class="menu-item" onclick="openWindow('notes'); toggleStart()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+                <span>Not Defteri</span>
             </div>
             <div class="menu-item" onclick="openWindow('update'); toggleStart()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                <span class="text-xs">Sistem Güncelleme</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <span>Yazılım Güncelleme</span>
             </div>
-            <div class="menu-item" onclick="location.reload()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-                <span class="text-xs">Sistemi Yeniden Başlat</span>
+            <div class="menu-item text-red-400 border-t border-white/10 pt-2 mt-2" onclick="location.reload()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                <span>Sistemi Yeniden Başlat</span>
             </div>
         </div>
     </div>
 
-    <!-- Windows -->
-    <div id="win-terminal" class="window hidden" style="width: 600px; height: 400px; top: 100px; left: 200px;">
+    <!-- WINDOWS -->
+
+    <!-- Terminal Window -->
+    <div id="win-terminal" class="window hidden" style="width: 620px; height: 420px; top: 80px; left: 160px;">
         <div class="window-header" onmousedown="dragWindow(event, 'win-terminal')">
             <div class="controls">
                 <div class="control close" onclick="closeWindow('terminal')">×</div>
-                <div class="control minimize">−</div>
-                <div class="control maximize">+</div>
+                <div class="control minimize" onclick="closeWindow('terminal')">−</div>
+                <div class="control maximize" onclick="toggleMaximize('win-terminal')">+</div>
             </div>
-            <div class="text-[10px] font-mono opacity-50">root@archweb_offline: ~</div>
+            <div class="text-[11px] font-mono text-sky-400">root@archweb_os: ~</div>
             <div style="width: 40px"></div>
         </div>
         <div class="window-content p-0">
             <div class="terminal-body" id="term-body">
-                <div>ArchWeb OS Portable [2026]</div>
-                <div>Çevrimdışı çekirdek yüklendi. Hazır.</div>
+                <div class="text-sky-300 font-bold">ArchWeb OS Desktop Terminal v2.5.0</div>
+                <div class="text-white/60">Komut listesi için 'help' yazabilirsiniz.</div>
                 <br>
                 <div id="term-output"></div>
                 <div class="flex gap-2">
-                    <span class="text-emerald-500">root@archweb#</span>
-                    <input type="text" id="term-input" class="bg-transparent outline-none border-none text-emerald-400 w-full" autofocus>
+                    <span class="text-sky-400">archweb@desktop:~$</span>
+                    <input type="text" id="term-input" class="bg-transparent outline-none border-none text-sky-300 w-full" autofocus>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="win-files" class="window hidden" style="width: 700px; height: 450px; top: 120px; left: 250px;">
+    <!-- File Manager Window -->
+    <div id="win-files" class="window hidden" style="width: 720px; height: 460px; top: 100px; left: 220px;">
         <div class="window-header" onmousedown="dragWindow(event, 'win-files')">
             <div class="controls">
                 <div class="control close" onclick="closeWindow('files')">×</div>
-                <div class="control minimize">−</div>
-                <div class="control maximize">+</div>
+                <div class="control minimize" onclick="closeWindow('files')">−</div>
+                <div class="control maximize" onclick="toggleMaximize('win-files')">+</div>
             </div>
-            <div class="text-[11px] font-bold">Sunucu Klasörü & Dosyalar</div>
+            <div class="text-[12px] font-bold text-amber-400">Dosya Yöneticisi</div>
             <div style="width: 40px"></div>
         </div>
-        <div class="window-content bg-[#0f172a]">
-            <div class="p-6">
-                <div class="flex items-center gap-2 text-xs text-white/40 mb-4 bg-black/20 p-2 rounded-lg">
-                    <span>C:</span> <span>></span> <span>Kullanıcı</span> <span>></span> <span>Masaüstü</span>
+        <div class="window-content bg-[#0f172a] p-6">
+            <div class="flex items-center gap-2 text-xs text-white/50 mb-5 bg-black/30 p-2.5 rounded-xl border border-white/5">
+                <span>📁 Kök Dizin</span> <span>/</span> <span>home</span> <span>/</span> <span>archweb</span>
+            </div>
+            <div class="grid grid-cols-4 gap-5">
+                <div class="flex flex-col items-center gap-2 p-4 bg-white/5 hover:bg-white/10 rounded-2xl cursor-pointer border border-white/5 transition-all">
+                    <div class="text-4xl">📁</div>
+                    <span class="text-xs font-bold text-white">Sunucu</span>
                 </div>
-                <div class="grid grid-cols-4 gap-4">
-                    <div class="flex flex-col items-center gap-2 p-4 hover:bg-white/5 rounded-xl cursor-pointer">
-                        <div class="text-4xl">📁</div>
-                        <span class="text-[10px] font-bold">Sunucu</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-2 p-4 hover:bg-white/5 rounded-xl cursor-pointer">
-                        <div class="text-4xl">📁</div>
-                        <span class="text-[10px] font-bold">Belgeler</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-2 p-4 hover:bg-white/5 rounded-xl cursor-pointer">
-                        <div class="text-4xl text-red-500">💿</div>
-                        <span class="text-[10px] font-bold">archweb_os.iso</span>
+                <div class="flex flex-col items-center gap-2 p-4 bg-white/5 hover:bg-white/10 rounded-2xl cursor-pointer border border-white/5 transition-all">
+                    <div class="text-4xl">📁</div>
+                    <span class="text-xs font-bold text-white">archweb</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 p-4 bg-white/5 hover:bg-white/10 rounded-2xl cursor-pointer border border-white/5 transition-all">
+                    <div class="text-4xl">📁</div>
+                    <span class="text-xs font-bold text-white">Belgeler</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 p-4 bg-white/5 hover:bg-white/10 rounded-2xl cursor-pointer border border-white/5 transition-all">
+                    <div class="text-4xl text-sky-400">💿</div>
+                    <span class="text-xs font-bold text-sky-300">archweb_os_v2.iso</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Web Browser Window -->
+    <div id="win-browser" class="window hidden" style="width: 780px; height: 480px; top: 60px; left: 180px;">
+        <div class="window-header" onmousedown="dragWindow(event, 'win-browser')">
+            <div class="controls">
+                <div class="control close" onclick="closeWindow('browser')">×</div>
+                <div class="control minimize" onclick="closeWindow('browser')">−</div>
+                <div class="control maximize" onclick="toggleMaximize('win-browser')">+</div>
+            </div>
+            <div class="text-[12px] font-bold text-purple-400">ArchWeb Tarayıcı (Çevrimdışı Mod)</div>
+            <div style="width: 40px"></div>
+        </div>
+        <div class="window-content bg-[#020617] flex flex-col">
+            <div class="h-12 bg-slate-900 border-b border-white/10 flex items-center px-4 gap-3">
+                <button onclick="browserHome()" class="p-1.5 hover:bg-white/10 rounded-lg text-xs font-bold">🏠</button>
+                <input type="text" id="browser-url" value="https://archweb.os/wiki" class="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-1 text-xs text-purple-300 outline-none">
+            </div>
+            <div class="flex-1 p-8 overflow-y-auto" id="browser-content">
+                <div class="max-w-xl mx-auto space-y-4">
+                    <div class="text-3xl font-black text-purple-400">ArchWeb OS Çevrimdışı Portal</div>
+                    <p class="text-sm text-white/70">İnternet bağlantısı olmadan yerel belgeleri, rehberleri ve sistem araçlarını tarayabilirsiniz.</p>
+                    <div class="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-2">
+                        <div class="font-bold text-sm text-white">Yerel Sayfalar</div>
+                        <ul class="text-xs text-purple-300 space-y-1 list-disc pl-5">
+                            <li class="cursor-pointer hover:underline" onclick="loadPage('https://archweb.os/wiki')">ArchWeb Kullanım Kılavuzu</li>
+                            <li class="cursor-pointer hover:underline" onclick="loadPage('https://archweb.os/about')">Sistem Hakkında</li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="win-notes" class="window hidden" style="width: 500px; height: 400px; top: 150px; left: 300px;">
+    <!-- Notepad Window -->
+    <div id="win-notes" class="window hidden" style="width: 540px; height: 380px; top: 120px; left: 280px;">
         <div class="window-header" onmousedown="dragWindow(event, 'win-notes')">
             <div class="controls">
                 <div class="control close" onclick="closeWindow('notes')">×</div>
-                <div class="control minimize">−</div>
-                <div class="control maximize">+</div>
+                <div class="control minimize" onclick="closeWindow('notes')">−</div>
+                <div class="control maximize" onclick="toggleMaximize('win-notes')">+</div>
             </div>
-            <div class="text-[11px] font-bold">Not Defteri</div>
+            <div class="text-[12px] font-bold text-emerald-400">Not Defteri</div>
             <div style="width: 40px"></div>
         </div>
-        <div class="window-content bg-slate-800 p-0">
-            <textarea class="w-full h-full bg-transparent p-6 outline-none resize-none text-white/80 font-mono text-sm" placeholder="Buraya notlarınızı yazın..."></textarea>
+        <div class="window-content bg-slate-900 p-0">
+            <textarea class="w-full h-full bg-transparent p-5 outline-none resize-none text-white/90 font-mono text-sm leading-relaxed" placeholder="Yazmaya başlayın..."></textarea>
         </div>
     </div>
 
-    <div id="win-tv" class="window hidden" style="width: 850px; height: 500px; top: 80px; left: 150px;">
-        <div class="window-header" onmousedown="dragWindow(event, 'win-tv')">
+    <!-- Calculator Window -->
+    <div id="win-calc" class="window hidden" style="width: 320px; height: 420px; top: 140px; left: 340px;">
+        <div class="window-header" onmousedown="dragWindow(event, 'win-calc')">
             <div class="controls">
-                <div class="control close" onclick="closeWindow('tv')">×</div>
-                <div class="control minimize">−</div>
+                <div class="control close" onclick="closeWindow('calc')">×</div>
+                <div class="control minimize" onclick="closeWindow('calc')">−</div>
                 <div class="control maximize">+</div>
             </div>
-            <div class="text-[11px] font-bold flex items-center gap-2">
-                <span class="px-1.5 bg-red-600 text-white rounded text-[9px]">TCL</span> 
-                <span>Android TV Simulator</span>
-            </div>
+            <div class="text-[12px] font-bold text-rose-400">Hesap Makinesi</div>
             <div style="width: 40px"></div>
         </div>
-        <div class="window-content bg-black flex flex-col items-center justify-center">
-            <div class="w-full h-full bg-gradient-to-br from-red-950 to-black p-12 flex flex-col justify-center">
-                <div class="text-4xl font-black mb-2">TCL Android TV</div>
-                <div class="text-xl text-white/60 mb-8">Google TV Edition</div>
-                <div class="grid grid-cols-4 gap-6">
-                    <div class="aspect-video bg-white/10 rounded-2xl border border-white/10 flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer group">
-                        <div class="text-sm font-bold group-hover:scale-110 transition-transform">Netflix</div>
-                    </div>
-                    <div class="aspect-video bg-white/10 rounded-2xl border border-white/10 flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer group">
-                        <div class="text-sm font-bold group-hover:scale-110 transition-transform">YouTube</div>
-                    </div>
-                    <div class="aspect-video bg-white/10 rounded-2xl border border-white/10 flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer group">
-                        <div class="text-sm font-bold group-hover:scale-110 transition-transform">Prime Video</div>
-                    </div>
-                    <div class="aspect-video bg-white/10 rounded-2xl border border-white/10 flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer group">
-                        <div class="text-sm font-bold group-hover:scale-110 transition-transform">Play Store</div>
-                    </div>
-                </div>
+        <div class="window-content bg-slate-950 p-4 flex flex-col justify-between">
+            <div class="bg-black/60 p-4 rounded-xl text-right text-3xl font-mono text-white font-bold h-16 flex items-center justify-end overflow-hidden" id="calc-display">0</div>
+            <div class="grid grid-cols-4 gap-2 my-2">
+                <button onclick="calcPress('C')" class="p-3 bg-rose-600/30 hover:bg-rose-600 text-rose-200 rounded-xl font-bold">C</button>
+                <button onclick="calcPress('/')" class="p-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold">/</button>
+                <button onclick="calcPress('*')" class="p-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold">*</button>
+                <button onclick="calcPress('-')" class="p-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold">-</button>
+                <button onclick="calcPress('7')" class="p-3 bg-white/5 hover:bg-white/15 rounded-xl font-bold">7</button>
+                <button onclick="calcPress('8')" class="p-3 bg-white/5 hover:bg-white/15 rounded-xl font-bold">8</button>
+                <button onclick="calcPress('9')" class="p-3 bg-white/5 hover:bg-white/15 rounded-xl font-bold">9</button>
+                <button onclick="calcPress('+')" class="p-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold">+</button>
+                <button onclick="calcPress('4')" class="p-3 bg-white/5 hover:bg-white/15 rounded-xl font-bold">4</button>
+                <button onclick="calcPress('5')" class="p-3 bg-white/5 hover:bg-white/15 rounded-xl font-bold">5</button>
+                <button onclick="calcPress('6')" class="p-3 bg-white/5 hover:bg-white/15 rounded-xl font-bold">6</button>
+                <button onclick="calcEqual()" class="p-3 bg-sky-600 hover:bg-sky-500 rounded-xl font-bold row-span-2 flex items-center justify-center text-xl">=</button>
+                <button onclick="calcPress('1')" class="p-3 bg-white/5 hover:bg-white/15 rounded-xl font-bold">1</button>
+                <button onclick="calcPress('2')" class="p-3 bg-white/5 hover:bg-white/15 rounded-xl font-bold">2</button>
+                <button onclick="calcPress('3')" class="p-3 bg-white/5 hover:bg-white/15 rounded-xl font-bold">3</button>
+                <button onclick="calcPress('0')" class="p-3 bg-white/5 hover:bg-white/15 rounded-xl font-bold col-span-2">0</button>
+                <button onclick="calcPress('.')" class="p-3 bg-white/5 hover:bg-white/15 rounded-xl font-bold">.</button>
             </div>
         </div>
     </div>
 
-    <div id="win-update" class="window hidden" style="width: 450px; height: 350px; top: 200px; left: 400px;">
+    <!-- Update Center Window -->
+    <div id="win-update" class="window hidden" style="width: 480px; height: 360px; top: 160px; left: 320px;">
         <div class="window-header" onmousedown="dragWindow(event, 'win-update')">
             <div class="controls">
                 <div class="control close" onclick="closeWindow('update')">×</div>
-                <div class="control minimize">−</div>
+                <div class="control minimize" onclick="closeWindow('update')">−</div>
                 <div class="control maximize">+</div>
             </div>
-            <div class="text-[11px] font-bold text-purple-400">Yazılım Güncelleme</div>
+            <div class="text-[12px] font-bold text-sky-400">Yazılım Güncelleme Merkezi</div>
             <div style="width: 40px"></div>
         </div>
-        <div class="window-content bg-[#1e1b4b] flex flex-col items-center justify-center p-8 text-center">
+        <div class="window-content bg-[#0f172a] flex flex-col items-center justify-center p-8 text-center">
             <div id="update-status">
                 <div class="text-4xl mb-4">✨</div>
                 <div class="text-lg font-bold mb-2">Sistem Güncel</div>
-                <div class="text-sm text-white/50 mb-6">ArchWeb OS v2.2.0 (Offline Edition)</div>
-                <button onclick="checkUpdates()" class="px-6 py-2 bg-purple-600 hover:bg-purple-500 rounded-full text-sm font-bold transition-all shadow-lg shadow-purple-900/20">
+                <div class="text-xs text-white/50 mb-6">ArchWeb OS v2.5.0 (Offline Standalone Edition)</div>
+                <button onclick="checkUpdates()" class="px-6 py-2.5 bg-sky-600 hover:bg-sky-500 rounded-xl text-xs font-bold transition-all shadow-lg shadow-sky-900/40">
                     Güncellemeleri Denetle
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- Taskbar -->
     <div class="taskbar">
         <div class="start-btn" onclick="toggleStart()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" class="w-5 h-5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" class="w-4 h-4"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <span>Başlat</span>
         </div>
         <div class="flex gap-2 h-full py-1.5" id="taskbar-apps"></div>
         <div class="clock-container">
-            <div class="text-[11px] font-bold" id="clock-time">00:00</div>
-            <div class="text-[8px] text-white/40 uppercase font-mono" id="clock-date">OCT 24</div>
+            <div class="text-[12px] font-bold" id="clock-time">00:00</div>
+            <div class="text-[9px] text-white/40 uppercase font-mono" id="clock-date">ARCHWEB OS</div>
         </div>
     </div>
 
@@ -402,50 +466,45 @@
 
         function openWindow(id) {
             const win = document.getElementById('win-' + id);
-            win.classList.remove('hidden');
-            win.style.zIndex = ++zIndex;
+            if (win) {
+                win.classList.remove('hidden');
+                win.style.zIndex = ++zIndex;
+            }
         }
 
         function closeWindow(id) {
-            document.getElementById('win-' + id).classList.add('hidden');
+            const win = document.getElementById('win-' + id);
+            if (win) win.classList.add('hidden');
+        }
+
+        function toggleMaximize(id) {
+            const win = document.getElementById(id);
+            if (win.style.width === '100%') {
+                win.style.width = '620px';
+                win.style.height = '420px';
+                win.style.top = '80px';
+                win.style.left = '160px';
+            } else {
+                win.style.width = '100%';
+                win.style.height = 'calc(100vh - 48px)';
+                win.style.top = '0px';
+                win.style.left = '0px';
+            }
         }
 
         function updateClock() {
             const now = new Date();
             document.getElementById('clock-time').innerText = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
-            document.getElementById('clock-date').innerText = now.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+            document.getElementById('clock-date').innerText = now.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }).toUpperCase();
         }
 
         setInterval(updateClock, 1000);
         updateClock();
 
-        // Update Logic
-        function checkUpdates() {
-            const status = document.getElementById('update-status');
-            status.innerHTML = `
-                <div class="flex flex-col items-center">
-                    <div class="w-12 h-12 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin mb-4"></div>
-                    <div class="text-sm">Güncellemeler denetleniyor...</div>
-                </div>
-            `;
-            
-            setTimeout(() => {
-                status.innerHTML = `
-                    <div class="text-4xl mb-4">✅</div>
-                    <div class="text-lg font-bold mb-2">Sistem Güncel</div>
-                    <div class="text-sm text-white/50 mb-6">En son sürümü kullanıyorsunuz.</div>
-                    <button onclick="checkUpdates()" class="px-6 py-2 bg-purple-600 hover:bg-purple-500 rounded-full text-sm font-bold transition-all">
-                        Tekrar Dene
-                    </button>
-                `;
-            }, 3000);
-        }
-
-        // Window Draggable
+        // Drag Window
         function dragWindow(e, id) {
             const win = document.getElementById(id);
             win.style.zIndex = ++zIndex;
-            
             let pos1 = 0, pos2 = 0, pos3 = e.clientX, pos4 = e.clientY;
             
             document.onmousemove = (ev) => {
@@ -463,39 +522,80 @@
             };
         }
 
-        // Terminal Logic
+        // Terminal logic
         const termInput = document.getElementById('term-input');
         const termOutput = document.getElementById('term-output');
 
-        termInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                const cmd = termInput.value.toLowerCase().trim();
-                const output = document.createElement('div');
-                output.className = 'mb-1';
-                output.innerHTML = `<span class="text-blue-400">root@archweb#</span> ${cmd}`;
-                termOutput.appendChild(output);
-                
-                const response = document.createElement('div');
-                response.className = 'text-white/60 mb-2 pl-4';
-                
-                if (cmd === 'help') {
-                    response.innerText = 'Kullanılabilir komutlar: help, clear, ls, date, version, about';
-                } else if (cmd === 'ls') {
-                    response.innerText = 'Sunucu/  Belgeler/  İndirilenler/  archweb_os.iso';
-                } else if (cmd === 'clear') {
-                    termOutput.innerHTML = '';
-                    response.innerText = '';
-                } else if (cmd === 'version') {
-                    response.innerText = 'ArchWeb Portable Edition v2.2.0-Offline (LTS)';
-                } else {
-                    response.innerText = cmd ? `'${cmd}' komutu bulunamadı.` : '';
+        if (termInput) {
+            termInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const cmd = termInput.value.toLowerCase().trim();
+                    const output = document.createElement('div');
+                    output.className = 'mb-1';
+                    output.innerHTML = `<span class="text-sky-400">archweb@desktop:~$</span> ${cmd}`;
+                    termOutput.appendChild(output);
+                    
+                    const response = document.createElement('div');
+                    response.className = 'text-white/70 mb-2 pl-4';
+                    
+                    if (cmd === 'help') {
+                        response.innerText = 'Kullanılabilir komutlar: help, clear, ls, date, version, neofetch, echo';
+                    } else if (cmd === 'ls') {
+                        response.innerText = 'Sunucu/  archweb/  Belgeler/  archweb_os_v2.iso';
+                    } else if (cmd === 'clear') {
+                        termOutput.innerHTML = '';
+                        response.innerText = '';
+                    } else if (cmd === 'version') {
+                        response.innerText = 'ArchWeb OS Desktop Edition v2.5.0-Offline';
+                    } else if (cmd === 'neofetch') {
+                        response.innerText = 'OS: ArchWeb OS v2.5 x86_64\nKernel: 6.8.0-archweb-offline\nUptime: 2 hours\nPackages: 1420 (pacman)\nShell: bash 5.2.21\nDE: ArchWeb Desktop Manager';
+                    } else {
+                        response.innerText = cmd ? `'${cmd}' komutu bulunamadı. Yardım için 'help' yazın.` : '';
+                    }
+                    
+                    termOutput.appendChild(response);
+                    termInput.value = '';
+                    document.getElementById('term-body').scrollTop = document.getElementById('term-body').scrollHeight;
                 }
-                
-                termOutput.appendChild(response);
-                termInput.value = '';
-                document.getElementById('term-body').scrollTop = document.getElementById('term-body').scrollHeight;
+            });
+        }
+
+        // Calculator Logic
+        let calcVal = '';
+        function calcPress(val) {
+            calcVal += val;
+            document.getElementById('calc-display').innerText = calcVal || '0';
+        }
+        function calcEqual() {
+            try {
+                calcVal = String(eval(calcVal));
+                document.getElementById('calc-display').innerText = calcVal;
+            } catch (e) {
+                document.getElementById('calc-display').innerText = 'Hata';
+                calcVal = '';
             }
-        });
+        }
+
+        // Update Logic
+        function checkUpdates() {
+            const status = document.getElementById('update-status');
+            status.innerHTML = `
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 border-4 border-sky-500/20 border-t-sky-500 rounded-full animate-spin mb-4"></div>
+                    <div class="text-xs font-bold text-white">Çevrimdışı paketler denetleniyor...</div>
+                </div>
+            `;
+            setTimeout(() => {
+                status.innerHTML = `
+                    <div class="text-4xl mb-3">✅</div>
+                    <div class="text-base font-bold mb-1 text-white">Sisteminiz En Güncel Sürümde</div>
+                    <div class="text-xs text-white/50 mb-6">ArchWeb OS v2.5.0 (Tüm sistem paketleri güncel)</div>
+                    <button onclick="checkUpdates()" class="px-6 py-2 bg-sky-600 hover:bg-sky-500 rounded-xl text-xs font-bold transition-all">
+                        Tekrar Denetle
+                    </button>
+                `;
+            }, 2500);
+        }
     </script>
 </body>
 </html>
