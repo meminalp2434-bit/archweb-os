@@ -16,6 +16,13 @@ echo ======================================================================
 echo           GELISTIRILMIS SISTEM BASLATICI v20.1.2
 echo ======================================================================
 echo.
+echo [SUNUCU ADRESLERI]
+echo  - Genel Canlı Ön İzleme (Herkes İçin): https://ais-pre-xjjumj5lom3t4danhihlde-579357512949.europe-west2.run.app
+echo  - Geliştirme Sunucusu (Özel Ağ):    https://ais-dev-xjjumj5lom3t4danhihlde-579357512949.europe-west2.run.app
+echo  - Yerel Ağ (Wi-Fi):                 http://192.168.1.182:3000
+echo  - Yerel Bilgisayar:                 http://localhost:3000
+echo ======================================================================
+echo.
 
 :: Path Check
 cd /d "%~dp0"

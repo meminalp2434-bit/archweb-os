@@ -44,7 +44,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
     }
   };
 
-  const handleDownloadFile = (fileType: 'apk' | 'ipa' | 'exe' | 'bat' | 'dmg' | 'deb' | 'dev' | 'server_apk' | 'zip' | 'iso') => {
+  const handleDownloadFile = (fileType: 'archwebapp_apk' | 'apk' | 'ipa' | 'exe' | 'bat' | 'dmg' | 'deb' | 'dev' | 'server_apk' | 'zip' | 'iso') => {
     if (downloadingFile) return;
     setDownloadingFile(fileType);
     setDownloadProgress(0);
@@ -64,6 +64,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
             playWindows11StartupSound(volume, isMuted, true);
 
             const fileContentsMap: Record<string, string> = {
+              archwebapp_apk: `<?xml version="1.0" encoding="utf-8"?>\n<manifest xmlns:android="http://schemas.android.com/apk/res/android"\n    package="com.archweb.app"\n    android:versionCode="20102"\n    android:versionName="20.1.2">\n\n    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\n\n    <application\n        android:label="archwebapp"\n        android:icon="@mipmap/ic_launcher"\n        android:theme="@style/Theme.ArchWeb.NoActionBar">\n        <activity android:name=".MainActivity"\n            android:exported="true">\n            <intent-filter>\n                <action android:name="android.intent.action.MAIN" />\n                <category android:name="android.intent.category.LAUNCHER" />\n            </intent-filter>\n        </activity>\n    </application>\n</manifest>\n\npackage com.archweb.app;\nimport com.getcapacitor.BridgeActivity;\npublic class MainActivity extends BridgeActivity {}`,
               apk: `<?xml version="1.0" encoding="utf-8"?>\n<manifest xmlns:android="http://schemas.android.com/apk/res/android"\n    package="com.archweb.os"\n    android:versionCode="20102"\n    android:versionName="20.1.2">\n\n    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\n\n    <application\n        android:label="ArchWeb OS"\n        android:icon="@mipmap/ic_launcher"\n        android:theme="@style/Theme.ArchWeb.NoActionBar">\n        \n        <activity android:name=".MainActivity"\n            android:exported="true"\n            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale">\n            <intent-filter>\n                <action android:name="android.intent.action.MAIN" />\n                <category android:name="android.intent.category.LAUNCHER" />\n            </intent-filter>\n        </activity>\n    </application>\n</manifest>\n\n/* MAIN ACTIVITY CODE */\npackage com.archweb.os;\nimport com.getcapacitor.BridgeActivity;\npublic class MainActivity extends BridgeActivity {}`,
               ipa: `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n    <key>CFBundleIdentifier</key>\n    <string>com.archweb.os.ios</string>\n    <key>CFBundleDisplayName</key>\n    <string>ArchWeb OS</string>\n    <key>CFBundleShortVersionString</key>\n    <string>20.1.2</string>\n    <key>CodeSigningIdentity</key>\n    <string>Apple Development: Signed Distribution (ArchWeb OS Team)</string>\n    <key>ProvisionedDevices</key>\n    <string>All Devices (Universal Ad-Hoc / Enterprise Signed)</string>\n</dict>\n</plist>`,
               server_apk: `package com.archweb.server;\n\nimport android.os.Bundle;\nimport com.getcapacitor.BridgeActivity;\n\npublic class MainActivity extends BridgeActivity {\n    @Override\n    public void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        this.getBridge().getWebView().getSettings().setDomStorageEnabled(true);\n    }\n}`,
@@ -77,7 +78,8 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
             };
 
             let filename = '';
-            if (fileType === 'apk') filename = 'archinstall.apk';
+            if (fileType === 'archwebapp_apk') filename = 'archwebapp.apk';
+            else if (fileType === 'apk') filename = 'archinstall.apk';
             else if (fileType === 'ipa') filename = 'archweb.ipa';
             else if (fileType === 'server_apk') filename = 'Server.apk';
             else if (fileType === 'exe') filename = 'ArchWeb_Desktop.exe';
@@ -90,7 +92,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
 
             const link = document.createElement('a');
 
-            if (fileType === 'apk' || fileType === 'ipa' || fileType === 'server_apk' || fileType === 'exe' || fileType === 'zip' || fileType === 'bat' || fileType === 'iso' || fileType === 'dmg' || fileType === 'deb') {
+            if (fileType === 'archwebapp_apk' || fileType === 'apk' || fileType === 'ipa' || fileType === 'server_apk' || fileType === 'exe' || fileType === 'zip' || fileType === 'bat' || fileType === 'iso' || fileType === 'dmg' || fileType === 'deb') {
               link.href = '/' + filename;
             } else {
               const content = fileContentsMap[fileType] || '';
@@ -103,7 +105,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            if (fileType !== 'apk' && fileType !== 'ipa' && fileType !== 'server_apk' && fileType !== 'exe' && fileType !== 'zip' && fileType !== 'iso' && fileType !== 'bat' && fileType !== 'dmg' && fileType !== 'deb') {
+            if (fileType !== 'archwebapp_apk' && fileType !== 'apk' && fileType !== 'ipa' && fileType !== 'server_apk' && fileType !== 'exe' && fileType !== 'zip' && fileType !== 'bat' && fileType !== 'dmg' && fileType !== 'deb') {
               URL.revokeObjectURL(link.href);
             }
           }, 300);
@@ -262,14 +264,29 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
 
                   {selectedGuide === 'android' && (
                     <div className="space-y-4">
-                      <h3 className="text-lg font-bold text-emerald-400">Android Kurulumu</h3>
+                      <h3 className="text-lg font-bold text-emerald-400">Android & Huawei (HMS) Kurulumu</h3>
                       <div className="space-y-3 text-sm text-white/80 leading-relaxed">
-                        <p>1. <b>archinstall.apk</b> dosyasını telefonunuza indirin.</p>
-                        <p>2. Dosya yöneticisinden APK dosyasını bulun ve açın.</p>
-                        <p>3. "Bilinmeyen Kaynaklardan Yükle" iznini aktif edin.</p>
-                        <p>4. Kurulum tamamlandığında ana ekranınızdaki ArchWeb ikonuna tıklayarak başlatın.</p>
+                        <p>1. <b>archinstall.apk</b> veya <b>Server.apk</b> dosyasını telefonunuza indirin.</p>
+                        <p>2. Dosya yöneticisinden indirdiğiniz APK dosyasını açın.</p>
+                        <p>3. "Bilinmeyen Kaynaklardan Yükle" veya "Harici Paket İzni" seçeneğini onaylayın.</p>
+                        <p>4. Kurulum tamamlandığında ana ekranınızdaki ArchWeb OS ikonuna tıklayarak başlatın.</p>
+
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-[12px] space-y-2">
+                          <b className="text-red-400 flex items-center gap-1.5">
+                            <span>🔴 Huawei & AppGallery Kullanıcıları İçin:</span>
+                          </b>
+                          <p className="text-white/80">
+                            Huawei AppGallery veya Huawei tarayıcısı (Petal / Huawei Browser) üzerinden kullanırken:
+                          </p>
+                          <ul className="list-disc list-inside space-y-1 text-white/70">
+                            <li>Huawei tarayıcısında sağ üstteki 3 nokta veya Paylaş menüsüne dokunun.</li>
+                            <li><b>"Ana Ekrana Ekle"</b> veya <b>"Uygulama Olarak Yükle"</b> butonuna basın.</li>
+                            <li>AppGallery için hazırlanan <b>archinstall.apk</b> dosyasını doğrudan indirip Huawei cihazınıza güvenle kurabilirsiniz.</li>
+                          </ul>
+                        </div>
+
                         <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-[12px]">
-                          <b>Alternatif:</b> Tarayıcı üzerinden "Uygulamayı Yükle" (PWA) seçeneğini kullanmak daha hızlı ve güncel bir deneyim sunar.
+                          <b>PWA Alternatifi:</b> Chrome, Edge veya Huawei Tarayıcı üzerinden "Uygulamayı Yükle" (PWA) butonuna basarak mağaza gerektirmeden tam ekran yerel uygulama olarak kullanabilirsiniz.
                         </div>
                       </div>
                     </div>
@@ -378,6 +395,59 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
             {/* APK Download Section */}
             <div id="apk_section" className="grid grid-cols-1 md:grid-cols-3 gap-4">
               
+              {/* Standalone Application APK Box - archwebapp.apk */}
+              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-5 space-y-4 flex flex-col justify-between relative overflow-hidden">
+                <div className="space-y-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="text-xs font-bold font-mono tracking-wider text-emerald-400 uppercase flex items-center gap-1.5">
+                      <Package size={14} /> Standart Uygulama (.APK)
+                    </h4>
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30 text-[8px] text-emerald-300 font-mono font-bold uppercase shrink-0">
+                      SUNUCUSUZ
+                    </span>
+                  </div>
+                  <p className="text-xs text-white font-black mt-1">archwebapp.apk</p>
+                  <p className="text-[11px] text-emerald-200/70">Kurulum yok, sunucu yok. Doğrudan tek parça Android bağımsız uygulama paketi.</p>
+                </div>
+
+                <div className="pt-2">
+                  {downloadingFile === 'archwebapp_apk' ? (
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[10px] font-mono text-emerald-300">
+                        <span>İndiriliyor...</span>
+                        <span>%{downloadProgress}</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-emerald-400 transition-all duration-150 rounded-full"
+                          style={{ width: `${downloadProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                  ) : downloadedFiles['archwebapp_apk'] ? (
+                    <div className="text-center space-y-2">
+                      <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-[11px] text-emerald-300 font-bold">
+                        <CheckCircle2 size={12} /> İndirildi!
+                      </div>
+                      <button 
+                        onClick={() => handleDownloadFile('archwebapp_apk')}
+                        className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1 justify-center mx-auto cursor-pointer font-bold"
+                      >
+                        <ArrowDownToLine size={10} /> Tekrar İndir
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleDownloadFile('archwebapp_apk')}
+                      className="w-full py-2.5 px-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs rounded-lg shadow-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                    >
+                      <Download size={13} className="stroke-[2.5]" />
+                      <span>archwebapp.apk İndir</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
               {/* Client APK Box */}
               <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4 flex flex-col justify-between">
                 <div className="space-y-1">

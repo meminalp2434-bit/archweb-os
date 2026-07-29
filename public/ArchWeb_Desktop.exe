@@ -39,15 +39,21 @@ namespace ArchWebOS.Setup
 
             Console.WriteLine("\u001b[92m[OK]\u001b[0m Node.js Runtime Hazır.");
 
-            string targetIp = "245.578.3.57.99";
-            string targetPort = "5677";
+            string targetIp = "127.0.0.1";
+            string localWifiIp = "192.168.1.182";
+            string targetPort = "3000";
+            string devUrl = "https://ais-dev-xjjumj5lom3t4danhihlde-579357512949.europe-west2.run.app";
+            string onlineUrl = "https://ais-pre-xjjumj5lom3t4danhihlde-579357512949.europe-west2.run.app";
 
-            Console.WriteLine("\u001b[94m[INFO]\u001b[0m Sunucu Yapılandırması:");
-            Console.WriteLine($"       > IP:   \u001b[93m{targetIp}\u001b[0m");
-            Console.WriteLine($"       > PORT: \u001b[93m{targetPort}\u001b[0m");
-            Console.WriteLine($"       > URL:  \u001b[96mhttp://localhost:{targetPort}\u001b[0m");
+            Console.WriteLine("\u001b[94m[INFO]\u001b[0m ArchWeb OS Sunucu Yapılandırması:");
+            Console.WriteLine($"       > YEREL IP:     \u001b[93m{targetIp}:{targetPort}\u001b[0m");
+            Console.WriteLine($"       > YEREL AĞ:     \u001b[93mhttp://{localWifiIp}:{targetPort}\u001b[0m");
+            Console.WriteLine($"       > GELİŞTİRME:   \u001b[96m{devUrl}\u001b[0m");
+            Console.WriteLine($"       > GENEL CANLI:  \u001b[92m{onlineUrl}\u001b[0m");
             Console.WriteLine("\u001b[95m------------------------------------------------------------\u001b[0m");
-            Console.WriteLine("\u001b[1mDURUM: \u001b[92mAKTİF (ARCHWEB ENGINE ÇALIŞIYOR)\u001b[0m");
+            Console.WriteLine("\u001b[1mDURUM: \u001b[92mAKTİF (ARCHWEB KERNEL ÇALIŞIYOR)\u001b[0m");
+            Console.WriteLine("\u001b[94m[KERNEL]\u001b[0m Webview2 Runtime başlatılıyor...");
+            Console.WriteLine("\u001b[94m[KERNEL]\u001b[0m Güvenli tünel oluşturuluyor...");
             Console.WriteLine("");
 
             try

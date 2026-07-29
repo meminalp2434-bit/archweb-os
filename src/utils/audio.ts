@@ -129,3 +129,162 @@ const createBellTone = (
   osc.stop(startTime + 3.2);
 };
 
+/**
+ * Play a soft clean click sound for UI actions and buttons
+ */
+export const playClickSound = (volume = 80, isMuted = false) => {
+  if (isMuted || volume === 0) return;
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.04);
+    
+    const volLevel = (volume / 100) * 0.15;
+    gain.gain.setValueAtTime(volLevel, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start();
+    osc.stop(ctx.currentTime + 0.05);
+  } catch (e) {
+    // Ignore audio autoplay restrictions
+  }
+};
+
+/**
+ * Play a soft ascending chime when a window or app opens
+ */
+export const playWindowOpenSound = (volume = 80, isMuted = false) => {
+  if (isMuted || volume === 0) return;
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    
+    const notes = [523.25, 659.25, 783.99]; // C5, E5, G5 chord
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const startTime = ctx.currentTime + (i * 0.05);
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+      
+      const volLevel = (volume / 100) * 0.12;
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(volLevel, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.start(startTime);
+      osc.stop(startTime + 0.35);
+    });
+  } catch (e) {}
+};
+
+/**
+ * Play a soft descending chime when a window or app closes
+ */
+export const playWindowCloseSound = (volume = 80, isMuted = false) => {
+  if (isMuted || volume === 0) return;
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    
+    const notes = [783.99, 659.25, 523.25]; // G5, E5, C5
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const startTime = ctx.currentTime + (i * 0.04);
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+      
+      const volLevel = (volume / 100) * 0.10;
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(volLevel, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.start(startTime);
+      osc.stop(startTime + 0.3);
+    });
+  } catch (e) {}
+};
+
+/**
+ * Play a gentle double chime notification sound
+ */
+export const playNotificationSound = (volume = 80, isMuted = false) => {
+  if (isMuted || volume === 0) return;
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    
+    const notes = [587.33, 880]; // D5, A5
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const startTime = ctx.currentTime + (i * 0.12);
+      
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, startTime);
+      
+      const volLevel = (volume / 100) * 0.15;
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(volLevel, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.start(startTime);
+      osc.stop(startTime + 0.45);
+    });
+  } catch (e) {}
+};
+
+/**
+ * Play an alert/error sound
+ */
+export const playErrorSound = (volume = 80, isMuted = false) => {
+  if (isMuted || volume === 0) return;
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(180, ctx.currentTime + 0.2);
+    
+    const volLevel = (volume / 100) * 0.12;
+    gain.gain.setValueAtTime(volLevel, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start();
+    osc.stop(ctx.currentTime + 0.3);
+  } catch (e) {}
+};
+
+

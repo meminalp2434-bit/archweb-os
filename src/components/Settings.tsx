@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
-import { X, Palette, Monitor, Shield, Info, Smartphone, AppWindow, ShieldAlert, ShieldCheck, Lock, RefreshCw, AlertCircle, QrCode, Download, ExternalLink, Volume2, VolumeX, Music } from 'lucide-react';
-import { motion } from 'motion/react';
-import { playWindows11StartupSound } from '../utils/audio';
+import { X, Palette, Monitor, Shield, Info, Smartphone, AppWindow, ShieldAlert, ShieldCheck, Lock, RefreshCw, AlertCircle, QrCode, Download, ExternalLink, Volume2, VolumeX, Music, Bell, Play, Sparkles, Volume1, Wifi, Globe, Cpu, Server, Trash2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+  playWindows11StartupSound, 
+  playClickSound, 
+  playWindowOpenSound, 
+  playWindowCloseSound, 
+  playNotificationSound, 
+  playErrorSound 
+} from '../utils/audio';
 
 interface SettingsProps {
   onClose: () => void;
@@ -47,7 +54,7 @@ interface SettingsProps {
   setStartupSoundEnabled: (val: boolean) => void;
 }
 
-type TabType = 'appearance' | 'display' | 'security' | 'mobile' | 'about';
+type TabType = 'appearance' | 'display' | 'network' | 'security' | 'mobile' | 'about';
 
 export const Settings: React.FC<SettingsProps> = ({
   onClose,
@@ -82,6 +89,11 @@ export const Settings: React.FC<SettingsProps> = ({
   setStartupSoundEnabled,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('appearance');
+  const [isScanning, setIsScanning] = useState(false);
+  const [foundNetworks, setFoundNetworks] = useState<any[]>([]);
+  const [connectedWifi, setConnectedWifi] = useState<string | null>(null);
+  const [wifiPassword, setWifiPassword] = useState('');
+  const [showWifiProps, setShowWifiProps] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
@@ -109,10 +121,46 @@ export const Settings: React.FC<SettingsProps> = ({
     }, 1000);
   };
 
+  const startNetworkScan = () => {
+    setIsScanning(true);
+    setFoundNetworks([]);
+    playNotificationSound(volume, isMuted);
+    
+    setTimeout(() => {
+      setFoundNetworks([
+        { ssid: 'FiberHGW_HUN6A2', signal: 98, security: 'WPA2', type: 'FIBER' },
+        { ssid: 'Guest_Network_EXT', signal: 45, security: 'Open', type: 'WLAN' },
+        { ssid: 'TP-Link_5G_Home', signal: 72, security: 'WPA3', type: 'WLAN' }
+      ]);
+      setIsScanning(false);
+      playClickSound(volume, isMuted);
+    }, 2500);
+  };
+
+  const connectToFiber = () => {
+    if (wifiPassword === 'AzTvmPLJaY9v') {
+      setIsUpdating(true);
+      setUpdateStatus('Kimlik doğrulanıyor (WPA2-Kişisel)...');
+      setTimeout(() => {
+        setUpdateStatus('IP adresi alınıyor (192.168.1.182)...');
+        setTimeout(() => {
+          setConnectedWifi('FiberHGW_HUN6A2');
+          setIsUpdating(false);
+          setUpdateStatus(null);
+          playWindows11StartupSound(volume, isMuted, true);
+        }, 1500);
+      }, 1500);
+    } else {
+      playErrorSound(volume, isMuted);
+      alert('Hatalı Şifre! Lütfen FiberHGW_HUN6A2 şifresini kontrol edin.');
+    }
+  };
+
   const getTabTitle = () => {
     switch (activeTab) {
       case 'appearance': return 'Görünüm Ayarları';
       case 'display': return 'Ekran & Ses Ayarları';
+      case 'network': return 'Ağ & Wi-Fi Yönetimi';
       case 'security': return 'Sistem Güvenliği';
       case 'mobile': return 'Mobil & Masaüstü Kurulumu';
       case 'about': return 'Sistem Hakkında';
@@ -179,6 +227,13 @@ export const Settings: React.FC<SettingsProps> = ({
           >
             <Monitor size={14} />
             Ekran & Ses
+          </button>
+          <button 
+            onClick={() => setActiveTab('network')}
+            className={`flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-colors ${activeTab === 'network' ? 'bg-[var(--accent)]/20 text-[var(--accent)]' : 'hover:bg-white/5 text-white/60'}`}
+          >
+            <Wifi size={14} />
+            Ağ & İnternet
           </button>
           <button 
             onClick={() => setActiveTab('security')}
@@ -390,6 +445,235 @@ export const Settings: React.FC<SettingsProps> = ({
                     <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${startupSoundEnabled ? 'translate-x-6' : ''}`} />
                   </button>
                 </div>
+
+                {/* System Sound Effects Test Panel */}
+                <div className="pt-3 border-t border-white/5 space-y-3">
+                  <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                    <Sparkles size={14} className="text-[var(--accent)]" />
+                    Sistem Ses Efektleri Test Masası
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <button
+                      onClick={() => playWindows11StartupSound(volume, isMuted, true)}
+                      className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white/80 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+                    >
+                      <Play size={12} className="text-emerald-400" />
+                      <span>Açılış Sesi</span>
+                    </button>
+                    <button
+                      onClick={() => playWindowOpenSound(volume, isMuted)}
+                      className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white/80 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+                    >
+                      <Volume2 size={12} className="text-sky-400" />
+                      <span>Pencere Açılış</span>
+                    </button>
+                    <button
+                      onClick={() => playWindowCloseSound(volume, isMuted)}
+                      className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white/80 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+                    >
+                      <Volume1 size={12} className="text-indigo-400" />
+                      <span>Pencere Kapanış</span>
+                    </button>
+                    <button
+                      onClick={() => playNotificationSound(volume, isMuted)}
+                      className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white/80 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+                    >
+                      <Bell size={12} className="text-amber-400" />
+                      <span>Bildirim Sesi</span>
+                    </button>
+                    <button
+                      onClick={() => playErrorSound(volume, isMuted)}
+                      className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white/80 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+                    >
+                      <VolumeX size={12} className="text-red-400" />
+                      <span>Uyarı / Hata</span>
+                    </button>
+                    <button
+                      onClick={() => playClickSound(volume, isMuted)}
+                      className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white/80 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+                    >
+                      <Sparkles size={12} className="text-purple-400" />
+                      <span>Buton Tık Sesi</span>
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </motion.div>
+          )}
+
+          {activeTab === 'network' && (
+            <motion.div 
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-6"
+            >
+              <section className="bg-white/5 p-4 rounded-xl border border-white/5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-xl ${connectedWifi ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                      <Wifi size={20} className={isScanning ? 'animate-pulse' : ''} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white">Kablosuz Ağ (Wi-Fi)</h4>
+                      <p className="text-[10px] text-white/40">
+                        {connectedWifi ? `${connectedWifi} ağına bağlı` : 'Ağ taranıyor veya bağlantı kesildi'}
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={startNetworkScan}
+                    disabled={isScanning}
+                    className="px-3 py-1 bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30 hover:bg-[var(--accent)]/20 transition-all text-[11px] rounded-lg disabled:opacity-50 font-bold"
+                  >
+                    {isScanning ? 'Taranıyor...' : 'Ağları Tara'}
+                  </button>
+                </div>
+
+                {isScanning && (
+                  <div className="py-8 flex flex-col items-center justify-center gap-3">
+                    <div className="relative">
+                      <div className="w-12 h-12 rounded-full border-2 border-[var(--accent)]/20 animate-ping absolute inset-0" />
+                      <div className="w-12 h-12 rounded-full border-2 border-[var(--accent)] animate-spin border-t-transparent" />
+                    </div>
+                    <span className="text-[10px] text-white/40 font-mono">Yakındaki Fiber protokolleri taranıyor...</span>
+                  </div>
+                )}
+
+                {!isScanning && foundNetworks.length > 0 && !connectedWifi && (
+                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                    <h5 className="text-[10px] font-bold text-white/30 uppercase pl-1">Bulunan Ağlar</h5>
+                    {foundNetworks.map((net) => (
+                      <div key={net.ssid} className="p-3 bg-white/5 border border-white/5 rounded-lg flex items-center justify-between hover:bg-white/10 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <Wifi size={14} className={net.ssid === 'FiberHGW_HUN6A2' ? 'text-emerald-400' : 'text-white/40'} />
+                          <div>
+                            <div className="text-xs font-bold text-white flex items-center gap-2">
+                              {net.ssid}
+                              {net.ssid === 'FiberHGW_HUN6A2' && <span className="text-[8px] px-1 bg-emerald-500/20 text-emerald-400 rounded">ÖNERİLEN</span>}
+                            </div>
+                            <div className="text-[9px] text-white/30">{net.security} • %{net.signal} Sinyal</div>
+                          </div>
+                        </div>
+                        {net.ssid === 'FiberHGW_HUN6A2' ? (
+                          <div className="flex gap-2">
+                            <input 
+                              type="password" 
+                              placeholder="Şifre"
+                              value={wifiPassword}
+                              onChange={(e) => setWifiPassword(e.target.value)}
+                              className="bg-black/40 border border-white/10 rounded px-2 py-1 text-[10px] text-white w-24 outline-none focus:border-emerald-500"
+                            />
+                            <button 
+                              onClick={connectToFiber}
+                              className="px-2 py-1 bg-emerald-500 text-white rounded text-[10px] font-bold hover:bg-emerald-600 transition-all"
+                            >
+                              Bağlan
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-[9px] text-white/20 italic">Erişim Engellendi</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {connectedWifi && (
+                  <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg">
+                          <Globe size={18} />
+                        </div>
+                        <div>
+                          <h5 className="text-xs font-bold text-white">Bağlantı Aktif</h5>
+                          <p className="text-[10px] text-emerald-400/60">FiberHGW_HUN6A2 • İnternet Erişimi Var</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => setShowWifiProps(!showWifiProps)}
+                        className="text-[10px] font-bold text-[var(--accent)] hover:underline"
+                      >
+                        {showWifiProps ? 'Gizle' : 'Özellikleri Gör'}
+                      </button>
+                    </div>
+
+                    <AnimatePresence>
+                      {showWifiProps && (
+                        <motion.div 
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden space-y-2 pt-2 border-t border-white/10"
+                        >
+                          <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-[10px]">
+                            <div className="flex justify-between py-1 border-b border-white/5">
+                              <span className="text-white/30">Protokol:</span>
+                              <span className="text-white/70 font-mono">Wi-Fi 4 (802.11n)</span>
+                            </div>
+                            <div className="flex justify-between py-1 border-b border-white/5">
+                              <span className="text-white/30">Ağ Grubu:</span>
+                              <span className="text-white/70">2.4 GHz (Kanal 11)</span>
+                            </div>
+                            <div className="flex justify-between py-1 border-b border-white/5">
+                              <span className="text-white/30">Bağlantı Hızı:</span>
+                              <span className="text-emerald-400">18/18 Mbps</span>
+                            </div>
+                            <div className="flex justify-between py-1 border-b border-white/5">
+                              <span className="text-white/30">IPv4 Adresi:</span>
+                              <span className="text-white/70 font-mono">192.168.1.182</span>
+                            </div>
+                            <div className="flex justify-between py-1 border-b border-white/5">
+                              <span className="text-white/30">Fiziksel (MAC):</span>
+                              <span className="text-white/70 font-mono">34:F6:4B:07:8C:85</span>
+                            </div>
+                            <div className="flex justify-between py-1 border-b border-white/5">
+                              <span className="text-white/30">Üretici:</span>
+                              <span className="text-white/70">Intel Corporation</span>
+                            </div>
+                            <div className="col-span-2 py-1 space-y-1">
+                              <span className="text-white/30">IPv6 Adresi:</span>
+                              <div className="text-[9px] text-white/50 font-mono break-all bg-black/20 p-1.5 rounded">
+                                2a00:1d34:28c5:ca00:73f6:7b33:6912:dcdd
+                              </div>
+                            </div>
+                            <div className="col-span-2 py-1 space-y-1">
+                              <span className="text-white/30">DNS Sunucuları:</span>
+                              <div className="flex gap-2">
+                                <span className="px-2 py-0.5 bg-black/20 rounded text-white/60">195.46.39.39</span>
+                                <span className="px-2 py-0.5 bg-black/20 rounded text-white/60">195.46.39.40</span>
+                              </div>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={() => setConnectedWifi(null)}
+                            className="w-full mt-2 py-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg text-[10px] font-bold hover:bg-red-500/20 transition-all"
+                          >
+                            Bağlantıyı Kes
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </section>
+
+              <section className="bg-white/5 p-4 rounded-xl border border-white/5 space-y-3">
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider text-white/50 flex items-center gap-2">
+                  <Cpu size={14} className="text-[var(--accent)]" />
+                  Donanım Bilgileri
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 p-2 bg-black/20 rounded-lg border border-white/5">
+                    <div className="p-2 bg-sky-500/10 text-sky-400 rounded">
+                      <Server size={14} />
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold text-white">Intel(R) Dual Band Wireless-AC 7265</div>
+                      <div className="text-[9px] text-white/30">Sürücü v23.40.0.4 • Aktif</div>
+                    </div>
+                  </div>
+                </div>
               </section>
             </motion.div>
           )}
@@ -478,6 +762,38 @@ export const Settings: React.FC<SettingsProps> = ({
                       Şifreyi Kaldır
                     </button>
                   )}
+                </div>
+              </section>
+
+              <section className="bg-red-500/5 p-4 rounded-xl border border-red-500/10 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-red-500/10 text-red-500 rounded-lg">
+                    <RefreshCw size={20} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white">Bakım ve Sıfırlama</h4>
+                    <p className="text-[10px] text-white/40">Tarayıcı önbelleğini ve yerel verileri temizle</p>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-black/20 rounded-lg border border-white/5 space-y-3">
+                  <p className="text-[10px] text-white/50 leading-relaxed">
+                    Uygulama düzgün çalışmıyorsa veya PWA güncellemelerini göremiyorsanız yerel depolamayı temizleyebilirsiniz. 
+                    <span className="text-red-400"> Dikkat: Kaydedilmemiş verileriniz silinebilir.</span>
+                  </p>
+                  <button 
+                    onClick={() => {
+                      if (confirm('Tüm sistem önbelleği temizlenecek ve oturum kapatılacak. Onaylıyor musunuz?')) {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        window.location.reload();
+                      }
+                    }}
+                    className="w-full py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-2"
+                  >
+                    <Trash2 size={14} />
+                    Önbelleği ve Verileri Temizle
+                  </button>
                 </div>
               </section>
 
@@ -740,6 +1056,10 @@ export const Settings: React.FC<SettingsProps> = ({
                 )}
 
                 <div className="divide-y divide-white/5 space-y-2 pt-1">
+                  <div className="flex justify-between text-xs py-1">
+                    <span className="text-white/40">Yapımcı</span>
+                    <span className="text-white/80 font-bold text-[var(--accent)]">Emin Alp</span>
+                  </div>
                   <div className="flex justify-between text-xs py-1">
                     <span className="text-white/40">İşletim Sistemi</span>
                     <span className="text-white/80 font-bold">ArchWeb for Kids</span>

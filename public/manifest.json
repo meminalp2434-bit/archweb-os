@@ -1,17 +1,105 @@
 {
-  "short_name": "ArchWeb Kids",
-  "name": "ArchWeb for Kids",
+  "id": "Archweb OS",
+  "short_name": "Archweb OS",
+  "name": "Archweb Operating System",
+  "description": "Yapımcı: Emin Alp. Çocuklar ve profesyoneller için modern, web tabanlı ve yüksek performanslı bir işletim sistemi deneyimi.",
+  "lang": "tr",
+  "dir": "ltr",
+  "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/icon.svg",
-      "type": "image/svg+xml",
+      "src": "pwa-icon.png",
       "sizes": "512x512",
-      "purpose": "any maskable"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "pwa-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "pwa-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "pwa-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "start_url": "/",
-  "background_color": "#000000",
-  "theme_color": "#000000",
   "display": "standalone",
-  "orientation": "any"
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
+  "background_color": "#0f172a",
+  "theme_color": "#1793d1",
+  "scope": "/",
+  "categories": [
+    "education",
+    "entertainment",
+    "productivity",
+    "utilities"
+  ],
+  "shortcuts": [
+    {
+      "name": "Sistem Ayarları",
+      "url": "/?action=settings",
+      "description": "Archweb OS tercihlerini ve ağ yapılandırmasını yönetin",
+      "icons": [
+        {
+          "src": "pwa-icon.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Canlı Sohbet Kanalları",
+      "url": "/?action=chat",
+      "description": "Archweb OS topluluk mesajlaşma odası",
+      "icons": [
+        {
+          "src": "pwa-icon.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Uygulama Mağazası",
+      "url": "/?action=store",
+      "description": "Masaüstü ve web uygulamaları indir",
+      "icons": [
+        {
+          "src": "pwa-icon.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "pwa-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Archweb OS Masaüstü Ortamı"
+    },
+    {
+      "src": "pwa-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Archweb OS Mobil Arayüzü"
+    }
+  ]
 }

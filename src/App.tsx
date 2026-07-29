@@ -18,10 +18,12 @@ import { KidApp } from './components/KidApp';
 import { PlayStore, playStoreApps, Minecraft2D, PianoKids, SpaceExplorer, ColoringBook, YTKids, BunnyPet } from './components/PlayStore';
 import { ApkInstaller } from './components/ApkInstaller';
 import { IsoInstaller } from './components/IsoInstaller';
+import { SahaApp } from './components/SahaApp';
+import { LiveChat } from './components/LiveChat';
 import { TvLauncher } from './components/TvLauncher';
 import { TabletView } from './components/TabletView';
 import { motion, AnimatePresence } from 'motion/react';
-import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock, Mail, Sparkles, Play, Cpu, ShoppingBag, Smartphone, Download, Package, X, ShieldCheck, Tv, Tablet, Monitor } from 'lucide-react';
+import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock, Mail, Sparkles, Play, Cpu, ShoppingBag, Smartphone, Download, Package, X, ShieldCheck, Tv, Tablet, Monitor, Activity, MessageCircle } from 'lucide-react';
 
 const getWallpaperGradient = (wallpaper: number, accentColor: string) => {
   switch (wallpaper) {
@@ -62,9 +64,7 @@ export default function App() {
   // Kid OS states
   const [isKidAppOpen, setIsKidAppOpen] = useState(false);
   const [activePlayApps, setActivePlayApps] = useState<Record<string, boolean>>({});
-  const [isSetupComplete, setIsSetupComplete] = useState<boolean>(() => {
-    return localStorage.getItem('archweb_kid_setup_complete') === 'true';
-  });
+  const [isSetupComplete, setIsSetupComplete] = useState<boolean>(false);
   const [gmailUser, setGmailUser] = useState<string>(() => {
     return localStorage.getItem('archweb_gmail_user') || '';
   });
@@ -92,6 +92,8 @@ export default function App() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isApkInstallerOpen, setIsApkInstallerOpen] = useState(false);
   const [isIsoInstallerOpen, setIsIsoInstallerOpen] = useState(false);
+  const [isSahaAppOpen, setIsSahaAppOpen] = useState(false);
+  const [isLiveChatOpen, setIsLiveChatOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isPowerDialogOpen, setIsPowerDialogOpen] = useState(false);
   const [isAppLauncherOpen, setIsAppLauncherOpen] = useState(false);
@@ -314,7 +316,7 @@ export default function App() {
         if (settings.volume !== undefined) setVolume(settings.volume);
         if (settings.isMuted !== undefined) setIsMuted(settings.isMuted);
         if (settings.startupSoundEnabled !== undefined) setStartupSoundEnabled(settings.startupSoundEnabled);
-        if (settings.isSetupComplete !== undefined) setIsSetupComplete(settings.isSetupComplete);
+        // Do not restore isSetupComplete, force login on every load
         if (settings.gmailUser !== undefined) setGmailUser(settings.gmailUser);
         if (settings.gmailPassword !== undefined) setGmailPassword(settings.gmailPassword);
         if (settings.loginMethod !== undefined) setLoginMethod(settings.loginMethod);
@@ -907,7 +909,35 @@ export default function App() {
         </AnimatePresence>
 
         <AnimatePresence>
-          {isSettingsOpen && (
+          {isSahaAppOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-2xl h-[500px]"
+          >
+            <SahaApp onClose={() => setIsSahaAppOpen(false)} />
+          </motion.div>
+        </div>
+      )}
+
+      {isLiveChatOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-lg h-[550px]"
+          >
+            <LiveChat 
+              onClose={() => setIsLiveChatOpen(false)} 
+              currentUser={gmailUser || 'Kullanıcı'} 
+              avatar={kidAvatar}
+            />
+          </motion.div>
+        </div>
+      )}
+
+      {isSettingsOpen && (
             <motion.div 
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1086,6 +1116,23 @@ export default function App() {
                         <div>
                           <div className="text-xs font-bold text-white">Ev Dizini (Dosyalar)</div>
                           <div className="text-[9px] text-white/40">Sanal dosya yöneticisi</div>
+                        </div>
+                      </button>
+
+                      <button 
+                        onClick={() => {
+                          setIsLiveChatOpen(true);
+                          setIsAppLauncherOpen(false);
+                        }}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/40 hover:bg-white/10 transition-all text-left group"
+                        id="launcher-run-chat"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+                          <MessageCircle size={18} />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-white">Canlı Sohbet</div>
+                          <div className="text-[9px] text-white/40">Global topluluk kanalı</div>
                         </div>
                       </button>
 
@@ -1533,6 +1580,42 @@ export default function App() {
             </button>
           </motion.div>
 
+          <motion.div drag dragMomentum={false}>
+            <button 
+              onClick={() => {
+                if (userRole === 'admin') {
+                  setIsSahaAppOpen(true);
+                } else {
+                  alert('Saha Analizör uygulamasına sadece yöneticiler (Admins) erişebilir. Erişim reddedildi.');
+                }
+              }}
+              className="flex flex-col items-center gap-1 group relative cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-sky-500/10 border border-sky-500/30 rounded-xl flex items-center justify-center group-hover:bg-sky-500/20 group-hover:border-sky-400 transition-all shadow-[0_0_12px_rgba(14,165,233,0.15)]">
+                <Activity size={24} className="text-sky-400 group-hover:scale-110 transition-transform" />
+              </div>
+              <span className="text-[10px] font-mono text-sky-300 group-hover:text-sky-200 font-bold uppercase tracking-tighter">Saha Analizör</span>
+              <div className="absolute -top-1.5 -right-1 px-1 bg-sky-500 rounded-full border border-sky-400 text-[8px] font-bold text-white scale-90 px-1 py-0.5 leading-none">
+                FİBER
+              </div>
+            </button>
+          </motion.div>
+
+          <motion.div drag dragMomentum={false}>
+            <button 
+              onClick={() => setIsLiveChatOpen(true)}
+              className="flex flex-col items-center gap-1 group relative cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center group-hover:bg-emerald-500/20 group-hover:border-emerald-400 transition-all shadow-[0_0_12px_rgba(16,185,129,0.15)]">
+                <MessageCircle size={24} className="text-emerald-400 group-hover:scale-110 transition-transform" />
+              </div>
+              <span className="text-[10px] font-mono text-emerald-300 group-hover:text-emerald-200 font-bold uppercase tracking-tighter">Canlı Sohbet</span>
+              <div className="absolute -top-1.5 -right-1 px-1 bg-emerald-500 rounded-full border border-emerald-400 text-[8px] font-bold text-white scale-90 px-1 py-0.5 leading-none animate-pulse">
+                LIVE
+              </div>
+            </button>
+          </motion.div>
+
           {/* Installed Play Store Apps */}
           {playStoreApps
             .filter((app) => installedPlayStoreApps[app.id])
@@ -1709,6 +1792,9 @@ export default function App() {
           </div>
           <button 
             onClick={() => {
+              if (startupSoundEnabled) {
+                playWindows11StartupSound(volume, isMuted);
+              }
               setIsShutDown(false);
               setIsSystemBooting(true);
               setTimeout(() => {

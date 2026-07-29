@@ -17,6 +17,146 @@ app.use((req, res, next) => {
   next();
 });
 
+// Network & Environment Access Control Middleware
+// ais-pre-*: Publicly accessible for everyone on any network
+// ais-dev-*: Restricted to local network (192.168.1.182 / FiberHGW_HUN6A2) or authorized local session
+app.use((req, res, next) => {
+  const host = req.headers.host || "";
+  
+  // If request is accessing the Development environment URL
+  if (host.includes("ais-dev-")) {
+    const isLocalNetworkAuth = 
+      req.query.network === "local" || 
+      req.query.auth === "local" ||
+      req.headers["x-network-auth"] === "true" ||
+      req.headers["referer"]?.includes("network=local");
+
+    // Allow essential static files and health checks
+    if (
+      req.path.startsWith("/api/health") ||
+      req.path.endsWith(".png") ||
+      req.path.endsWith(".jpg") ||
+      req.path.endsWith(".svg") ||
+      req.path.endsWith(".css") ||
+      req.path.endsWith(".js") ||
+      req.path === "/manifest.json" ||
+      req.path === "/sw.js"
+    ) {
+      return next();
+    }
+
+    // If accessing ais-dev- externally without local network authorization flag
+    if (!isLocalNetworkAuth) {
+      return res.status(403).send(`
+        <!DOCTYPE html>
+        <html lang="tr">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Ağ Kısıtlaması - ArchWeb OS Dev</title>
+          <style>
+            body {
+              margin: 0;
+              padding: 0;
+              background-color: #0f172a;
+              color: #f8fafc;
+              font-family: system-ui, -apple-system, sans-serif;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              text-align: center;
+            }
+            .card {
+              background: rgba(30, 41, 59, 0.9);
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              padding: 2.5rem;
+              border-radius: 1.5rem;
+              max-width: 500px;
+              box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+              backdrop-filter: blur(12px);
+              margin: 1rem;
+            }
+            .icon {
+              font-size: 3rem;
+              margin-bottom: 1rem;
+            }
+            h1 {
+              font-size: 1.3rem;
+              color: #38bdf8;
+              margin-bottom: 0.75rem;
+              font-weight: 700;
+            }
+            p {
+              font-size: 0.9rem;
+              color: #94a3b8;
+              line-height: 1.6;
+              margin-bottom: 1.25rem;
+            }
+            .badge {
+              display: inline-block;
+              background: rgba(239, 68, 68, 0.15);
+              color: #f87171;
+              border: 1px solid rgba(239, 68, 68, 0.3);
+              padding: 0.35rem 0.85rem;
+              border-radius: 2rem;
+              font-size: 0.75rem;
+              font-weight: 700;
+              margin-bottom: 1.25rem;
+            }
+            .btn {
+              display: inline-block;
+              background: #1793d1;
+              color: white;
+              text-decoration: none;
+              padding: 0.85rem 1.75rem;
+              border-radius: 0.75rem;
+              font-size: 0.9rem;
+              font-weight: 700;
+              transition: all 0.2s;
+              box-shadow: 0 4px 12px rgba(23, 147, 209, 0.3);
+            }
+            .btn:hover {
+              background: #0284c7;
+              transform: translateY(-2px);
+            }
+            .network-info {
+              margin-top: 1.75rem;
+              padding-top: 1.25rem;
+              border-top: 1px solid rgba(255, 255, 255, 0.1);
+              font-size: 0.75rem;
+              color: #64748b;
+              font-family: monospace;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="icon">🔒</div>
+            <div class="badge">Sadece Özel / Yerel Ağ Erişimi</div>
+            <h1>Geliştirme Ortamı Kısıtlandı</h1>
+            <p>
+              Geliştirme adresi (<code>ais-dev</code>) yalnızca tanımlı yerel ağ (<strong>FiberHGW_HUN6A2 / 192.168.1.182</strong>) üzerinden erişilmek üzere yapılandırılmıştır.
+            </p>
+            <p>
+              Herkesin her internetten erişebildiği <strong>Canlı Ön İzleme Adresi</strong>ne aşağıdaki bağlantıdan ulaşabilirsiniz:
+            </p>
+            <a href="https://ais-pre-xjjumj5lom3t4danhihlde-579357512949.europe-west2.run.app" class="btn">
+              Canlı Ön İzleme Adresine Git 🌐
+            </a>
+            <div class="network-info">
+              Ağ Durumu: Dış İnternet Kısıtlaması Aktif • ArchWeb OS Kernel
+            </div>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+  }
+
+  next();
+});
+
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -321,6 +461,112 @@ app.post("/api/settings", (req, res) => {
   }
 });
 
+// 7. Live Chat API
+const CHAT_FILE = path.join(SERVER_STORAGE_DIR, "canli_sohbet.json");
+
+app.get("/pwa-icon.png", (req, res) => {
+  const iconPath = path.join(process.cwd(), "public", "pwa-icon.png");
+  if (fs.existsSync(iconPath)) {
+    res.setHeader("Content-Type", "image/png");
+    res.sendFile(iconPath);
+  } else {
+    res.status(404).send("Icon not found");
+  }
+});
+
+app.get("/sw.js", (req, res) => {
+  const swPath = path.join(process.cwd(), "public", "sw.js");
+  if (fs.existsSync(swPath)) {
+    res.setHeader("Content-Type", "application/javascript");
+    res.setHeader("Service-Worker-Allowed", "/");
+    res.sendFile(swPath);
+  } else {
+    res.status(404).json({ error: "Service worker not found" });
+  }
+});
+
+app.get(["/manifest.json", "/manifest.webmanifest"], (req, res) => {
+  const manifestPath = path.join(process.cwd(), "public", "manifest.json");
+  if (fs.existsSync(manifestPath)) {
+    res.setHeader("Content-Type", "application/manifest+json");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.sendFile(manifestPath);
+  } else {
+    res.status(404).json({ error: "Manifest not found" });
+  }
+});
+
+// Executable / Desktop Launcher Download Endpoints (.exe, .bat)
+app.get(["/ArchWeb_Desktop.exe", "/ArchWeb_OS_Setup.exe", "/ArchWeb_OS_Launcher.exe"], (req, res) => {
+  const exePath = path.join(process.cwd(), "public", "ArchWeb_Desktop.exe");
+  if (fs.existsSync(exePath)) {
+    res.setHeader("Content-Type", "application/x-msdownload");
+    res.setHeader("Content-Disposition", "attachment; filename=ArchWeb_Desktop.exe");
+    res.sendFile(exePath);
+  } else {
+    res.status(404).send("Executable file not found");
+  }
+});
+
+app.get("/ArchWeb_OS_Launcher.bat", (req, res) => {
+  const batPath = path.join(process.cwd(), "public", "ArchWeb_OS_Launcher.bat");
+  if (fs.existsSync(batPath)) {
+    res.setHeader("Content-Type", "application/x-bat");
+    res.setHeader("Content-Disposition", "attachment; filename=ArchWeb_OS_Launcher.bat");
+    res.sendFile(batPath);
+  } else {
+    res.status(404).send("Launcher script not found");
+  }
+});
+
+app.get(["/archwebapp.apk", "/archwebapp"], (req, res) => {
+  const apkPath = path.join(process.cwd(), "public", "archwebapp.apk");
+  if (fs.existsSync(apkPath)) {
+    res.setHeader("Content-Type", "application/vnd.android.package-archive");
+    res.setHeader("Content-Disposition", "attachment; filename=archwebapp.apk");
+    res.sendFile(apkPath);
+  } else {
+    res.status(404).send("APK file not found");
+  }
+});
+
+app.get("/api/chat", (req, res) => {
+  try {
+    if (fs.existsSync(CHAT_FILE)) {
+      const data = fs.readFileSync(CHAT_FILE, "utf8");
+      res.json(JSON.parse(data));
+    } else {
+      res.json([]);
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/chat", (req, res) => {
+  try {
+    const { user, message, avatar } = req.body;
+    let chatLogs = [];
+    if (fs.existsSync(CHAT_FILE)) {
+      chatLogs = JSON.parse(fs.readFileSync(CHAT_FILE, "utf8"));
+    }
+    const newMsg = {
+      id: Date.now(),
+      user: user || "Misafir",
+      message: message || "",
+      avatar: avatar || "👤",
+      time: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+    };
+    chatLogs.push(newMsg);
+    // Keep only last 100 messages
+    if (chatLogs.length > 100) chatLogs = chatLogs.slice(-100);
+    fs.writeFileSync(CHAT_FILE, JSON.stringify(chatLogs, null, 2), "utf8");
+    res.json(newMsg);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Setup dev and production servers
 async function startServer() {
   // Serve public folder before Vite to bypass large file limits
@@ -362,8 +608,9 @@ async function startServer() {
     console.log(`\n${MAGENTA}====================================================${RESET}`);
     console.log(`${CYAN}ARCHWEB OS SUNUCUSU AKTIF (PORT: ${PORT})${RESET}`);
     console.log(`${MAGENTA}====================================================${RESET}`);
-    console.log(`${BLUE}Erisim: ${YELLOW}http://localhost:${PORT}${RESET}`);
-    console.log(`${BLUE}Ag:     ${YELLOW}http://192.168.1.105:${PORT}${RESET}`);
+    console.log(`${BLUE}Onizleme: ${YELLOW}https://ais-pre-xjjumj5lom3t4danhihlde-579357512949.europe-west2.run.app${RESET}`);
+    console.log(`${BLUE}Gelistirme: ${YELLOW}https://ais-dev-xjjumj5lom3t4danhihlde-579357512949.europe-west2.run.app${RESET}`);
+    console.log(`${BLUE}Yerel:      ${YELLOW}http://localhost:${PORT}${RESET}`);
     console.log(`${MAGENTA}====================================================${RESET}\n`);
   });
 }

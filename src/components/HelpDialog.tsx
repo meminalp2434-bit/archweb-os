@@ -131,10 +131,10 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ onClose }) => {
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-[var(--accent)]">
               <MessageSquare size={16} />
-              <h3 className="text-xs font-bold uppercase tracking-wider">Destek Ekibi</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider">Destek Ekibi (Emin Alp)</h3>
             </div>
             <p className="text-[10px] text-white/60 leading-relaxed max-w-sm">
-              Sorununuz hala çözülmediyse Discord topluluğumuza katılabilir veya geliştiriciye e-posta gönderebilirsiniz.
+              Sorununuz hala çözülmediyse Discord topluluğumuza katılabilir veya yapımcı Emin Alp'e e-posta gönderebilirsiniz.
             </p>
           </div>
           <button className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-black text-[10px] font-bold rounded-lg transition-all flex items-center gap-2 shrink-0">
@@ -147,7 +147,7 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ onClose }) => {
       <div className="px-6 py-4 bg-black/20 border-t border-white/5 flex items-center justify-between text-[10px] text-white/30">
         <div className="flex items-center gap-2">
           <ShieldCheck size={12} />
-          <span>ArchWeb OS v20.1.2 Güvenli Sürüm</span>
+          <span>ArchWeb OS v20.1.2 | Yapımcı: Emin Alp</span>
         </div>
         <span>© 2026 ArchWeb Project</span>
       </div>

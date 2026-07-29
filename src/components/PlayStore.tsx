@@ -30,6 +30,21 @@ export interface AppItem {
 
 export const playStoreApps: AppItem[] = [
   {
+    id: 'archweb_kids',
+    name: 'ArchWeb for Kids OS',
+    developer: 'ArchWeb Software',
+    category: 'kids',
+    icon: Cpu,
+    iconColor: '#38bdf8',
+    iconBg: 'bg-sky-500/20',
+    rating: 5.0,
+    reviews: '2.4M',
+    downloads: '10M+',
+    size: '18 MB',
+    description: 'Çocuklar ve öğrenciler için özel olarak tasarlanmış güvenli, hızlı, reklamsız web tabanlı işletim sistemi. Ebeveyn kontrolü, dahili eğitici oyunlar, çevrimdışı HTML sürümü ve yüksek performanslı masaüstü deneyimi sunar.',
+    screenshots: ['#0f172a', '#0284c7', '#38bdf8']
+  },
+  {
     id: 'whatsapp',
     name: 'WhatsApp Messenger',
     developer: 'Meta',

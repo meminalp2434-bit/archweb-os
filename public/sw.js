@@ -2,7 +2,10 @@ const CACHE_NAME = 'archweb-os-v1';
 const ASSETS = [
   '/',
   '/index.html',
-  '/manifest.json'
+  '/manifest.json',
+  '/icon.svg',
+  '/pwa-icon.png',
+  '/archweb_offline.html'
 ];
 
 self.addEventListener('install', (e) => {
