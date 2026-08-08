@@ -530,22 +530,96 @@ app.get(["/archwebapp.apk", "/archwebapp"], (req, res) => {
   }
 });
 
+const CHAT_CONFIG_FILE = path.join(process.cwd(), "chat_config.json");
+
+const DEFAULT_GROUPS = [
+  { id: "genel", name: "Genel", icon: "💬" },
+  { id: "duyurular", name: "Duyurular", icon: "📢" },
+  { id: "destek", name: "Teknik Destek", icon: "🛠️" },
+  { id: "yonetim", name: "Yönetici Grubu", icon: "👑" }
+];
+
+function getChatConfig() {
+  try {
+    if (fs.existsSync(CHAT_CONFIG_FILE)) {
+      const parsed = JSON.parse(fs.readFileSync(CHAT_CONFIG_FILE, "utf8"));
+      if (!parsed.groups || !Array.isArray(parsed.groups)) {
+        parsed.groups = DEFAULT_GROUPS;
+      }
+      return parsed;
+    }
+  } catch (e) {}
+  return { isLocked: false, groups: DEFAULT_GROUPS };
+}
+
+function saveChatConfig(config: any) {
+  try {
+    fs.writeFileSync(CHAT_CONFIG_FILE, JSON.stringify(config, null, 2), "utf8");
+  } catch (e) {}
+}
+
 app.get("/api/chat", (req, res) => {
   try {
-    if (fs.existsSync(CHAT_FILE)) {
-      const data = fs.readFileSync(CHAT_FILE, "utf8");
-      res.json(JSON.parse(data));
-    } else {
-      res.json([]);
+    const group = (req.query.group as string) || "genel";
+    const dmWith = req.query.dmWith as string;
+    const currentUser = req.query.currentUser as string;
+    const userAvatar = (req.query.userAvatar as string) || "👤";
+    const userRole = (req.query.userRole as string) || "user";
+
+    // Track active/online presence if currentUser is provided
+    if (currentUser) {
+      activeUsersPresence[currentUser] = {
+        username: currentUser,
+        avatar: userAvatar,
+        role: userRole,
+        lastSeen: Date.now()
+      };
     }
+
+    let messages = [];
+    if (fs.existsSync(CHAT_FILE)) {
+      const allMsgs = JSON.parse(fs.readFileSync(CHAT_FILE, "utf8"));
+      
+      if (dmWith && currentUser) {
+        // DM Filter: messages between currentUser & dmWith
+        messages = allMsgs.filter((m: any) => 
+          (m.isDm || m.type === 'dm') && 
+          ((m.user === currentUser && m.recipient === dmWith) || (m.user === dmWith && m.recipient === currentUser))
+        );
+      } else {
+        // Group Filter: non-DM messages matching group
+        messages = allMsgs.filter((m: any) => !m.isDm && m.type !== 'dm' && (m.group || "genel") === group);
+      }
+    }
+
+    // Clean up presence older than 30 seconds
+    const now = Date.now();
+    const onlineList = Object.values(activeUsersPresence).filter(u => now - u.lastSeen < 30000);
+
+    const config = getChatConfig();
+    res.json({ 
+      messages, 
+      isLocked: !!config.isLocked, 
+      groups: config.groups,
+      onlineUsers: onlineList 
+    });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
+const activeUsersPresence: Record<string, { username: string; avatar: string; role: string; lastSeen: number }> = {};
+
 app.post("/api/chat", (req, res) => {
   try {
-    const { user, message, avatar } = req.body;
+    const { user, message, avatar, role, group, isDm, recipient } = req.body;
+    const config = getChatConfig();
+    
+    // If chat is locked and poster is not admin, deny (except for DMs if allowed, but lock applies to main channel)
+    if (!isDm && config.isLocked && role !== 'admin') {
+      return res.status(403).json({ error: "Sohbet şu an yöneticiler tarafından kilitli durumda." });
+    }
+
     let chatLogs = [];
     if (fs.existsSync(CHAT_FILE)) {
       chatLogs = JSON.parse(fs.readFileSync(CHAT_FILE, "utf8"));
@@ -555,13 +629,109 @@ app.post("/api/chat", (req, res) => {
       user: user || "Misafir",
       message: message || "",
       avatar: avatar || "👤",
+      role: role || "user",
+      group: group || "genel",
+      isDm: !!isDm,
+      recipient: recipient || null,
       time: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
     };
     chatLogs.push(newMsg);
-    // Keep only last 100 messages
-    if (chatLogs.length > 100) chatLogs = chatLogs.slice(-100);
+    // Keep only last 300 messages total
+    if (chatLogs.length > 300) chatLogs = chatLogs.slice(-300);
     fs.writeFileSync(CHAT_FILE, JSON.stringify(chatLogs, null, 2), "utf8");
+
+    // Touch presence
+    if (user) {
+      activeUsersPresence[user] = {
+        username: user,
+        avatar: avatar || "👤",
+        role: role || "user",
+        lastSeen: Date.now()
+      };
+    }
+
     res.json(newMsg);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/chat/groups", (req, res) => {
+  try {
+    const { name, icon, role } = req.body;
+    if (role !== 'admin') {
+      return res.status(403).json({ error: "Yalnızca yöneticiler yeni sohbet grubu oluşturabilir." });
+    }
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: "Grup adı boş olamaz." });
+    }
+    const config = getChatConfig();
+    const groupId = name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const exists = config.groups.some((g: any) => g.id === groupId || g.name.toLowerCase() === name.toLowerCase().trim());
+    if (exists) {
+      return res.status(400).json({ error: "Bu isimde bir sohbet grubu zaten var." });
+    }
+    const newGroup = {
+      id: groupId || `group-${Date.now()}`,
+      name: name.trim(),
+      icon: icon || "👥"
+    };
+    config.groups.push(newGroup);
+    saveChatConfig(config);
+    res.json({ success: true, group: newGroup, groups: config.groups });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete("/api/chat/groups", (req, res) => {
+  try {
+    const { groupId, role } = req.body;
+    if (role !== 'admin') {
+      return res.status(403).json({ error: "Yalnızca yöneticiler sohbet grubu silebilir." });
+    }
+    if (groupId === "genel") {
+      return res.status(400).json({ error: "Ana 'Genel' grubu silinemez." });
+    }
+    const config = getChatConfig();
+    config.groups = config.groups.filter((g: any) => g.id !== groupId);
+    saveChatConfig(config);
+    res.json({ success: true, groups: config.groups });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete("/api/chat", (req, res) => {
+  try {
+    const { id, clearAll } = req.query;
+    if (clearAll === "true") {
+      fs.writeFileSync(CHAT_FILE, JSON.stringify([], null, 2), "utf8");
+      return res.json({ success: true, message: "Tüm sohbet geçmişi temizlendi." });
+    }
+    if (id) {
+      const msgId = Number(id);
+      let chatLogs = [];
+      if (fs.existsSync(CHAT_FILE)) {
+        chatLogs = JSON.parse(fs.readFileSync(CHAT_FILE, "utf8"));
+      }
+      chatLogs = chatLogs.filter((m: any) => m.id !== msgId);
+      fs.writeFileSync(CHAT_FILE, JSON.stringify(chatLogs, null, 2), "utf8");
+      return res.json({ success: true, message: "Mesaj silindi." });
+    }
+    res.status(400).json({ error: "Geçersiz istek parametresi." });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/chat/lock", (req, res) => {
+  try {
+    const { isLocked } = req.body;
+    const config = getChatConfig();
+    config.isLocked = !!isLocked;
+    saveChatConfig(config);
+    res.json({ success: true, isLocked: config.isLocked });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

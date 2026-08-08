@@ -62,11 +62,8 @@ const CATEGORIES = [
 ];
 
 export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
-  const [step, setStep] = useState<0 | 1 | 2>(() => {
-    const savedUsersRaw = localStorage.getItem('archweb_registered_users');
-    const savedUsers = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
-    return savedUsers.length > 0 ? 0 : 1;
-  });
+  // Always default to step 1 (Yeni Hesap Ekle / Oluştur) on initial site access
+  const [step, setStep] = useState<0 | 1 | 2>(1);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -80,8 +77,13 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   useEffect(() => {
-    const savedUsersRaw = localStorage.getItem('archweb_registered_users');
-    setSavedUsers(savedUsersRaw ? JSON.parse(savedUsersRaw) : []);
+    try {
+      const savedUsersRaw = localStorage.getItem('archweb_registered_users');
+      const parsed = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
+      setSavedUsers(Array.isArray(parsed) ? parsed : []);
+    } catch (e) {
+      setSavedUsers([]);
+    }
   }, []);
 
   const handleSystemReset = () => {

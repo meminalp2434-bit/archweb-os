@@ -1,0 +1,9 @@
+ArchWeb for Kids OS - Android Package (Simulation)
+==============================================
+Bu dosya ArchWeb for Kids OS uygulamasının Android sürümüdür.
+Geliştirici: ArchWeb Software
+Sürüm: 1.0.0
+Paket Adı: com.archweb.kidsos
+
+Bu bir simülasyon dosyasıdır. Gerçek cihazlarda çalıştırmak için 
+Apache Cordova veya React Native ile paketlenmesi gerekir.

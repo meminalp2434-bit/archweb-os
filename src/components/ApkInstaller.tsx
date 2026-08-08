@@ -68,8 +68,8 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
               apk: `<?xml version="1.0" encoding="utf-8"?>\n<manifest xmlns:android="http://schemas.android.com/apk/res/android"\n    package="com.archweb.os"\n    android:versionCode="20102"\n    android:versionName="20.1.2">\n\n    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\n\n    <application\n        android:label="ArchWeb OS"\n        android:icon="@mipmap/ic_launcher"\n        android:theme="@style/Theme.ArchWeb.NoActionBar">\n        \n        <activity android:name=".MainActivity"\n            android:exported="true"\n            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale">\n            <intent-filter>\n                <action android:name="android.intent.action.MAIN" />\n                <category android:name="android.intent.category.LAUNCHER" />\n            </intent-filter>\n        </activity>\n    </application>\n</manifest>\n\n/* MAIN ACTIVITY CODE */\npackage com.archweb.os;\nimport com.getcapacitor.BridgeActivity;\npublic class MainActivity extends BridgeActivity {}`,
               ipa: `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n    <key>CFBundleIdentifier</key>\n    <string>com.archweb.os.ios</string>\n    <key>CFBundleDisplayName</key>\n    <string>ArchWeb OS</string>\n    <key>CFBundleShortVersionString</key>\n    <string>20.1.2</string>\n    <key>CodeSigningIdentity</key>\n    <string>Apple Development: Signed Distribution (ArchWeb OS Team)</string>\n    <key>ProvisionedDevices</key>\n    <string>All Devices (Universal Ad-Hoc / Enterprise Signed)</string>\n</dict>\n</plist>`,
               server_apk: `package com.archweb.server;\n\nimport android.os.Bundle;\nimport com.getcapacitor.BridgeActivity;\n\npublic class MainActivity extends BridgeActivity {\n    @Override\n    public void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        this.getBridge().getWebView().getSettings().setDomStorageEnabled(true);\n    }\n}`,
-              exe: `#include <iostream>\n#include <windows.h>\n#include <string>\n\nint main() {\n    SetConsoleTitleA("ArchWeb OS - Desktop Core v20.1.2");\n    \n    std::cout << "========================================" << std::endl;\n    std::cout << "       ARCHWEB OS - DESKTOP CORE        " << std::endl;\n    std::cout << "========================================" << std::endl;\n    std::cout << "[SYSTEM] C++ Native Kernel baslatiliyor..." << std::endl;\n    \n    std::cout << "[INFO] Port 3000 kontrol ediliyor..." << std::endl;\n    Sleep(1000);\n    \n    std::cout << "[INFO] Yerel sunucu adresi: http://localhost:3000" << std::endl;\n    std::cout << "[SYSTEM] Arayuz motoru yukleniyor..." << std::endl;\n    \n    system("npm run dev");\n\n    return 0;\n}`,
-              bat: `@echo off\nsetlocal enabledelayedexpansion\ntitle ArchWeb OS - System Launcher & Updater\ncd /d "%~dp0"\n\necho [1/4] Gereksinimler kontrol ediliyor...\nwhere node >nul 2>nul\nif %errorlevel% neq 0 ( color 0C & echo [HATA] Node.js bulunamadi! & pause & exit /b )\n\necho [2/4] Guncelleme Kontrolu\nset /p upd="Sistemi guncellemek ister misiniz? (E/H): "\nif /i "%upd%"=="E" ( \n    echo [GUNCELLEME] Paketler yukleniyor...\n    call npm install \n)\n\necho [3/4] Sistem baslatiliyor...\ncall npm run dev\n`,
+              exe: `using System;\nusing System.Diagnostics;\nusing System.IO;\nusing System.Runtime.InteropServices;\n\nnamespace ArchWebLauncher {\n    class Program {\n        static void Main(string[] args) {\n            Console.Title = "ArchWeb OS - Desktop C# Launcher";\n            Console.ForegroundColor = ConsoleColor.Cyan;\n            Console.WriteLine("========================================");\n            Console.WriteLine("       ARCHWEB OS - DESKTOP C# CORE      ");\n            Console.WriteLine("========================================");\n            \n            if (!File.Exists("package.json")) {\n                Console.ForegroundColor = ConsoleColor.Red;\n                Console.WriteLine("[HATA] Proje kok dizininde degilsiniz!");\n                Console.ReadLine();\n                return;\n            }\n\n            Console.WriteLine("[1/2] Bagimliliklar kontrol ediliyor...");\n            if (!Directory.Exists("node_modules")) {\n                RunCommand("npm", "install");\n            }\n\n            Console.WriteLine("[2/2] Sistem baslatiliyor...");\n            RunCommand("npm", "run dev");\n        }\n\n        static void RunCommand(string cmd, string args) {\n            ProcessStartInfo psi = new ProcessStartInfo {\n                FileName = "cmd.exe",\n                Arguments = "/c " + cmd + " " + args,\n                UseShellExecute = false\n            };\n            Process.Start(psi)?.WaitForExit();\n        }\n    }\n}`,
+              bat: `@echo off\ntitle ArchWeb OS - Launcher\ncd /d "%~dp0"\necho [1/2] Node.js Kontrol Ediliyor...\nwhere node >nul 2>nul\nif %errorlevel% neq 0 ( echo Node.js bulunamadi! & pause & exit )\necho [2/2] Sistem Baslatiliyor...\ncall npm install && call npm run dev\npause`,
               iso: `ARCHWEB OS ISO IMAGE\nVersion: 20.1.2\nEdition: Chromebook Edition\nBuild: Beta Test Stage\n`,
               zip: `ArchWeb OS Standalone System Package (.ZIP)\n==========================================\nVersion: 20.1.2\nType: Recovery & Offline Support\n`,
               dmg: `ArchWeb OS for macOS Installer\n==================================\n`,
@@ -82,7 +82,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
             else if (fileType === 'apk') filename = 'archinstall.apk';
             else if (fileType === 'ipa') filename = 'archweb.ipa';
             else if (fileType === 'server_apk') filename = 'Server.apk';
-            else if (fileType === 'exe') filename = 'ArchWeb_Desktop.exe';
+            else if (fileType === 'exe') filename = 'ArchWeb_Launcher.cs';
             else if (fileType === 'bat') filename = 'ArchWeb_OS_Launcher.bat';
             else if (fileType === 'iso') filename = 'archweb_v20_chromebook.iso';
             else if (fileType === (('zip' as any) as typeof fileType)) filename = 'archweb_system.zip';
@@ -92,7 +92,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
 
             const link = document.createElement('a');
 
-            if (fileType === 'archwebapp_apk' || fileType === 'apk' || fileType === 'ipa' || fileType === 'server_apk' || fileType === 'exe' || fileType === 'zip' || fileType === 'bat' || fileType === 'iso' || fileType === 'dmg' || fileType === 'deb') {
+            if (fileType === 'archwebapp_apk' || fileType === 'apk' || fileType === 'ipa' || fileType === 'server_apk' || fileType === 'zip' || fileType === 'iso' || fileType === 'dmg' || fileType === 'deb') {
               link.href = '/' + filename;
             } else {
               const content = fileContentsMap[fileType] || '';
@@ -233,12 +233,12 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
                     <div className="space-y-4">
                       <h3 className="text-lg font-bold text-blue-400">Windows Kurulumu</h3>
                       <div className="space-y-3 text-sm text-white/80 leading-relaxed">
-                        <p>1. <b>ArchWeb_OS_Setup.exe</b> dosyasını indirin.</p>
-                        <p>2. İndirilen dosyayı çift tıklayarak çalıştırın.</p>
-                        <p>3. Eğer sisteminizde Python yüklüyse, otomatik olarak gelişmiş terminal arayüzü açılacaktır.</p>
-                        <p>4. Sunucu başlatıldığında tarayıcınızda <b>http://localhost:5677</b> adresi otomatik olarak açılacaktır.</p>
+                        <p>1. <b>ArchWeb_Launcher.cs</b> (C# Kaynak Kodu) dosyasını indirin.</p>
+                        <p>2. Eğer bilgisayarınızda .NET SDK yüklüyse <code className="bg-black/50 px-2 py-1 rounded">dotnet build</code> ile derleyebilirsiniz.</p>
+                        <p>3. Derleme ile uğraşmak istemiyorsanız <b>ArchWeb_OS_Launcher.bat</b> dosyasını indirin.</p>
+                        <p>4. .bat dosyasını projenin ana klasörüne koyun ve çift tıklayarak çalıştırın.</p>
                         <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[12px]">
-                          <b>Not:</b> Windows 10/11 kullanıcıları için .exe kurulumu en stabil yöntemdir.
+                          <b>Not:</b> En hızlı ve sorunsuz yöntem .bat dosyasını kullanmaktır. C# sürümü profesyonel geliştiriciler için sunulmuştur.
                         </div>
                       </div>
                     </div>
@@ -652,8 +652,8 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
                     <Monitor size={20} />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-white">Full Setup Installer (.EXE)</p>
-                    <p className="text-[10px] text-white/50">Otomatik port (5677) ve IP (245.578.3.57.99) ayarlarıyla.</p>
+                    <p className="text-xs font-bold text-white">C# Launcher Source (.CS)</p>
+                    <p className="text-[10px] text-white/50">Derlenebilir C# kodu. Windows Defender dostu ve güvenli.</p>
                   </div>
                 </div>
 
@@ -662,7 +662,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
                   className="w-full sm:w-auto px-5 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-extrabold text-xs rounded-lg shadow-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shrink-0"
                 >
                   <Download size={13} className="stroke-[2.5]" />
-                  <span>HEPSİNİ İNDİR (.EXE)</span>
+                  <span>KODU İNDİR (.CS)</span>
                 </button>
               </div>
             </div>
@@ -675,9 +675,9 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-[9px] text-blue-400 font-mono font-bold uppercase">
-                      Windows Full
+                      Windows C# Launcher
                     </span>
-                    <span className="text-[10px] font-mono text-white/40">.exe</span>
+                    <span className="text-[10px] font-mono text-white/40">.cs</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden p-1 shrink-0">

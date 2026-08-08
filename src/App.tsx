@@ -15,13 +15,14 @@ import { PowerDialog } from './components/PowerDialog';
 import { EmailApp } from './components/EmailApp';
 import { KidLogin } from './components/KidLogin';
 import { KidApp } from './components/KidApp';
-import { PlayStore, playStoreApps, Minecraft2D, PianoKids, SpaceExplorer, ColoringBook, YTKids, BunnyPet } from './components/PlayStore';
+import { PlayStore, playStoreApps, Minecraft2D, PianoKids, SpaceExplorer, ColoringBook, YTKids } from './components/PlayStore';
 import { ApkInstaller } from './components/ApkInstaller';
 import { IsoInstaller } from './components/IsoInstaller';
 import { SahaApp } from './components/SahaApp';
 import { LiveChat } from './components/LiveChat';
 import { TvLauncher } from './components/TvLauncher';
 import { TabletView } from './components/TabletView';
+import { safeStorage } from './utils/safeStorage';
 import { motion, AnimatePresence } from 'motion/react';
 import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock, Mail, Sparkles, Play, Cpu, ShoppingBag, Smartphone, Download, Package, X, ShieldCheck, Tv, Tablet, Monitor, Activity, MessageCircle } from 'lucide-react';
 
@@ -66,19 +67,19 @@ export default function App() {
   const [activePlayApps, setActivePlayApps] = useState<Record<string, boolean>>({});
   const [isSetupComplete, setIsSetupComplete] = useState<boolean>(false);
   const [gmailUser, setGmailUser] = useState<string>(() => {
-    return localStorage.getItem('archweb_gmail_user') || '';
+    return safeStorage.getItem('archweb_gmail_user') || '';
   });
   const [gmailPassword, setGmailPassword] = useState<string>(() => {
-    return localStorage.getItem('archweb_gmail_password') || '';
+    return safeStorage.getItem('archweb_gmail_password') || '';
   });
   const [loginMethod, setLoginMethod] = useState<'email' | 'google' | 'microsoft' | 'apple'>(() => {
-    return (localStorage.getItem('archweb_login_method') as any) || 'email';
+    return (safeStorage.getItem('archweb_login_method') as any) || 'email';
   });
   const [kidCategory, setKidCategory] = useState<'education' | 'gaming' | 'creativity' | 'science'>(() => {
-    return (localStorage.getItem('archweb_kid_category') as any) || 'education';
+    return (safeStorage.getItem('archweb_kid_category') as any) || 'education';
   });
   const [kidAvatar, setKidAvatar] = useState<string>(() => {
-    return localStorage.getItem('archweb_kid_avatar') || '🦊';
+    return safeStorage.getItem('archweb_kid_avatar') || '🦊';
   });
 
   const [isTerminalOpen, setIsTerminalOpen] = useState(false); // Default to false for kids
@@ -106,7 +107,7 @@ export default function App() {
   const [isResetting, setIsResetting] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isSafeMode, setIsSafeMode] = useState<boolean>(() => {
-    return localStorage.getItem('archweb_safe_mode') === 'true' || (import.meta as any).env.VITE_SAFE_MODE === 'true';
+    return safeStorage.getItem('archweb_safe_mode') === 'true';
   });
   const [accentColor, setAccentColor] = useState('#1793d1');
   const [editingFile, setEditingFile] = useState({ name: 'notlar.txt', content: 'ArchWeb OS\'e Hoş Geldiniz!\n\nBu, Arch Linux ortamının tamamen işlevsel bir web simülasyonudur.\n\nKeyfini çıkarın!', path: '/home/user/notlar.txt' });
@@ -116,7 +117,7 @@ export default function App() {
   const [isRemote, setIsRemote] = useState(false);
   const [isRemoteVerified, setIsRemoteVerified] = useState(false);
   const [userRole, setUserRole] = useState<'admin' | 'user'>(() => {
-    return (localStorage.getItem('archweb_user_role') as 'admin' | 'user') || 'user';
+    return (safeStorage.getItem('archweb_user_role') as 'admin' | 'user') || 'user';
   });
   const [isControlPanelOpen, setIsControlPanelOpen] = useState(false);
 
@@ -130,13 +131,17 @@ export default function App() {
   const [pinCode, setPinCode] = useState('1234');
   const [mobileMode, setMobileMode] = useState(false);
   const [deviceMode, setDeviceMode] = useState<'desktop' | 'mobile' | 'tablet' | 'tv'>(() => {
-    const saved = localStorage.getItem('archweb_device_mode');
-    return (saved as any) || 'desktop';
+    const saved = safeStorage.getItem('archweb_device_mode');
+    if (saved) return saved as any;
+    if (typeof navigator !== 'undefined' && /smarttv|tcl|googletv|android tv|tizen|webos|hbbtv|appletv|netcast/i.test(navigator.userAgent)) {
+      return 'tv';
+    }
+    return 'desktop';
   });
 
   const handleChangeDeviceMode = (mode: 'desktop' | 'mobile' | 'tablet' | 'tv') => {
     setDeviceMode(mode);
-    localStorage.setItem('archweb_device_mode', mode);
+    safeStorage.setItem('archweb_device_mode', mode);
     if (mode === 'mobile') {
       setMobileMode(true);
     } else {
@@ -144,18 +149,23 @@ export default function App() {
     }
   };
   const [isLocked, setIsLocked] = useState<boolean>(() => {
-    return localStorage.getItem('archweb_is_locked') === 'true';
+    return safeStorage.getItem('archweb_is_locked') === 'true';
   });
 
   // Sound and Volume Settings
   const [volume, setVolume] = useState<number>(() => {
-    const saved = localStorage.getItem('archweb_volume');
+    const saved = safeStorage.getItem('archweb_volume');
     return saved !== null ? parseInt(saved) : 80;
   });
 
   const [installedPlayStoreApps, setInstalledPlayStoreApps] = useState<Record<string, boolean>>(() => {
-    const saved = localStorage.getItem('playstore_installed_apps');
-    return saved ? JSON.parse(saved) : {};
+    const saved = safeStorage.getItem('playstore_installed_apps');
+    if (!saved) return {};
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      return {};
+    }
   });
 
   useEffect(() => {
@@ -170,7 +180,9 @@ export default function App() {
   useEffect(() => {
     const handleLaunchApp = (e: any) => {
       const appId = e.detail;
-      if (appId) {
+      if (appId === 'archweb_kids') {
+        setIsKidAppOpen(true);
+      } else if (appId) {
         setActivePlayApps(prev => ({ ...prev, [appId]: true }));
       }
     };
@@ -703,7 +715,7 @@ export default function App() {
       style={{ 
         background: getWallpaperGradient(wallpaper, accentColor),
         fontSize: fontSize === 'small' ? '12px' : fontSize === 'large' ? '16px' : '14px',
-        filter: `brightness(${brightness}%) ${isSafeMode ? 'grayscale(0.6) contrast(1.05)' : ''}`
+        filter: `brightness(${brightness}%)`
       }}
     >
       <AnimatePresence mode="wait">
@@ -932,6 +944,7 @@ export default function App() {
               onClose={() => setIsLiveChatOpen(false)} 
               currentUser={gmailUser || 'Kullanıcı'} 
               avatar={kidAvatar}
+              userRole={userRole}
             />
           </motion.div>
         </div>
@@ -1256,12 +1269,43 @@ export default function App() {
         {playStoreApps.map((app) => {
           const isOpen = activePlayApps[app.id];
           if (!isOpen) return null;
-          const AppContent = app.id === 'minecraft2d' ? Minecraft2D :
-                             app.id === 'piano_kids' ? PianoKids :
-                             app.id === 'space_explorer' ? SpaceExplorer :
-                             app.id === 'coloring_book' ? ColoringBook :
-                             app.id === 'yt_kids' ? YTKids :
-                             BunnyPet;
+          
+          let AppContent: React.FC<any> = () => (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white h-full">
+              <div className={`w-20 h-20 ${app.iconBg} rounded-2xl flex items-center justify-center mb-4`}>
+                <app.icon size={48} style={{ color: app.iconColor }} />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800">{app.name}</h3>
+              <p className="text-xs text-gray-500 mt-2 max-w-xs">
+                Bu uygulama ArchWeb güvenli havuzunda (sandbox) başarıyla başlatıldı. 
+                Uygulama verileri oturum boyunca ve sonrasında cihazınızda güvenle saklanacaktır.
+              </p>
+              <div className="mt-6 flex flex-col items-center gap-2">
+                <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-bold border border-emerald-100">
+                  <ShieldCheck size={12} /> GÜVENLİ BAĞLANTI
+                </div>
+                <div className="text-[9px] text-gray-400 font-mono">APP_ID: {app.id.toUpperCase()}</div>
+              </div>
+            </div>
+          );
+
+          if (app.id === 'minecraft2d') AppContent = Minecraft2D;
+          else if (app.id === 'piano_kids') AppContent = PianoKids;
+          else if (app.id === 'space_explorer') AppContent = SpaceExplorer;
+          else if (app.id === 'coloring_book') AppContent = ColoringBook;
+          else if (app.id === 'yt_kids') AppContent = YTKids;
+          else if (app.id === 'archweb_kids') {
+            AppContent = () => (
+              <KidApp 
+                onClose={() => setActivePlayApps(prev => ({ ...prev, archweb_kids: false }))}
+                category={kidCategory || 'education'}
+                gmailUser={gmailUser || 'kaşif@archweb.com'}
+                avatar={kidAvatar || '🦊'}
+                onLogout={handleKidLogout}
+              />
+            );
+          }
+          
           return (
             <AnimatePresence key={app.id}>
               <motion.div 

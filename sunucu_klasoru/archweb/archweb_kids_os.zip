@@ -1,0 +1,10 @@
+ArchWeb for Kids OS Source Code (Simulation ZIP)
+==============================================
+Bu dosya ArchWeb for Kids OS uygulamasının tüm kaynak kodlarını içermektedir.
+Kullanıcı bu dosyayı .apk olarak yeniden adlandırıp paketleme araçlarıyla kullanabilir.
+İçerik:
+- src/
+- public/
+- package.json
+- vite.config.ts
+- README.md

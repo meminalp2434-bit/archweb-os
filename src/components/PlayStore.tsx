@@ -6,6 +6,7 @@ import {
   Linkedin, Twitter, Instagram, Smartphone, Languages, MessageSquare, Ghost
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { safeStorage } from '../utils/safeStorage';
 
 interface PlayStoreProps {
   onClose: () => void;
@@ -418,21 +419,6 @@ export const playStoreApps: AppItem[] = [
     size: '18 MB',
     description: 'Telif haklarını %100 korumak için tasarlanmış, çocuk dostu, eğlenceli ve güvenli bir YouTube simülatör uygulaması. Özenle seçilmiş çizgi filmler ve animasyonlar içerir.',
     screenshots: ['#6411ad', '#8f2d56', '#d81159']
-  },
-  {
-    id: 'bunny_pet',
-    name: 'Sanal Tavşanım Bobo',
-    developer: 'Pet Care Studio',
-    category: 'kids',
-    icon: Heart,
-    iconColor: '#e040fb',
-    iconBg: 'bg-purple-500/10',
-    rating: 4.8,
-    reviews: '89B',
-    downloads: '10M+',
-    size: '15 MB',
-    description: 'Sevimli evcil tavşanınız Bobo\'yu besleyin, uyutun, onunla oyun oynayın! Açlık, enerji ve mutluluk barlarını doldurarak Bobo\'yu sağlıklı büyütün.',
-    screenshots: ['#10002b', '#240046', '#3c096c']
   }
 ];
 
@@ -441,22 +427,19 @@ export const PlayStore: React.FC<PlayStoreProps> = ({ onClose, mobileMode = fals
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedApp, setSelectedApp] = useState<AppItem | null>(null);
   const [installedApps, setInstalledApps] = useState<Record<string, boolean>>(() => {
-    const saved = localStorage.getItem('playstore_installed_apps');
+    const saved = safeStorage.getItem('playstore_installed_apps');
     return saved ? JSON.parse(saved) : {};
   });
   const [installProgress, setInstallProgress] = useState<Record<string, number>>({});
 
-  // Keep track of installation status in localStorage
   useEffect(() => {
-    localStorage.setItem('playstore_installed_apps', JSON.stringify(installedApps));
+    safeStorage.setItem('playstore_installed_apps', JSON.stringify(installedApps));
     window.dispatchEvent(new Event('playstore_apps_changed'));
   }, [installedApps]);
 
   const handleInstall = (appId: string) => {
     if (installedApps[appId]) return;
-
     setInstallProgress(prev => ({ ...prev, [appId]: 1 }));
-
     let progress = 0;
     const interval = setInterval(() => {
       progress += Math.floor(Math.random() * 15) + 5;
@@ -486,7 +469,6 @@ export const PlayStore: React.FC<PlayStoreProps> = ({ onClose, mobileMode = fals
   const filteredApps = playStoreApps.filter(app => {
     const matchesSearch = app.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           app.developer.toLowerCase().includes(searchQuery.toLowerCase());
-    
     if (activeTab === 'home') return matchesSearch;
     if (activeTab === 'games') return matchesSearch && app.category === 'games';
     if (activeTab === 'apps') return matchesSearch && app.category === 'apps';
@@ -502,14 +484,10 @@ export const PlayStore: React.FC<PlayStoreProps> = ({ onClose, mobileMode = fals
       className={`absolute transition-all duration-300 bg-[#f8f9fa] text-[#202124] border border-black/10 overflow-hidden shadow-2xl z-[75] flex flex-col font-sans ${mobileMode ? 'inset-x-0 top-8 bottom-0 rounded-none' : 'inset-4 md:inset-10 rounded-2xl'}`}
       id="playstore-window"
     >
-      {/* Play Store Head */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {selectedApp ? (
-            <button 
-              onClick={() => setSelectedApp(null)}
-              className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
-            >
+            <button onClick={() => setSelectedApp(null)} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-600">
               <ArrowLeft size={18} />
             </button>
           ) : (
@@ -523,8 +501,6 @@ export const PlayStore: React.FC<PlayStoreProps> = ({ onClose, mobileMode = fals
             </div>
           )}
         </div>
-
-        {/* Search Bar */}
         {!selectedApp && (
           <div className="flex-1 max-w-md mx-6">
             <div className="flex items-center gap-2 bg-[#f1f3f4] rounded-full px-4 py-1.5 border border-transparent focus-within:bg-white focus-within:border-gray-200 transition-all shadow-inner">
@@ -544,64 +520,34 @@ export const PlayStore: React.FC<PlayStoreProps> = ({ onClose, mobileMode = fals
             </div>
           </div>
         )}
-
-        <button 
-          onClick={onClose}
-          className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500"
-          id="close-playstore-btn"
-        >
+        <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500">
           <X size={18} />
         </button>
       </div>
 
-      {/* Main Layout Area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Navigation Tabs (Only when not in detail view) */}
         {!selectedApp && (
           <div className="w-16 md:w-48 bg-white border-r border-gray-200 flex flex-col py-4 gap-1">
-            <button 
-              onClick={() => setActiveTab('home')}
-              className={`flex flex-col md:flex-row items-center gap-2 px-3 py-3 mx-2 rounded-xl text-left transition-colors ${activeTab === 'home' ? 'bg-[#e6f4ea] text-[#01875f]' : 'text-gray-600 hover:bg-gray-50'}`}
-            >
-              <Compass size={18} />
-              <span className="text-[10px] md:text-xs font-semibold hidden md:inline">Ana Sayfa</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('games')}
-              className={`flex flex-col md:flex-row items-center gap-2 px-3 py-3 mx-2 rounded-xl text-left transition-colors ${activeTab === 'games' ? 'bg-[#e6f4ea] text-[#01875f]' : 'text-gray-600 hover:bg-gray-50'}`}
-            >
-              <Gamepad2 size={18} />
-              <span className="text-[10px] md:text-xs font-semibold hidden md:inline">Oyunlar</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('apps')}
-              className={`flex flex-col md:flex-row items-center gap-2 px-3 py-3 mx-2 rounded-xl text-left transition-colors ${activeTab === 'apps' ? 'bg-[#e6f4ea] text-[#01875f]' : 'text-gray-600 hover:bg-gray-50'}`}
-            >
-              <Cpu size={18} />
-              <span className="text-[10px] md:text-xs font-semibold hidden md:inline">Uygulamalar</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('kids')}
-              className={`flex flex-col md:flex-row items-center gap-2 px-3 py-3 mx-2 rounded-xl text-left transition-colors ${activeTab === 'kids' ? 'bg-[#e6f4ea] text-[#01875f]' : 'text-gray-600 hover:bg-gray-50'}`}
-            >
-              <Sparkles size={18} />
-              <span className="text-[10px] md:text-xs font-semibold hidden md:inline">Çocuk Dünyası</span>
-            </button>
+            {(['home', 'games', 'apps', 'kids'] as const).map(tab => (
+              <button 
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex flex-col md:flex-row items-center gap-2 px-3 py-3 mx-2 rounded-xl text-left transition-colors ${activeTab === tab ? 'bg-[#e6f4ea] text-[#01875f]' : 'text-gray-600 hover:bg-gray-50'}`}
+              >
+                {tab === 'home' && <Compass size={18} />}
+                {tab === 'games' && <Gamepad2 size={18} />}
+                {tab === 'apps' && <Cpu size={18} />}
+                {tab === 'kids' && <Sparkles size={18} />}
+                <span className="text-[10px] md:text-xs font-semibold hidden md:inline capitalize">{tab === 'kids' ? 'Çocuk Dünyası' : tab}</span>
+              </button>
+            ))}
           </div>
         )}
 
-        {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#f8f9fa]">
           <AnimatePresence mode="wait">
             {selectedApp ? (
-              <motion.div 
-                key="detail"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm max-w-4xl mx-auto flex flex-col md:flex-row gap-8"
-              >
-                {/* Detail Left - App Header and Info */}
+              <motion.div key="detail" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm max-w-4xl mx-auto flex flex-col md:flex-row gap-8">
                 <div className="flex-1 space-y-6">
                   <div className="flex gap-4">
                     <div className={`w-24 h-24 rounded-2xl ${selectedApp.iconBg} flex items-center justify-center text-white`}>
@@ -613,159 +559,66 @@ export const PlayStore: React.FC<PlayStoreProps> = ({ onClose, mobileMode = fals
                       <p className="text-[11px] text-gray-400 capitalize">{selectedApp.category} • Reklamsız</p>
                     </div>
                   </div>
-
-                  {/* Play Store Quick Specs */}
                   <div className="grid grid-cols-4 gap-2 border-y border-gray-100 py-3.5 text-center">
                     <div className="border-r border-gray-100">
-                      <div className="flex items-center justify-center gap-0.5 text-xs font-bold text-gray-800">
-                        {selectedApp.rating} <Star size={12} className="fill-amber-400 text-amber-400" />
-                      </div>
+                      <div className="flex items-center justify-center gap-0.5 text-xs font-bold text-gray-800">{selectedApp.rating} <Star size={12} className="fill-amber-400 text-amber-400" /></div>
                       <div className="text-[9px] text-gray-400 font-medium">{selectedApp.reviews} yorum</div>
                     </div>
-                    <div className="border-r border-gray-100">
-                      <div className="text-xs font-bold text-gray-800">{selectedApp.size}</div>
-                      <div className="text-[9px] text-gray-400 font-medium">Dosya Boyutu</div>
-                    </div>
-                    <div className="border-r border-gray-100">
-                      <div className="text-xs font-bold text-gray-800">PEGI 3</div>
-                      <div className="text-[9px] text-gray-400 font-medium">Her Yaşa Uygun</div>
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-gray-800">{selectedApp.downloads}</div>
-                      <div className="text-[9px] text-gray-400 font-medium">İndirme</div>
-                    </div>
+                    <div className="border-r border-gray-100"><div className="text-xs font-bold text-gray-800">{selectedApp.size}</div><div className="text-[9px] text-gray-400 font-medium">Dosya Boyutu</div></div>
+                    <div className="border-r border-gray-100"><div className="text-xs font-bold text-gray-800">PEGI 3</div><div className="text-[9px] text-gray-400 font-medium">Her Yaşa Uygun</div></div>
+                    <div><div className="text-xs font-bold text-gray-800">{selectedApp.downloads}</div><div className="text-[9px] text-gray-400 font-medium">İndirme</div></div>
                   </div>
-
-                  {/* Actions / Install button */}
                   <div className="flex items-center gap-3">
                     {installedApps[selectedApp.id] ? (
                       <>
-                        <button 
-                          onClick={() => {
-                            window.dispatchEvent(new CustomEvent('playstore_launch_app', { detail: selectedApp.id }));
-                          }}
-                          className="flex-1 py-2.5 rounded-full bg-[#01875f] hover:bg-[#00704e] text-white font-bold text-xs shadow-md shadow-emerald-700/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                        >
-                          <Play size={14} /> Uygulamayı Çalıştır
-                        </button>
-                        <button 
-                          onClick={() => handleUninstall(selectedApp.id)}
-                          className="px-4 py-2.5 rounded-full border border-red-200 hover:bg-red-50 text-red-500 font-bold text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer"
-                        >
-                          <Trash2 size={13} /> Kaldır
-                        </button>
+                        <button onClick={() => window.dispatchEvent(new CustomEvent('playstore_launch_app', { detail: selectedApp.id }))} className="flex-1 py-2.5 rounded-full bg-[#01875f] hover:bg-[#00704e] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"><Play size={14} /> Uygulamayı Çalıştır</button>
+                        <button onClick={() => handleUninstall(selectedApp.id)} className="px-4 py-2.5 rounded-full border border-red-200 hover:bg-red-50 text-red-500 font-bold text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer"><Trash2 size={13} /> Kaldır</button>
                       </>
                     ) : installProgress[selectedApp.id] !== undefined ? (
                       <div className="flex-1 space-y-2">
-                        <div className="flex justify-between text-[11px] font-bold text-gray-600">
-                          <span>Yükleniyor...</span>
-                          <span>%{installProgress[selectedApp.id]}</span>
-                        </div>
-                        <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-[#01875f] transition-all duration-150" 
-                            style={{ width: `${installProgress[selectedApp.id]}%` }}
-                          />
-                        </div>
+                        <div className="flex justify-between text-[11px] font-bold text-gray-600"><span>Yükleniyor...</span><span>%{installProgress[selectedApp.id]}</span></div>
+                        <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-[#01875f] transition-all duration-150" style={{ width: `${installProgress[selectedApp.id]}%` }} /></div>
                       </div>
                     ) : (
-                      <button 
-                        onClick={() => handleInstall(selectedApp.id)}
-                        className="flex-1 py-2.5 rounded-full bg-[#01875f] hover:bg-[#00704e] text-white font-bold text-xs shadow-md shadow-emerald-700/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                      >
-                        <Download size={14} /> Yükle
-                      </button>
+                      <button onClick={() => handleInstall(selectedApp.id)} className="flex-1 py-2.5 rounded-full bg-[#01875f] hover:bg-[#00704e] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"><Download size={14} /> Yükle</button>
                     )}
                   </div>
-
-                  {/* About App */}
-                  <div className="space-y-2">
-                    <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Uygulama Hakkında</h4>
-                    <p className="text-xs text-gray-600 leading-relaxed">{selectedApp.description}</p>
-                  </div>
+                  <div className="space-y-2"><h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Uygulama Hakkında</h4><p className="text-xs text-gray-600 leading-relaxed">{selectedApp.description}</p></div>
                 </div>
-
-                {/* Detail Right - Mock Screenshots */}
                 <div className="w-full md:w-64 space-y-3">
                   <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Ekran Görüntüleri</h4>
                   <div className="flex md:flex-col gap-3 overflow-x-auto pb-2">
                     {selectedApp.screenshots.map((color, idx) => (
-                      <div 
-                        key={idx} 
-                        className="w-40 md:w-full h-24 rounded-xl shadow-inner border border-black/5 flex items-center justify-center text-white/10 font-bold font-mono text-[10px]"
-                        style={{ backgroundColor: color }}
-                      >
-                        Screenshot {idx + 1}
-                      </div>
+                      <div key={idx} className="w-40 md:w-full h-24 rounded-xl shadow-inner border border-black/5 flex items-center justify-center text-white/10 font-bold font-mono text-[10px]" style={{ backgroundColor: color }}>Screenshot {idx + 1}</div>
                     ))}
                   </div>
                 </div>
               </motion.div>
             ) : (
-              <motion.div 
-                key="store-front"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="space-y-6"
-              >
-                {/* Banner Promotion */}
-                <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-6 text-white shadow-lg shadow-emerald-800/10 relative overflow-hidden">
-                  <div className="absolute right-0 bottom-0 top-0 w-1/3 opacity-15 pointer-events-none select-none flex items-center justify-center">
-                    <Sparkles size={120} />
-                  </div>
+              <motion.div key="store-front" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                  <div className="absolute right-0 bottom-0 top-0 w-1/3 opacity-15 pointer-events-none select-none flex items-center justify-center"><Sparkles size={120} /></div>
                   <div className="max-w-md space-y-2 relative z-10">
                     <span className="px-2 py-0.5 rounded-full bg-white/20 border border-white/25 text-[9px] uppercase font-bold tracking-wider">Haftanın Seçimi</span>
                     <h3 className="text-lg font-extrabold tracking-tight">Eğitici ve Güvenli Çocuk Oyunları</h3>
-                    <p className="text-[11px] text-white/80 leading-relaxed">Play Store\'da yer alan oyun ve araçlarla çocuklar eğlenirken kendilerini geliştiriyor. Tamamen reklamsız ve güvenli simülatörleri hemen yükleyin.</p>
+                    <p className="text-[11px] text-white/80 leading-relaxed">Play Store'da yer alan oyun ve araçlarla çocuklar eğlenirken kendilerini geliştiriyor. Tamamen reklamsız ve güvenli simülatörleri hemen yükleyin.</p>
                   </div>
                 </div>
-
-                {/* App Grid */}
                 <div className="space-y-4">
-                  <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <Compass size={14} className="text-[#01875f]" />
-                    Önerilen Uygulamalar ({filteredApps.length})
-                  </h3>
-                  
+                  <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5"><Compass size={14} className="text-[#01875f]" /> Önerilen Uygulamalar ({filteredApps.length})</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredApps.map((app) => {
                       const isInstalled = installedApps[app.id];
                       const progress = installProgress[app.id];
                       return (
-                        <div 
-                          key={app.id}
-                          onClick={() => setSelectedApp(app)}
-                          className="bg-white border border-gray-200/80 hover:border-gray-300 rounded-2xl p-4 transition-all duration-200 hover:shadow-md cursor-pointer flex gap-4 relative overflow-hidden group"
-                        >
-                          <div className={`w-14 h-14 rounded-xl ${app.iconBg} flex items-center justify-center text-white group-hover:scale-105 transition-transform shrink-0`}>
-                            <app.icon size={30} style={{ color: app.iconColor }} />
-                          </div>
-                          
+                        <div key={app.id} onClick={() => setSelectedApp(app)} className="bg-white border border-gray-200/80 hover:border-gray-300 rounded-2xl p-4 transition-all duration-200 hover:shadow-md cursor-pointer flex gap-4 relative overflow-hidden group">
+                          <div className={`w-14 h-14 rounded-xl ${app.iconBg} flex items-center justify-center text-white group-hover:scale-105 transition-transform shrink-0`}><app.icon size={30} style={{ color: app.iconColor }} /></div>
                           <div className="flex-1 space-y-1 overflow-hidden">
                             <h4 className="text-xs font-bold text-gray-800 truncate">{app.name}</h4>
                             <p className="text-[10px] text-gray-400 truncate">{app.developer}</p>
-                            <div className="flex items-center gap-1.5 text-[10px] text-gray-500">
-                              <span className="flex items-center font-bold text-gray-700">
-                                {app.rating} <Star size={10} className="fill-amber-400 text-amber-400 inline ml-0.5" />
-                              </span>
-                              <span>•</span>
-                              <span>{app.size}</span>
-                            </div>
+                            <div className="flex items-center gap-1.5 text-[10px] text-gray-500"><span className="flex items-center font-bold text-gray-700">{app.rating} <Star size={10} className="fill-amber-400 text-amber-400 inline ml-0.5" /></span><span>•</span><span>{app.size}</span></div>
                           </div>
-
-                          {/* Action badge */}
-                          <div className="absolute right-3 top-3">
-                            {isInstalled ? (
-                              <span className="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 text-[8px] font-bold text-emerald-600 flex items-center gap-0.5">
-                                <Check size={8} /> Yüklü
-                              </span>
-                            ) : progress !== undefined ? (
-                              <span className="px-2 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-[8px] font-bold text-blue-600 animate-pulse">
-                                %{progress}
-                              </span>
-                            ) : null}
-                          </div>
+                          <div className="absolute right-3 top-3">{isInstalled ? <span className="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 text-[8px] font-bold text-emerald-600 flex items-center gap-0.5"><Check size={8} /> Yüklü</span> : progress !== undefined ? <span className="px-2 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-[8px] font-bold text-blue-600 animate-pulse">%{progress}</span> : null}</div>
                         </div>
                       );
                     })}
@@ -780,27 +633,21 @@ export const PlayStore: React.FC<PlayStoreProps> = ({ onClose, mobileMode = fals
   );
 };
 
-/* ==========================================================================
-   1. MINECRAFT 2D LITE MINI GAME
-   ========================================================================== */
 export const Minecraft2D: React.FC = () => {
   const [tool, setTool] = useState<'dig' | 'dirt' | 'brick' | 'wood' | 'leaf' | 'diamond'>('dig');
   const [grid, setGrid] = useState<string[][]>(() => {
-    // Generate a beautiful 2D Minecraft sky, grass, dirt, stone layout
+    const saved = safeStorage.getItem('minecraft2d_grid');
+    if (saved) return JSON.parse(saved);
     const rows = 12;
     const cols = 20;
     const initial: string[][] = [];
     for (let r = 0; r < rows; r++) {
       const row: string[] = [];
       for (let c = 0; c < cols; c++) {
-        if (r < 5) {
-          row.push('sky');
-        } else if (r === 5) {
-          row.push('grass');
-        } else if (r < 9) {
-          row.push('dirt');
-        } else {
-          // randomized stone or diamonds
+        if (r < 5) row.push('sky');
+        else if (r === 5) row.push('grass');
+        else if (r < 9) row.push('dirt');
+        else {
           const rand = Math.random();
           if (rand < 0.12) row.push('diamond');
           else if (rand < 0.3) row.push('coal');
@@ -811,6 +658,10 @@ export const Minecraft2D: React.FC = () => {
     }
     return initial;
   });
+
+  useEffect(() => {
+    safeStorage.setItem('minecraft2d_grid', JSON.stringify(grid));
+  }, [grid]);
 
   const getBlockStyles = (type: string) => {
     switch (type) {
@@ -830,13 +681,9 @@ export const Minecraft2D: React.FC = () => {
   const handleBlockClick = (r: number, c: number) => {
     const updated = [...grid.map(row => [...row])];
     if (tool === 'dig') {
-      if (grid[r][c] !== 'sky') {
-        updated[r][c] = 'sky';
-      }
+      if (grid[r][c] !== 'sky') updated[r][c] = 'sky';
     } else {
-      if (grid[r][c] === 'sky') {
-        updated[r][c] = tool;
-      }
+      if (grid[r][c] === 'sky') updated[r][c] = tool;
     }
     setGrid(updated);
   };
@@ -845,93 +692,38 @@ export const Minecraft2D: React.FC = () => {
     <div className="p-4 flex flex-col items-center gap-4 bg-[#1e2022] h-full text-white">
       <div className="flex items-center justify-between w-full max-w-xl pb-2 border-b border-white/10">
         <span className="text-xs font-mono font-bold text-emerald-400">Yaratıcı Mod: 2D Dünya İnşaat</span>
-        <button 
-          onClick={() => {
-            // reset
-            const rows = 12;
-            const cols = 20;
-            const initial: string[][] = [];
-            for (let r = 0; r < rows; r++) {
-              const row: string[] = [];
-              for (let c = 0; c < cols; c++) {
-                if (r < 5) row.push('sky');
-                else if (r === 5) row.push('grass');
-                else if (r < 9) row.push('dirt');
-                else row.push(Math.random() < 0.15 ? 'diamond' : 'stone');
-              }
-              initial.push(row);
+        <button onClick={() => {
+          const rows = 12; const cols = 20; const initial: string[][] = [];
+          for (let r = 0; r < rows; r++) {
+            const row: string[] = [];
+            for (let c = 0; c < cols; c++) {
+              if (r < 5) row.push('sky'); else if (r === 5) row.push('grass'); else if (r < 9) row.push('dirt'); else row.push(Math.random() < 0.15 ? 'diamond' : 'stone');
             }
-            setGrid(initial);
-          }}
-          className="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-[9px] font-bold"
-        >
-          Dünyayı Sıfırla
-        </button>
+            initial.push(row);
+          }
+          setGrid(initial);
+        }} className="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-[9px] font-bold">Dünyayı Sıfırla</button>
       </div>
-
-      {/* Grid Canvas */}
       <div className="grid grid-cols-20 gap-0.5 w-full max-w-2xl bg-black/40 p-2 rounded-xl border border-white/5 select-none aspect-video">
-        {grid.map((row, r) => 
-          row.map((cell, c) => (
-            <div 
-              key={`${r}-${c}`}
-              onClick={() => handleBlockClick(r, c)}
-              className={`aspect-square cursor-pointer transition-all ${getBlockStyles(cell)}`}
-              title={cell}
-            >
-              {cell === 'diamond' && <div className="w-1 h-1 bg-white rounded-full mx-auto mt-1 animate-ping" />}
-              {cell === 'coal' && <div className="w-1.5 h-1.5 bg-black rounded mx-auto mt-1" />}
-            </div>
-          ))
-        )}
+        {grid.map((row, r) => row.map((cell, c) => (
+          <div key={`${r}-${c}`} onClick={() => handleBlockClick(r, c)} className={`aspect-square cursor-pointer transition-all ${getBlockStyles(cell)}`} title={cell}>
+            {cell === 'diamond' && <div className="w-1 h-1 bg-white rounded-full mx-auto mt-1 animate-ping" />}
+            {cell === 'coal' && <div className="w-1.5 h-1.5 bg-black rounded mx-auto mt-1" />}
+          </div>
+        )))}
       </div>
-
-      {/* Toolbar */}
       <div className="flex gap-2 flex-wrap justify-center p-3 bg-black/20 rounded-xl border border-white/5 w-full max-w-xl">
-        <button 
-          onClick={() => setTool('dig')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${tool === 'dig' ? 'bg-red-500 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
-        >
-          ⛏️ Kazma (Kır)
-        </button>
-        <button 
-          onClick={() => setTool('dirt')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${tool === 'dirt' ? 'bg-emerald-600 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
-        >
-          🟫 Toprak Koy
-        </button>
-        <button 
-          onClick={() => setTool('brick')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${tool === 'brick' ? 'bg-red-600 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
-        >
-          🧱 Tuğla Koy
-        </button>
-        <button 
-          onClick={() => setTool('wood')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${tool === 'wood' ? 'bg-amber-700 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
-        >
-          🪵 Ahşap Koy
-        </button>
-        <button 
-          onClick={() => setTool('leaf')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${tool === 'leaf' ? 'bg-green-500 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
-        >
-          🍃 Yaprak Koy
-        </button>
-        <button 
-          onClick={() => setTool('diamond')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${tool === 'diamond' ? 'bg-cyan-500 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
-        >
-          💎 Elmas Koy
-        </button>
+        <button onClick={() => setTool('dig')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${tool === 'dig' ? 'bg-red-500 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>⛏️ Kazma (Kır)</button>
+        <button onClick={() => setTool('dirt')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${tool === 'dirt' ? 'bg-emerald-600 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>🟫 Toprak Koy</button>
+        <button onClick={() => setTool('brick')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${tool === 'brick' ? 'bg-red-600 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>🧱 Tuğla Koy</button>
+        <button onClick={() => setTool('wood')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${tool === 'wood' ? 'bg-amber-700 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>🪵 Ahşap Koy</button>
+        <button onClick={() => setTool('leaf')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${tool === 'leaf' ? 'bg-green-500 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>🍃 Yaprak Koy</button>
+        <button onClick={() => setTool('diamond')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${tool === 'diamond' ? 'bg-cyan-500 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>💎 Elmas Koy</button>
       </div>
     </div>
   );
 };
 
-/* ==========================================================================
-   2. PIANO KIDS SYNTH MINI APP
-   ========================================================================== */
 export const PianoKids: React.FC = () => {
   const notes = [
     { name: 'C', label: 'Do', freq: 261.63, color: 'bg-red-500 border-red-600 text-white' },
@@ -943,548 +735,167 @@ export const PianoKids: React.FC = () => {
     { name: 'B', label: 'Si', freq: 493.88, color: 'bg-purple-500 border-purple-600 text-white' },
     { name: 'C2', label: 'Do2', freq: 523.25, color: 'bg-pink-500 border-pink-600 text-white' }
   ];
-
   const playSound = (freq: number) => {
     try {
-      // Create actual Web Audio Context sound
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'triangle'; // friendly sine-like sound for children
-      osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start();
-      osc.stop(ctx.currentTime + 0.8);
-    } catch (e) {
-      console.warn("AudioContext failed:", e);
-    }
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext; if (!AudioCtx) return;
+      const ctx = new AudioCtx(); const osc = ctx.createOscillator(); const gain = ctx.createGain();
+      osc.type = 'triangle'; osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+      osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.8);
+    } catch (e) { console.warn(e); }
   };
-
   return (
     <div className="p-6 flex flex-col items-center justify-center gap-6 bg-gradient-to-b from-purple-900 to-indigo-950 h-full text-white">
       <div className="text-center space-y-1">
         <h3 className="text-sm font-extrabold tracking-wide uppercase text-pink-300">🎵 Sihirli Çocuk Piyanosu 🎵</h3>
         <p className="text-[10px] text-purple-200">Rengarenk tuşlara dokunarak kendi ezgilerini çalmaya başla!</p>
       </div>
-
       <div className="flex gap-2 p-4 bg-black/30 rounded-2xl border border-white/10 shadow-2xl max-w-lg w-full aspect-[2/1]">
         {notes.map((note) => (
-          <button 
-            key={note.name}
-            onClick={() => playSound(note.freq)}
-            className={`flex-1 rounded-xl border-b-8 flex flex-col justify-end items-center pb-4 transition-all duration-75 active:translate-y-1.5 active:border-b-2 hover:brightness-110 active:brightness-95 cursor-pointer shadow-lg select-none ${note.color}`}
-          >
+          <button key={note.name} onClick={() => playSound(note.freq)} className={`flex-1 rounded-xl border-b-8 flex flex-col justify-end items-center pb-4 transition-all duration-75 active:translate-y-1.5 active:border-b-2 hover:brightness-110 active:brightness-95 cursor-pointer shadow-lg select-none ${note.color}`}>
             <span className="text-xs font-bold font-mono uppercase">{note.name}</span>
             <span className="text-[10px] font-semibold opacity-80">{note.label}</span>
           </button>
         ))}
       </div>
-
-      <div className="text-[9px] text-purple-300 font-mono flex items-center gap-1.5">
-        <span>Bilgi: Web Audio API kullanılarak gerçek zamanlı dalga sentezlenmektedir.</span>
-      </div>
     </div>
   );
 };
 
-/* ==========================================================================
-   3. SPACE EXPLORER MINI GAME (Canvas Keyboard or Touch)
-   ========================================================================== */
 export const SpaceExplorer: React.FC = () => {
   const [gameState, setGameState] = useState<'idle' | 'playing' | 'gameover'>('idle');
   const [score, setScore] = useState(0);
-  const [highScore, setHighScore] = useState(() => {
-    return Number(localStorage.getItem('space_high_score') || '0');
-  });
-  const [rocketX, setRocketX] = useState(50); // percentage 0 to 100
+  const [highScore, setHighScore] = useState(() => Number(safeStorage.getItem('space_high_score') || '0'));
+  const [rocketX, setRocketX] = useState(50);
   const [asteroids, setAsteroids] = useState<{ id: number; x: number; y: number; size: number }[]>([]);
   const [stars, setStars] = useState<{ id: number; x: number; y: number }[]>([]);
-  
-  const requestRef = useRef<number | null>(null);
   const nextItemId = useRef(0);
+  const requestRef = useRef<number | null>(null);
 
-  // Restart game
-  const startGame = () => {
-    setGameState('playing');
-    setScore(0);
-    setRocketX(50);
-    setAsteroids([]);
-    setStars([]);
-  };
+  const startGame = () => { setGameState('playing'); setScore(0); setRocketX(50); setAsteroids([]); setStars([]); };
 
   useEffect(() => {
     if (gameState !== 'playing') return;
-
-    let localAsteroids = [...asteroids];
-    let localStars = [...stars];
-    let frameScore = 0;
-
+    let localAsteroids = [...asteroids]; let localStars = [...stars]; let frameScore = 0;
     const gameLoop = () => {
-      // Spawning odds
-      if (Math.random() < 0.04) {
-        localAsteroids.push({
-          id: nextItemId.current++,
-          x: Math.random() * 90 + 5,
-          y: -10,
-          size: Math.random() * 15 + 10
-        });
+      if (Math.random() < 0.04) localAsteroids.push({ id: nextItemId.current++, x: Math.random() * 90 + 5, y: -10, size: Math.random() * 15 + 10 });
+      if (Math.random() < 0.03) localStars.push({ id: nextItemId.current++, x: Math.random() * 90 + 5, y: -10 });
+      localAsteroids = localAsteroids.map(ast => ({ ...ast, y: ast.y + 1.8 })).filter(ast => ast.y < 110);
+      localStars = localStars.map(star => ({ ...star, y: star.y + 1.2 })).filter(star => star.y < 110);
+      if (localAsteroids.some(ast => Math.abs(ast.x - rocketX) < 10 && ast.y > 80 && ast.y < 95)) {
+        setGameState('gameover'); if (score + frameScore > highScore) { setHighScore(score + frameScore); safeStorage.setItem('space_high_score', String(score + frameScore)); } return;
       }
-
-      if (Math.random() < 0.03) {
-        localStars.push({
-          id: nextItemId.current++,
-          x: Math.random() * 90 + 5,
-          y: -10
-        });
-      }
-
-      // Move Asteroids
-      localAsteroids = localAsteroids
-        .map(ast => ({ ...ast, y: ast.y + 1.8 }))
-        .filter(ast => ast.y < 110);
-
-      // Move Stars
-      localStars = localStars
-        .map(star => ({ ...star, y: star.y + 1.2 }))
-        .filter(star => star.y < 110);
-
-      // Check Collision with Rocket (X threshold 8%)
-      const hitAsteroid = localAsteroids.some(ast => {
-        return Math.abs(ast.x - rocketX) < 10 && ast.y > 80 && ast.y < 95;
-      });
-
-      if (hitAsteroid) {
-        setGameState('gameover');
-        if (score + frameScore > highScore) {
-          setHighScore(score + frameScore);
-          localStorage.setItem('space_high_score', String(score + frameScore));
-        }
-        return;
-      }
-
-      // Collect stars
       const initialStarCount = localStars.length;
-      localStars = localStars.filter(star => {
-        const collected = Math.abs(star.x - rocketX) < 10 && star.y > 80 && star.y < 95;
-        if (collected) {
-          frameScore += 10;
-        }
-        return !collected;
-      });
-
-      if (frameScore > 0) {
-        setScore(prev => prev + frameScore);
-        frameScore = 0;
-      }
-
-      // Update refs
-      setAsteroids(localAsteroids);
-      setStars(localStars);
-
+      localStars = localStars.filter(star => !(Math.abs(star.x - rocketX) < 10 && star.y > 80 && star.y < 95));
+      frameScore += (initialStarCount - localStars.length) * 10;
+      setScore(s => s + (initialStarCount - localStars.length) * 10);
+      setAsteroids(localAsteroids); setStars(localStars);
       requestRef.current = requestAnimationFrame(gameLoop);
     };
-
     requestRef.current = requestAnimationFrame(gameLoop);
-
-    return () => {
-      if (requestRef.current) cancelAnimationFrame(requestRef.current);
-    };
-  }, [gameState, rocketX, score, highScore]);
-
-  return (
-    <div className="p-4 flex flex-col items-center justify-center bg-gray-950 h-full text-white font-mono select-none">
-      <div className="flex justify-between w-full max-w-md pb-2 border-b border-white/10 text-xs">
-        <span className="text-yellow-400">Skor: {score}</span>
-        <span className="text-blue-400">En Yüksek: {highScore}</span>
-      </div>
-
-      {/* Screen Box */}
-      <div className="w-full max-w-md h-72 bg-slate-900 border-2 border-white/10 rounded-2xl relative overflow-hidden my-4 shadow-2xl">
-        {gameState === 'idle' && (
-          <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-4 text-center p-4">
-            <span className="text-lg font-bold text-blue-400 tracking-wider">🚀 UZAY SERÜVENİ 🚀</span>
-            <p className="text-[10px] text-gray-400">Yıldızları topla, meteorlardan kaç! Sol/sağ tuşlarıyla roketini yönlendir.</p>
-            <button 
-              onClick={startGame}
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 font-bold text-xs rounded-full transition-transform hover:scale-105 cursor-pointer"
-            >
-              Oyunu Başlat
-            </button>
-          </div>
-        )}
-
-        {gameState === 'gameover' && (
-          <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center gap-3 text-center p-4">
-            <span className="text-sm font-extrabold text-red-500 tracking-widest">💥 GÖREV BAŞARISIZ! 💥</span>
-            <span className="text-xs text-white/80">Elde Ettiğin Skor: {score}</span>
-            <button 
-              onClick={startGame}
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 font-bold text-xs rounded-full transition-transform hover:scale-105 cursor-pointer"
-            >
-              Tekrar Dene
-            </button>
-          </div>
-        )}
-
-        {/* Space Elements */}
-        {gameState === 'playing' && (
-          <>
-            {/* Rocket */}
-            <div 
-              className="absolute bottom-4 -translate-x-1/2 text-2xl transition-all duration-75 select-none"
-              style={{ left: `${rocketX}%` }}
-            >
-              🚀
-            </div>
-
-            {/* Asteroids */}
-            {asteroids.map(ast => (
-              <div 
-                key={ast.id}
-                className="absolute select-none"
-                style={{ left: `${ast.x}%`, top: `${ast.y}%`, fontSize: `${ast.size}px` }}
-              >
-                ☄️
-              </div>
-            ))}
-
-            {/* Stars */}
-            {stars.map(star => (
-              <div 
-                key={star.id}
-                className="absolute text-yellow-300 animate-pulse select-none text-sm"
-                style={{ left: `${star.x}%`, top: `${star.y}%` }}
-              >
-                ⭐
-              </div>
-            ))}
-          </>
-        )}
-      </div>
-
-      {/* Controllers */}
-      {gameState === 'playing' && (
-        <div className="flex gap-4 w-full max-w-xs">
-          <button 
-            onMouseDown={() => setRocketX(prev => Math.max(5, prev - 10))}
-            onTouchStart={() => setRocketX(prev => Math.max(5, prev - 10))}
-            className="flex-1 py-3 bg-white/5 hover:bg-white/15 border border-white/10 active:bg-blue-500/20 active:border-blue-500/50 rounded-xl font-bold text-sm cursor-pointer select-none"
-          >
-            ◀ SOL
-          </button>
-          <button 
-            onMouseDown={() => setRocketX(prev => Math.min(95, prev + 10))}
-            onTouchStart={() => setRocketX(prev => Math.min(95, prev + 10))}
-            className="flex-1 py-3 bg-white/5 hover:bg-white/15 border border-white/10 active:bg-blue-500/20 active:border-blue-500/50 rounded-xl font-bold text-sm cursor-pointer select-none"
-          >
-            SAĞ ▶
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-/* ==========================================================================
-   4. COLORING BOOK MINI APP
-   ========================================================================== */
-export const ColoringBook: React.FC = () => {
-  const [color, setColor] = useState('#ef4444');
-  const [pixels, setPixels] = useState<Record<string, string>>({});
-  
-  const palette = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#ec4899', '#ffffff'];
-
-  const rows = 12;
-  const cols = 12;
-
-  const handleCellClick = (r: number, c: number) => {
-    setPixels(prev => ({
-      ...prev,
-      [`${r}-${c}`]: color
-    }));
-  };
-
-  return (
-    <div className="p-4 flex flex-col items-center gap-4 bg-gray-50 h-full text-gray-800">
-      <div className="text-center space-y-1">
-        <h3 className="text-xs font-extrabold text-[#01875f] uppercase tracking-wider">🎨 Çocuk Boyama Matrisi 🎨</h3>
-        <p className="text-[9px] text-gray-500">Kutuları boyayarak piksel sanatı çizimleri oluştur!</p>
-      </div>
-
-      {/* Grid */}
-      <div className="grid grid-cols-12 gap-px bg-gray-300 p-1.5 rounded-xl max-w-sm w-full aspect-square shadow-md border border-gray-200">
-        {Array.from({ length: rows }).map((_, r) => 
-          Array.from({ length: cols }).map((_, c) => {
-            const cellColor = pixels[`${r}-${c}`] || '#ffffff';
-            return (
-              <div 
-                key={`${r}-${c}`}
-                onClick={() => handleCellClick(r, c)}
-                className="aspect-square cursor-pointer transition-colors border-[0.5px] border-gray-100 hover:brightness-95"
-                style={{ backgroundColor: cellColor }}
-              />
-            );
-          })
-        )}
-      </div>
-
-      {/* Palette Selection */}
-      <div className="flex gap-2.5 p-2.5 bg-white rounded-xl shadow-sm border border-gray-200">
-        {palette.map(col => (
-          <button 
-            key={col}
-            onClick={() => setColor(col)}
-            className={`w-7 h-7 rounded-full border transition-transform hover:scale-110 cursor-pointer ${color === col ? 'scale-110 ring-2 ring-emerald-500 ring-offset-2' : 'border-gray-200'}`}
-            style={{ backgroundColor: col }}
-          />
-        ))}
-      </div>
-
-      <button 
-        onClick={() => setPixels({})}
-        className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-lg text-[10px] font-bold text-gray-600 transition-colors"
-      >
-        Tuali Temizle
-      </button>
-    </div>
-  );
-};
-
-/* ==========================================================================
-   5. ARCHWEB KIDS VIDEO (YT KIDS SIMULATOR)
-   ========================================================================== */
-interface VideoItem {
-  id: string;
-  title: string;
-  category: string;
-  color: string;
-  duration: string;
-}
-
-export const YTKids: React.FC = () => {
-  const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-
-  const videos: VideoItem[] = [
-    { id: '1', title: 'Rengarenk Balonlar Çocuk Şarkısı', category: 'Müzik', color: 'from-pink-500 to-purple-600', duration: '2:15' },
-    { id: '2', title: 'Sevimli Köpek Bobi Ormanda', category: 'Çizgi Film', color: 'from-amber-400 to-red-500', duration: '3:40' },
-    { id: '3', title: 'Neden Gökyüzü Mavidir? (Bilim Deneyi)', category: 'Bilim', color: 'from-cyan-400 to-blue-600', duration: '4:10' },
-    { id: '4', title: 'Dinozorlar Çağını Öğrenelim', category: 'Tarih', color: 'from-emerald-400 to-green-600', duration: '5:20' }
-  ];
+    return () => { if (requestRef.current) cancelAnimationFrame(requestRef.current); };
+  }, [gameState, rocketX]);
 
   useEffect(() => {
-    if (!isPlaying) return;
-    const interval = setInterval(() => {
-      setProgress(p => {
-        if (p >= 100) {
-          setIsPlaying(false);
-          return 0;
-        }
-        return p + 2;
-      });
-    }, 250);
-    return () => clearInterval(interval);
-  }, [isPlaying]);
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'ArrowLeft') setRocketX(x => Math.max(5, x - 5)); if (e.key === 'ArrowRight') setRocketX(x => Math.min(95, x + 5)); };
+    window.addEventListener('keydown', handleKey); return () => window.removeEventListener('keydown', handleKey);
+  }, []);
 
   return (
-    <div className="p-4 bg-gray-50 h-full text-gray-800 flex flex-col font-sans">
-      <div className="pb-3 border-b border-gray-200 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Youtube size={20} className="text-red-500 fill-red-500" />
-          <span className="text-xs font-extrabold tracking-tight text-gray-900">YouTube Kids</span>
-        </div>
-        <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-200">
-          🛡️ Telif Korumalı (Simülatör)
-        </span>
+    <div className="h-full bg-[#050b18] text-white flex flex-col overflow-hidden relative font-sans">
+      <div className="absolute top-4 left-4 z-10 flex flex-col gap-1">
+        <span className="text-[10px] uppercase font-bold text-sky-400">Skor: {score}</span>
+        <span className="text-[9px] text-white/40">En Yüksek: {highScore}</span>
       </div>
-
-      {selectedVideo ? (
-        <div className="flex-1 flex flex-col justify-center items-center py-4 gap-4 max-w-xl mx-auto w-full">
-          {/* Mock Video Canvas */}
-          <div className={`w-full aspect-video rounded-2xl bg-gradient-to-tr ${selectedVideo.color} flex flex-col items-center justify-center text-white relative overflow-hidden shadow-lg border border-black/10`}>
-            {isPlaying ? (
-              <div className="flex flex-col items-center gap-2 text-center p-6 animate-pulse">
-                <span className="text-4xl">🍿</span>
-                <span className="text-xs font-bold tracking-tight">{selectedVideo.title}</span>
-                <span className="text-[10px] text-white/70">Oynatılıyor...</span>
-              </div>
-            ) : (
-              <button 
-                onClick={() => setIsPlaying(true)}
-                className="w-16 h-16 rounded-full bg-white text-red-500 flex items-center justify-center shadow-lg hover:scale-105 transition-transform cursor-pointer"
-              >
-                <Play size={28} className="fill-red-500 ml-1" />
-              </button>
-            )}
-
-            {/* Video Progress Bar */}
-            <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/30">
-              <div className="h-full bg-red-500 transition-all duration-150" style={{ width: `${progress}%` }} />
-            </div>
-          </div>
-
-          <div className="w-full flex items-center justify-between">
-            <div>
-              <h4 className="text-xs font-bold text-gray-900 leading-tight">{selectedVideo.title}</h4>
-              <p className="text-[10px] text-gray-500">{selectedVideo.category} • {selectedVideo.duration}</p>
-            </div>
-            <button 
-              onClick={() => {
-                setSelectedVideo(null);
-                setIsPlaying(false);
-                setProgress(0);
-              }}
-              className="px-3 py-1.5 rounded-lg bg-gray-200 hover:bg-gray-300 text-[10px] font-bold text-gray-600 transition-colors"
-            >
-              Videolara Dön
-            </button>
-          </div>
+      {gameState === 'idle' ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 p-8 text-center">
+          <div className="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center border border-blue-500/30 text-4xl">🚀</div>
+          <div className="space-y-2"><h2 className="text-lg font-bold">Uzay Serüveni</h2><p className="text-xs text-white/50">Meteorlardan kaç ve yıldızları topla! Roketi ok tuşlarıyla hareket ettir.</p></div>
+          <button onClick={startGame} className="px-8 py-3 bg-blue-600 hover:bg-blue-500 rounded-full text-sm font-bold shadow-lg transition-all">Oyunu Başlat</button>
+        </div>
+      ) : gameState === 'gameover' ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 p-8 text-center bg-red-950/20">
+          <div className="text-4xl">💥</div>
+          <div className="space-y-2"><h2 className="text-lg font-bold text-red-400">Görev Başarısız!</h2><p className="text-xs text-white/50">Roketin bir meteora çarptı. Topladığın puan: {score}</p></div>
+          <button onClick={startGame} className="px-8 py-3 bg-white text-slate-900 rounded-full text-sm font-bold shadow-lg transition-all">Tekrar Dene</button>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto pt-4 grid grid-cols-2 gap-4">
-          {videos.map(video => (
-            <div 
-              key={video.id}
-              onClick={() => setSelectedVideo(video)}
-              className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md cursor-pointer flex flex-col"
-            >
-              <div className={`w-full h-24 bg-gradient-to-tr ${video.color} flex items-center justify-center text-white/50 text-2xl font-bold font-mono`}>
-                ▶
-              </div>
-              <div className="p-2.5 space-y-1">
-                <span className="text-[8px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{video.category}</span>
-                <h4 className="text-[11px] font-bold text-gray-800 line-clamp-1 leading-snug">{video.title}</h4>
-                <p className="text-[9px] text-gray-400 font-medium">Süre: {video.duration}</p>
-              </div>
-            </div>
-          ))}
+        <div className="flex-1 relative overflow-hidden">
+          {asteroids.map(ast => <div key={ast.id} className="absolute text-2xl" style={{ left: `${ast.x}%`, top: `${ast.y}%` }}>☄️</div>)}
+          {stars.map(star => <div key={star.id} className="absolute text-xl animate-pulse" style={{ left: `${star.x}%`, top: `${star.y}%` }}>⭐</div>)}
+          <div className="absolute bottom-10 transition-all duration-75 text-4xl" style={{ left: `${rocketX}%`, transform: 'translateX(-50%)' }}>🚀</div>
         </div>
       )}
     </div>
   );
 };
 
-/* ==========================================================================
-   6. BUNNY PET LITE MINI GAME
-   ========================================================================== */
-export const BunnyPet: React.FC = () => {
-  const [bunnyState, setBunnyState] = useState<'idle' | 'eating' | 'sleeping' | 'playing'>('idle');
-  const [stats, setStats] = useState({ hunger: 70, energy: 60, love: 80 });
-
-  const feedBunny = () => {
-    setBunnyState('eating');
-    setStats(prev => ({
-      ...prev,
-      hunger: Math.min(100, prev.hunger + 15),
-      love: Math.min(100, prev.love + 5)
-    }));
-    setTimeout(() => setBunnyState('idle'), 1500);
-  };
-
-  const sleepBunny = () => {
-    setBunnyState('sleeping');
-    setStats(prev => ({
-      ...prev,
-      energy: Math.min(100, prev.energy + 20)
-    }));
-    setTimeout(() => setBunnyState('idle'), 2000);
-  };
-
-  const playBunny = () => {
-    setBunnyState('playing');
-    setStats(prev => ({
-      ...prev,
-      hunger: Math.max(10, prev.hunger - 10),
-      energy: Math.max(10, prev.energy - 15),
-      love: Math.min(100, prev.love + 12)
-    }));
-    setTimeout(() => setBunnyState('idle'), 1500);
-  };
-
+export const ColoringBook: React.FC = () => {
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [color, setColor] = useState('#ff0000');
+  const images = ['🐱', '🦖', '🚀', '🏠', '🌻', '🍎'];
   return (
-    <div className="p-4 bg-pink-50/50 h-full text-gray-800 flex flex-col items-center justify-center font-sans">
-      <div className="text-center space-y-1 pb-3">
-        <h3 className="text-xs font-extrabold text-pink-600 uppercase tracking-wider">🐰 Sanal Tavşanım Bobo 🐰</h3>
-        <p className="text-[9px] text-gray-500">Bobo\'nun mutlu olması için ona iyi bak!</p>
-      </div>
-
-      {/* Bunny Avatar Canvas */}
-      <div className="w-40 h-40 rounded-full bg-white/80 border-2 border-pink-200 shadow-inner flex items-center justify-center relative select-none">
-        {bunnyState === 'idle' && (
-          <div className="flex flex-col items-center animate-bounce duration-[2000ms]">
-            <span className="text-6xl">🐰</span>
-            <span className="text-[9px] font-bold text-pink-500 mt-1">Bobo keyifli</span>
-          </div>
-        )}
-        {bunnyState === 'eating' && (
-          <div className="flex flex-col items-center animate-pulse">
-            <span className="text-6xl">🥕🐰</span>
-            <span className="text-[9px] font-bold text-emerald-500 mt-1">Ham hum kıtır kıtır!</span>
-          </div>
-        )}
-        {bunnyState === 'sleeping' && (
-          <div className="flex flex-col items-center">
-            <span className="text-6xl">😴🐰</span>
-            <span className="text-[9px] font-bold text-blue-500 mt-1">Zzz... Mışıl mışıl</span>
-          </div>
-        )}
-        {bunnyState === 'playing' && (
-          <div className="flex flex-col items-center animate-bounce">
-            <span className="text-6xl">⚽🐰</span>
-            <span className="text-[9px] font-bold text-purple-500 mt-1">Hoppa! Çok eğlenceli</span>
-          </div>
-        )}
-      </div>
-
-      {/* Stats indicators */}
-      <div className="grid grid-cols-3 gap-3 w-full max-w-sm py-4">
-        <div className="bg-white border border-gray-100 p-2 rounded-xl text-center shadow-sm">
-          <div className="text-[10px] font-bold text-gray-400">Tokluk</div>
-          <div className="text-xs font-extrabold text-emerald-500">%{stats.hunger}</div>
-        </div>
-        <div className="bg-white border border-gray-100 p-2 rounded-xl text-center shadow-sm">
-          <div className="text-[10px] font-bold text-gray-400">Enerji</div>
-          <div className="text-xs font-extrabold text-blue-500">%{stats.energy}</div>
-        </div>
-        <div className="bg-white border border-gray-100 p-2 rounded-xl text-center shadow-sm">
-          <div className="text-[10px] font-bold text-gray-400">Sevgi</div>
-          <div className="text-xs font-extrabold text-pink-500">%{stats.love}</div>
+    <div className="h-full bg-white flex flex-col p-4 gap-4 text-gray-800 font-sans">
+      <div className="flex justify-between items-center border-b pb-2">
+        <h3 className="text-sm font-bold text-indigo-600">🎨 Sanal Boyama Dünyası</h3>
+        <div className="flex gap-2">
+          {['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#000000'].map(c => (
+            <button key={c} onClick={() => setColor(c)} className={`w-5 h-5 rounded-full border border-gray-200 transition-transform ${color === c ? 'scale-125 shadow-md' : 'hover:scale-110'}`} style={{ backgroundColor: c }} />
+          ))}
         </div>
       </div>
+      <div className="flex-1 flex gap-4 overflow-hidden">
+        <div className="w-16 flex flex-col gap-2 overflow-y-auto pr-1">
+          {images.map((img, i) => (
+            <button key={i} onClick={() => setSelectedImage(i)} className={`w-12 h-12 flex items-center justify-center rounded-xl text-2xl border-2 transition-all ${selectedImage === i ? 'border-indigo-500 bg-indigo-50' : 'border-gray-100 hover:bg-gray-50'}`}>{img}</button>
+          ))}
+        </div>
+        <div className="flex-1 bg-gray-50 rounded-2xl border-4 border-dashed border-gray-200 flex items-center justify-center text-9xl relative overflow-hidden select-none">
+          <span style={{ color }}>{images[selectedImage]}</span>
+          <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">Fırça Modu Aktif</div>
+        </div>
+      </div>
+      <div className="text-[10px] text-gray-400 text-center font-medium">İpucu: Resme tıklayarak rengini değiştirebilirsin (Simülasyon).</div>
+    </div>
+  );
+};
 
-      {/* Control Actions */}
-      <div className="flex gap-2 w-full max-w-sm">
-        <button 
-          onClick={feedBunny}
-          disabled={bunnyState !== 'idle'}
-          className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-emerald-500/10 cursor-pointer"
-        >
-          🥕 Besle
-        </button>
-        <button 
-          onClick={sleepBunny}
-          disabled={bunnyState !== 'idle'}
-          className="flex-1 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-40 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-blue-500/10 cursor-pointer"
-        >
-          💤 Uyut
-        </button>
-        <button 
-          onClick={playBunny}
-          disabled={bunnyState !== 'idle'}
-          className="flex-1 py-2 bg-purple-500 hover:bg-purple-600 disabled:opacity-40 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-purple-500/10 cursor-pointer"
-        >
-          ⚽ Oyun Oyna
-        </button>
+export const YTKids: React.FC = () => {
+  const [selectedVideo, setSelectedVideo] = useState<any>(null);
+  const videos = [
+    { id: 1, title: 'Sevimli Dostlar: Alfabe Şarkısı', duration: '3:45', category: 'Eğitim', color: 'from-red-500 to-orange-500' },
+    { id: 2, title: 'Niloya: Piknik Zamanı', duration: '11:20', category: 'Çizgi Film', color: 'from-blue-500 to-sky-500' },
+    { id: 3, title: 'Kral Şakir: Uzay Macerası', duration: '15:10', category: 'Eğlence', color: 'from-purple-500 to-pink-500' },
+    { id: 4, title: 'Uzay Hakkında İlginç Bilgiler', duration: '8:30', category: 'Bilim', color: 'from-emerald-500 to-teal-500' }
+  ];
+  return (
+    <div className="h-full bg-white flex flex-col overflow-hidden font-sans">
+      <div className="bg-red-600 text-white p-3 flex items-center gap-2">
+        <Youtube size={20} /> <span className="font-bold text-sm tracking-tight">YouTube Kids</span>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4">
+        {selectedVideo ? (
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+            <button onClick={() => setSelectedVideo(null)} className="text-[10px] font-bold text-red-600 flex items-center gap-1">← Videolara Dön</button>
+            <div className={`w-full aspect-video rounded-2xl bg-gradient-to-tr ${selectedVideo.color} flex items-center justify-center text-white text-4xl shadow-xl shadow-gray-200`}>▶</div>
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold text-gray-800">{selectedVideo.title}</h3>
+              <p className="text-[10px] text-gray-400">{selectedVideo.category} • 1.2M Görüntüleme</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4">
+            {videos.map(v => (
+              <div key={v.id} onClick={() => setSelectedVideo(v)} className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-lg cursor-pointer flex flex-col transition-all active:scale-95">
+                <div className={`w-full h-24 bg-gradient-to-tr ${v.color} flex items-center justify-center text-white/50 text-2xl font-bold`}>▶</div>
+                <div className="p-2.5 space-y-1">
+                  <span className="text-[8px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-red-50 text-red-500">{v.category}</span>
+                  <h4 className="text-[11px] font-bold text-gray-800 line-clamp-1">{v.title}</h4>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
