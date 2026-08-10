@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, Search, Star, Download, ArrowLeft, Check, Play, Trash2, 
   Gamepad2, Palette, Music, Youtube, Heart, Cpu, Menu, Compass, Sparkles, BookOpen,
-  MessageCircle, Camera, Facebook, Video, Globe, Briefcase, ShoppingBag, Map, Cloud, Shield, 
+  MessageCircle, Camera, Mic, Box, Facebook, Video, Globe, Briefcase, ShoppingBag, Map, Cloud, Shield, 
   Linkedin, Twitter, Instagram, Smartphone, Languages, MessageSquare, Ghost
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -30,6 +30,51 @@ export interface AppItem {
 }
 
 export const playStoreApps: AppItem[] = [
+  {
+    id: 'camera',
+    name: 'Kamera',
+    developer: 'ArchWeb Systems',
+    category: 'apps',
+    icon: Camera,
+    iconColor: '#ec4899',
+    iconBg: 'bg-pink-500/20',
+    rating: 4.9,
+    reviews: '12M',
+    downloads: '100M+',
+    size: '14 MB',
+    description: 'Tarayıcı üzerinden kamera izinleri alarak HD fotoğraflar çeken, sanal diske kaydeden ve anında indirme imkanı sunan profesyonel kamera uygulaması.',
+    screenshots: ['#ec4899', '#db2777', '#be185d']
+  },
+  {
+    id: 'voicerecorder',
+    name: 'Ses Kaydedici',
+    developer: 'ArchWeb Systems',
+    category: 'apps',
+    icon: Mic,
+    iconColor: '#a855f7',
+    iconBg: 'bg-purple-500/20',
+    rating: 4.8,
+    reviews: '8M',
+    downloads: '50M+',
+    size: '10 MB',
+    description: 'Mikrofon izinleriyle kristal netliğinde ses kayıtları almanızı sağlayan, `.mp3` formatında sanal diske kaydeden ve oynatan ses kayıt aracı.',
+    screenshots: ['#a855f7', '#9333ea', '#7e22ce']
+  },
+  {
+    id: 'blender3d',
+    name: 'Blender 3D Studio',
+    developer: 'ArchWeb Creative',
+    category: 'apps',
+    icon: Box,
+    iconColor: '#f97316',
+    iconBg: 'bg-orange-500/20',
+    rating: 4.9,
+    reviews: '45M',
+    downloads: '100M+',
+    size: '180 MB',
+    description: 'Web tabanlı profesyonel 3D modelleme, heykel, animasyon ve render stüdyosu. Kendi 3D şekillerinizi tasarlayın ve sahnede sergileyin.',
+    screenshots: ['#f97316', '#ea580c', '#c2410c']
+  },
   {
     id: 'archweb_kids',
     name: 'ArchWeb for Kids OS',
@@ -532,7 +577,7 @@ export const PlayStore: React.FC<PlayStoreProps> = ({ onClose, mobileMode = fals
               <button 
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex flex-col md:flex-row items-center gap-2 px-3 py-3 mx-2 rounded-xl text-left transition-colors ${activeTab === tab ? 'bg-[#e6f4ea] text-[#01875f]' : 'text-gray-600 hover:bg-gray-50'}`}
+                className={`flex flex-col md:flex-row items-center gap-2 px-3 py-3 mx-2 rounded-xl text-left transition-colors cursor-pointer ${activeTab === tab ? 'bg-[#e6f4ea] text-[#01875f]' : 'text-gray-600 hover:bg-gray-50'}`}
               >
                 {tab === 'home' && <Compass size={18} />}
                 {tab === 'games' && <Gamepad2 size={18} />}
@@ -541,6 +586,16 @@ export const PlayStore: React.FC<PlayStoreProps> = ({ onClose, mobileMode = fals
                 <span className="text-[10px] md:text-xs font-semibold hidden md:inline capitalize">{tab === 'kids' ? 'Çocuk Dünyası' : tab}</span>
               </button>
             ))}
+            <div className="mt-auto px-2">
+              <button
+                onClick={() => setInstalledApps({})}
+                className="w-full flex items-center justify-center gap-1.5 px-2 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-[10px] md:text-xs font-medium transition-colors cursor-pointer"
+                title="Bütün Uygulamaları Sil"
+              >
+                <Trash2 size={14} />
+                <span className="hidden md:inline">Tümünü Kaldır</span>
+              </button>
+            </div>
           </div>
         )}
 

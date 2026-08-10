@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, User, MessageCircle, X, Terminal, Trash2, RefreshCw, Shield, Lock, Unlock, Crown, Plus, FolderPlus, Hash } from 'lucide-react';
+import { Send, User, MessageCircle, X, Terminal, Trash2, RefreshCw, Shield, Lock, Unlock, Crown, Plus, Hash, Wifi, Globe, Search, Cpu, Server, Activity, CheckCircle2, Mail, Radio, Laptop, Smartphone } from 'lucide-react';
 import { getApiUrl } from '../utils/api';
 import { playClickSound, playNotificationSound } from '../utils/audio';
 
@@ -36,11 +36,14 @@ interface LiveChatProps {
 
 export const LiveChat: React.FC<LiveChatProps> = ({ 
   onClose, 
-  currentUser = 'Misafir', 
+  currentUser = 'meminalp2434@gmail.com', 
   avatar = '👤',
   userRole = 'user'
 }) => {
-  const [chatMode, setChatMode] = useState<'group' | 'dm'>('group');
+  // Ensure currentUser is a Gmail format
+  const myGmail = currentUser.includes('@') ? currentUser : `${currentUser.toLowerCase().replace(/\s+/g, '')}@gmail.com`;
+
+  const [chatMode, setChatMode] = useState<'group' | 'dm' | 'scan'>('group');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [groups, setGroups] = useState<ChatGroup[]>([
     { id: 'genel', name: 'Genel', icon: '💬' },
@@ -51,10 +54,17 @@ export const LiveChat: React.FC<LiveChatProps> = ({
   const [activeGroup, setActiveGroup] = useState<string>('genel');
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   
-  // DM State
-  const [activeDmUser, setActiveDmUser] = useState<string | null>(null);
-  const [customDmUsername, setCustomDmUsername] = useState('');
-  const [showAddDmUserModal, setShowAddDmUserModal] = useState(false);
+  // DM State (Strictly Gmail based)
+  const [activeDmGmail, setActiveDmGmail] = useState<string | null>('destek.archweb@gmail.com');
+  const [targetGmailInput, setTargetGmailInput] = useState('');
+  const [showAddDmModal, setShowAddDmModal] = useState(false);
+  const [gmailSearchQuery, setGmailSearchQuery] = useState('');
+
+  // Network Scanner State (3 Modes)
+  const [scanMode, setScanMode] = useState<'subnet' | 'global' | 'deep'>('subnet');
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanResults, setScanResults] = useState<any>(null);
+  const [scanFilterQuery, setScanFilterQuery] = useState('');
 
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -74,13 +84,16 @@ export const LiveChat: React.FC<LiveChatProps> = ({
     try {
       let url = '';
       if (chatMode === 'group') {
-        url = `/api/chat?group=${activeGroup}&currentUser=${encodeURIComponent(currentUser)}&userAvatar=${encodeURIComponent(avatar)}&userRole=${userRole}`;
-      } else {
-        if (!activeDmUser) {
+        url = `/api/chat?group=${activeGroup}&currentUser=${encodeURIComponent(myGmail)}&userAvatar=${encodeURIComponent(avatar)}&userRole=${userRole}`;
+      } else if (chatMode === 'dm') {
+        if (!activeDmGmail) {
           setIsLoading(false);
           return;
         }
-        url = `/api/chat?dmWith=${encodeURIComponent(activeDmUser)}&currentUser=${encodeURIComponent(currentUser)}&userAvatar=${encodeURIComponent(avatar)}&userRole=${userRole}`;
+        url = `/api/chat?dmWith=${encodeURIComponent(activeDmGmail)}&currentUser=${encodeURIComponent(myGmail)}&userAvatar=${encodeURIComponent(avatar)}&userRole=${userRole}`;
+      } else {
+        setIsLoading(false);
+        return;
       }
 
       const response = await fetch(getApiUrl(url));
@@ -102,22 +115,42 @@ export const LiveChat: React.FC<LiveChatProps> = ({
       setError(null);
     } catch (err) {
       console.error('Chat fetch error:', err);
-      setError('Bağlantı Hatası: Canlı sohbet sunucusu şu an aktif değil.');
+      setError('Bağlantı Hatası: Canlı sohbet sunucusu yanıt vermiyor.');
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 3000);
-    return () => clearInterval(interval);
-  }, [chatMode, activeGroup, activeDmUser]);
+  // Run Network Scanner API for selected mode
+  const runNetworkScan = async (mode = scanMode, query = scanFilterQuery) => {
+    setIsScanning(true);
+    try {
+      const response = await fetch(getApiUrl(`/api/chat/network-scan?mode=${mode}&q=${encodeURIComponent(query)}`));
+      if (response.ok) {
+        const data = await response.json();
+        setScanResults(data);
+      }
+    } catch (err) {
+      console.error("Network scan error:", err);
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   useEffect(() => {
-    if (scrollRef.current) {
+    if (chatMode !== 'scan') {
+      fetchMessages();
+      const interval = setInterval(fetchMessages, 3000);
+      return () => clearInterval(interval);
+    } else {
+      runNetworkScan(scanMode, scanFilterQuery);
+    }
+  }, [chatMode, activeGroup, activeDmGmail, scanMode]);
+
+  useEffect(() => {
+    if (scrollRef.current && chatMode !== 'scan') {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, chatMode]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,8 +159,8 @@ export const LiveChat: React.FC<LiveChatProps> = ({
       setError('Sohbet şu an yöneticiler tarafından dondurulmuştur.');
       return;
     }
-    if (chatMode === 'dm' && !activeDmUser) {
-      setError('Lütfen önce mesaj göndermek istediğiniz bir kişiyi seçin.');
+    if (chatMode === 'dm' && !activeDmGmail) {
+      setError('Lütfen mesaj yazmak için geçerli bir Gmail adresi seçin.');
       return;
     }
 
@@ -141,13 +174,13 @@ export const LiveChat: React.FC<LiveChatProps> = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user: currentUser,
+          user: myGmail,
           message: tempMsg,
           avatar: avatar,
           role: userRole,
           group: isDm ? undefined : activeGroup,
           isDm: isDm,
-          recipient: isDm ? activeDmUser : undefined
+          recipient: isDm ? activeDmGmail : undefined
         })
       });
 
@@ -163,11 +196,17 @@ export const LiveChat: React.FC<LiveChatProps> = ({
     }
   };
 
-  const handleStartDmWith = (targetUser: string) => {
-    setActiveDmUser(targetUser);
+  const handleStartDmWithGmail = (rawGmail: string) => {
+    if (!rawGmail.trim()) return;
+    let formatted = rawGmail.trim().toLowerCase();
+    if (!formatted.includes('@')) {
+      formatted += '@gmail.com';
+    }
+    setActiveDmGmail(formatted);
     setChatMode('dm');
-    setShowAddDmUserModal(false);
-    setCustomDmUsername('');
+    setShowAddDmModal(false);
+    setTargetGmailInput('');
+    playClickSound(60, true);
   };
 
   const handleAdminCreateGroup = async (e: React.FormEvent) => {
@@ -275,29 +314,29 @@ export const LiveChat: React.FC<LiveChatProps> = ({
   };
 
   const currentGroupObj = groups.find(g => g.id === activeGroup) || groups[0];
-  const otherOnlineUsers = onlineUsers.filter(u => u.username !== currentUser);
+  const otherOnlineUsers = onlineUsers.filter(u => u.username !== myGmail);
 
   return (
-    <div className="flex flex-col h-full bg-[#0f111a] text-white overflow-hidden rounded-xl border border-white/10 shadow-2xl relative">
+    <div className="flex flex-col h-full bg-[#0d0f17] text-white overflow-hidden rounded-xl border border-white/10 shadow-2xl relative font-sans">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-[#161b22] border-b border-white/5">
+      <div className="flex items-center justify-between px-4 py-3 bg-[#151926] border-b border-white/5 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-sky-500/20 text-sky-400 rounded-lg flex items-center justify-center">
+          <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center border border-emerald-500/30">
             <MessageCircle size={18} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xs font-bold">ArchWeb Canlı Sohbet</h2>
+              <h2 className="text-xs font-bold tracking-wide">ArchWeb Ağ ve Sohbet Merkezi</h2>
               {userRole === 'admin' && (
                 <span className="px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-[9px] font-bold text-amber-300 flex items-center gap-1">
                   <Crown size={10} /> YÖNETİCİ
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className={`w-1.5 h-1.5 rounded-full ${isChatLocked ? 'bg-rose-500' : 'bg-emerald-500'} animate-pulse`}></span>
-              <span className="text-[9px] text-white/40 uppercase tracking-wider">
-                {chatMode === 'group' ? `${currentGroupObj?.icon} ${currentGroupObj?.name}` : `🔒 Özel Mesaj: ${activeDmUser || 'Kişi Seçin'}`}
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className={`w-2 h-2 rounded-full ${isChatLocked ? 'bg-rose-500' : 'bg-emerald-400'} animate-pulse`}></span>
+              <span className="text-[10px] text-emerald-300/80 font-mono font-medium">
+                Siz: {myGmail}
               </span>
             </div>
           </div>
@@ -310,7 +349,7 @@ export const LiveChat: React.FC<LiveChatProps> = ({
               <button
                 onClick={() => setShowCreateGroup(true)}
                 className="p-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 rounded-md transition-all flex items-center gap-1 text-[10px] font-bold"
-                title="Yeni Grup / Kanal Oluştur (Yönetici)"
+                title="Yeni Grup Oluştur"
               >
                 <Plus size={13} />
                 <span className="hidden sm:inline">Grup Ekle</span>
@@ -323,7 +362,7 @@ export const LiveChat: React.FC<LiveChatProps> = ({
                     ? 'bg-rose-500/20 border border-rose-500/40 text-rose-300 hover:bg-rose-500/30' 
                     : 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30'
                 }`}
-                title={isChatLocked ? 'Sohbet Kilidini Aç' : 'Sohbeti Kullanıcılara Kilitle'}
+                title={isChatLocked ? 'Sohbet Kilidini Aç' : 'Sohbeti Kilitle'}
               >
                 {isChatLocked ? <Lock size={13} /> : <Unlock size={13} />}
                 <span className="hidden sm:inline">{isChatLocked ? 'Kilitli' : 'Açık'}</span>
@@ -332,7 +371,7 @@ export const LiveChat: React.FC<LiveChatProps> = ({
               <button
                 onClick={handleAdminClearAll}
                 className="p-1.5 bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 text-rose-400 rounded-md transition-colors"
-                title="Sohbet Geçmişini Temizle"
+                title="Sohbeti Temizle"
               >
                 <Trash2 size={13} />
               </button>
@@ -340,11 +379,14 @@ export const LiveChat: React.FC<LiveChatProps> = ({
           )}
 
           <button 
-            onClick={fetchMessages}
+            onClick={() => {
+              if (chatMode === 'scan') runNetworkScan();
+              else fetchMessages();
+            }}
             className="p-1.5 hover:bg-white/5 text-white/40 hover:text-white rounded-md transition-colors"
-            title="Mesajları Yenile"
+            title="Yenile"
           >
-            <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+            <RefreshCw size={14} className={isLoading || isScanning ? 'animate-spin' : ''} />
           </button>
           
           <button 
@@ -357,51 +399,59 @@ export const LiveChat: React.FC<LiveChatProps> = ({
         </div>
       </div>
 
-      {/* Main Mode Switcher: Gruplar vs Özel Mesajlar */}
-      <div className="flex bg-[#0b0d14] border-b border-white/5 p-1 gap-1">
+      {/* Main Navigation Mode Switcher: Gruplar | Gmail DM | 3 Mod Ağ Taraması */}
+      <div className="grid grid-cols-3 bg-[#0a0c13] border-b border-white/5 p-1 gap-1 shrink-0">
         <button
           onClick={() => {
             setChatMode('group');
             playClickSound(40, false);
           }}
-          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
+          className={`py-2 px-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 border ${
             chatMode === 'group'
               ? 'bg-sky-500/20 border-sky-500/50 text-sky-300 shadow-[0_0_12px_rgba(14,165,233,0.15)]'
               : 'bg-transparent border-transparent text-white/50 hover:text-white hover:bg-white/5'
           }`}
         >
-          <span>👥 GRUP SOHBETLERİ</span>
+          <Hash size={13} />
+          <span className="truncate">GRUP SOHBETLERİ</span>
         </button>
 
         <button
           onClick={() => {
             setChatMode('dm');
-            if (!activeDmUser && otherOnlineUsers.length > 0) {
-              setActiveDmUser(otherOnlineUsers[0].username);
-            }
             playClickSound(40, false);
           }}
-          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 border relative ${
+          className={`py-2 px-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 border relative ${
             chatMode === 'dm'
               ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
               : 'bg-transparent border-transparent text-white/50 hover:text-white hover:bg-white/5'
           }`}
         >
-          <span>💬 ÖZEL MESAJLAR (DM)</span>
-          {otherOnlineUsers.length > 0 && (
-            <span className="px-1.5 py-0.2 bg-emerald-500 text-slate-950 text-[9px] font-black rounded-full">
-              {otherOnlineUsers.length} Aktif
-            </span>
-          )}
+          <Mail size={13} />
+          <span className="truncate">GMAIL İLE DM</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setChatMode('scan');
+            playClickSound(40, false);
+          }}
+          className={`py-2 px-2 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 border ${
+            chatMode === 'scan'
+              ? 'bg-purple-500/20 border-purple-500/50 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.15)]'
+              : 'bg-transparent border-transparent text-white/50 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <Globe size={13} />
+          <span className="truncate">AĞ TARAMASI (3 MOD)</span>
         </button>
       </div>
 
       {/* Mode Sub-navigation */}
-      {chatMode === 'group' ? (
-        /* Group Bar */
-        <div className="flex items-center gap-1.5 px-3 py-2 bg-[#121520] border-b border-white/5 overflow-x-auto custom-scrollbar">
-          <span className="text-[9px] uppercase font-bold text-white/30 tracking-wider shrink-0 mr-1 flex items-center gap-1">
-            <Hash size={10} /> GRUPLAR:
+      {chatMode === 'group' && (
+        <div className="flex items-center gap-1.5 px-3 py-2 bg-[#121522] border-b border-white/5 overflow-x-auto custom-scrollbar shrink-0">
+          <span className="text-[9px] uppercase font-bold text-sky-400/80 tracking-wider shrink-0 mr-1 flex items-center gap-1">
+            KANALLAR:
           </span>
           {groups.map((grp) => {
             const isActive = grp.id === activeGroup;
@@ -426,7 +476,7 @@ export const LiveChat: React.FC<LiveChatProps> = ({
                   <button
                     onClick={(e) => handleAdminDeleteGroup(grp.id, e)}
                     className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500/80 hover:bg-rose-600 rounded-full flex items-center justify-center text-white text-[9px] opacity-0 group-hover/grptab:opacity-100 transition-opacity"
-                    title="Grubu Sil (Yönetici)"
+                    title="Sil"
                   >
                     ×
                   </button>
@@ -434,247 +484,544 @@ export const LiveChat: React.FC<LiveChatProps> = ({
               </div>
             );
           })}
-
-          {userRole === 'admin' && (
-            <button
-              onClick={() => setShowCreateGroup(true)}
-              className="px-2 py-1 rounded-lg text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 transition-all shrink-0 flex items-center gap-1 ml-auto"
-            >
-              <Plus size={12} />
-              <span>Yeni Grup</span>
-            </button>
-          )}
         </div>
-      ) : (
-        /* DM Contacts Bar */
-        <div className="flex items-center gap-1.5 px-3 py-2 bg-[#121520] border-b border-white/5 overflow-x-auto custom-scrollbar">
+      )}
+
+      {chatMode === 'dm' && (
+        <div className="flex items-center gap-1.5 px-3 py-2 bg-[#121522] border-b border-white/5 overflow-x-auto custom-scrollbar shrink-0">
           <span className="text-[9px] uppercase font-bold text-emerald-400/80 tracking-wider shrink-0 mr-1 flex items-center gap-1">
-            <User size={10} /> KİŞİLER:
+            GMAIL KİŞİLERİ:
           </span>
 
-          {otherOnlineUsers.map((u) => {
-            const isActive = activeDmUser === u.username;
+          {/* Quick preset Gmail contacts */}
+          {['destek.archweb@gmail.com', 'admin.kernel@gmail.com', 'ahmet.dev@gmail.com'].map((g) => {
+            const isActive = activeDmGmail === g;
             return (
               <button
-                key={u.username}
+                key={g}
                 onClick={() => {
-                  setActiveDmUser(u.username);
+                  setActiveDmGmail(g);
                   playClickSound(40, false);
                 }}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border shrink-0 ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold transition-all flex items-center gap-1.5 border shrink-0 ${
                   isActive
                     ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.15)]'
-                    : 'bg-white/5 border-white/5 text-white/70 hover:text-white hover:bg-white/10'
+                    : 'bg-white/5 border-white/5 text-white/60 hover:text-white hover:bg-white/10'
                 }`}
               >
-                <span>{u.avatar}</span>
-                <span>{u.username}</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                <Mail size={11} className="text-emerald-400" />
+                <span>{g}</span>
               </button>
             );
           })}
 
-          {/* Currently selected offline or custom target */}
-          {activeDmUser && !otherOnlineUsers.some(u => u.username === activeDmUser) && (
+          {/* Active target if custom */}
+          {activeDmGmail && !['destek.archweb@gmail.com', 'admin.kernel@gmail.com', 'ahmet.dev@gmail.com'].includes(activeDmGmail) && (
             <button
-              onClick={() => setActiveDmUser(activeDmUser)}
-              className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 shrink-0 flex items-center gap-1.5"
+              onClick={() => setActiveDmGmail(activeDmGmail)}
+              className="px-2.5 py-1 rounded-lg text-xs font-mono font-semibold bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 shrink-0 flex items-center gap-1.5"
             >
-              <span>👤</span>
-              <span>{activeDmUser}</span>
-              <span className="text-[9px] text-white/40">(Çevrimdışı)</span>
+              <Mail size={11} className="text-emerald-400" />
+              <span>{activeDmGmail}</span>
             </button>
           )}
 
           <button
-            onClick={() => setShowAddDmUserModal(true)}
-            className="px-2 py-1 rounded-lg text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 transition-all shrink-0 flex items-center gap-1 ml-auto"
+            onClick={() => setShowAddDmModal(true)}
+            className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 transition-all shrink-0 flex items-center gap-1 ml-auto"
           >
             <Plus size={12} />
-            <span>Kişi Ara / Ekle</span>
+            <span>Gmail Ekle / Ara</span>
           </button>
         </div>
       )}
 
-      {/* Admin Notice Banner (for Group Chat) */}
-      {chatMode === 'group' && isChatLocked && (
-        <div className="px-4 py-1.5 bg-rose-500/15 border-b border-rose-500/30 flex items-center justify-between text-[11px] text-rose-300 font-mono">
-          <div className="flex items-center gap-2">
-            <Lock size={12} className="animate-bounce" />
-            <span>Sohbet Yöneticiler Tarafından Kilitlenmiştir.</span>
-          </div>
-          {userRole === 'admin' && <span className="text-[9px] text-rose-400 uppercase font-bold">(Yönetici Modu)</span>}
+      {/* 3 Mode Network Scanner Bar */}
+      {chatMode === 'scan' && (
+        <div className="flex items-center gap-1.5 px-3 py-2 bg-[#121522] border-b border-white/5 overflow-x-auto custom-scrollbar shrink-0">
+          <span className="text-[9px] uppercase font-bold text-purple-400/80 tracking-wider shrink-0 mr-1 flex items-center gap-1">
+            TARAMA MODLARI:
+          </span>
+
+          <button
+            onClick={() => {
+              setScanMode('subnet');
+              runNetworkScan('subnet');
+              playClickSound(40, false);
+            }}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border shrink-0 ${
+              scanMode === 'subnet'
+                ? 'bg-purple-500/20 border-purple-500/50 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]'
+                : 'bg-white/5 border-white/5 text-white/60 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            <Wifi size={12} />
+            <span>1. Yerel Subnet Taraması</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setScanMode('global');
+              runNetworkScan('global');
+              playClickSound(40, false);
+            }}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border shrink-0 ${
+              scanMode === 'global'
+                ? 'bg-purple-500/20 border-purple-500/50 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]'
+                : 'bg-white/5 border-white/5 text-white/60 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            <Globe size={12} />
+            <span>2. Global Gmail Dizini</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setScanMode('deep');
+              runNetworkScan('deep');
+              playClickSound(40, false);
+            }}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border shrink-0 ${
+              scanMode === 'deep'
+                ? 'bg-purple-500/20 border-purple-500/50 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.15)]'
+                : 'bg-white/5 border-white/5 text-white/60 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            <Cpu size={12} />
+            <span>3. Derin Cihaz & Port Taraması</span>
+          </button>
         </div>
       )}
 
-      {/* Messages Area */}
-      <div 
-        ref={scrollRef}
-        className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar bg-gradient-to-b from-[#0f111a] to-[#0a0b12]"
-      >
-        {isLoading && messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-3 opacity-40">
-            <RefreshCw size={24} className="animate-spin" />
-            <span className="text-xs font-mono">Mesajlar yükleniyor...</span>
-          </div>
-        ) : error && messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-4 p-6 text-center">
-            <div className="p-3 bg-rose-500/10 text-rose-400 rounded-xl border border-rose-500/20 text-xs">
-              {error}
-            </div>
-            <button
-              onClick={fetchMessages}
-              className="px-4 py-2 bg-white/5 hover:bg-white/10 text-xs text-white rounded-lg border border-white/10 transition-colors"
-            >
-              Yeniden Dene
-            </button>
-          </div>
-        ) : chatMode === 'dm' && !activeDmUser ? (
-          <div className="flex flex-col items-center justify-center h-full gap-3 py-16 text-center text-white/40">
-            <User size={36} className="text-emerald-400/50" />
-            <div className="text-xs font-bold text-white/80">Birebir Özel Mesajlaşma</div>
-            <p className="text-[11px] max-w-xs text-white/40">
-              İstediğiniz kişi ile 1-e-1 özel sohbet başlatmak için yukarıdaki kişilerden birini seçin veya "Kişi Ara / Ekle"ye tıklayın.
-            </p>
-          </div>
-        ) : (
-          <AnimatePresence initial={false}>
-            {messages.length === 0 ? (
-              <div className="text-center py-20 text-white/20 text-[11px] italic flex flex-col items-center justify-center gap-2">
-                <span className="text-2xl">{chatMode === 'group' ? currentGroupObj?.icon : '🔒'}</span>
-                <span>
-                  {chatMode === 'group' 
-                    ? `[${currentGroupObj?.name}] grubunda henüz mesaj yok. Katılan herkes konuşabilir!`
-                    : `[${activeDmUser}] ile henüz özel sohbet geçmişiniz yok. İlk mesajı siz atın!`}
-                </span>
+      {/* Content Body Area */}
+      <div className="flex-1 overflow-y-auto bg-gradient-to-b from-[#0d0f17] to-[#07080d] flex flex-col">
+        {chatMode === 'scan' ? (
+          /* NETWORK SCANNER VIEW (3 MODES) */
+          <div className="p-4 space-y-4 flex-1">
+            <div className="bg-purple-950/20 border border-purple-500/30 rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 text-purple-300 font-bold text-sm">
+                  {scanMode === 'subnet' && <Wifi className="animate-pulse text-purple-400" size={18} />}
+                  {scanMode === 'global' && <Globe className="animate-pulse text-purple-400" size={18} />}
+                  {scanMode === 'deep' && <Cpu className="animate-pulse text-purple-400" size={18} />}
+                  <span>
+                    {scanMode === 'subnet' && 'Mod 1: Yerel Ağ / Subnet Taraması (192.168.1.0/24)'}
+                    {scanMode === 'global' && 'Mod 2: Global Gmail Dizin Taraması (ArchWeb Network)'}
+                    {scanMode === 'deep' && 'Mod 3: Derin Cihaz, Socket & Port Taraması'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-white/50 mt-1">
+                  {scanMode === 'subnet' && 'Ağınızdaki aktif cihazları, IP adreslerini ve Gmail hesaplarını otomatik tespit eder.'}
+                  {scanMode === 'global' && 'ArchWeb OS sunucularında kayıtlı ve çevrimiçi tüm Gmail hesaplarını sorgular.'}
+                  {scanMode === 'deep' && '3000, 8080 ve 443 portlarındaki aktif socket oturumlarını ve Gmail tokenlerini analiz eder.'}
+                </p>
               </div>
-            ) : (
-              messages.map((msg) => {
-                const isAdminMsg = msg.role === 'admin';
-                return (
-                  <motion.div 
-                    key={msg.id}
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    className={`flex gap-3 group relative ${msg.user === currentUser ? 'flex-row-reverse' : ''}`}
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-lg shrink-0 select-none relative">
-                      {msg.avatar}
-                      {isAdminMsg && (
-                        <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-500 rounded-full flex items-center justify-center text-[8px] text-slate-950 font-black shadow-md">
-                          👑
-                        </div>
-                      )}
-                    </div>
-                    <div className={`flex flex-col gap-1 max-w-[80%] ${msg.user === currentUser ? 'items-end' : ''}`}>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[10px] font-bold flex items-center gap-1 ${isAdminMsg ? 'text-amber-400' : 'text-sky-400'}`}>
-                          {msg.user}
-                          {isAdminMsg && (
-                            <span className="px-1 py-0.2 rounded bg-amber-500/20 text-[8px] text-amber-300 font-mono font-bold">
-                              ADMIN
-                            </span>
-                          )}
-                        </span>
-                        <span className="text-[8px] text-white/20 font-mono">{msg.time}</span>
-                      </div>
-                      <div className="relative group/bubble">
-                        <div className={`px-3 py-2 rounded-2xl text-[11px] leading-relaxed break-words ${
-                          isAdminMsg
-                            ? 'bg-amber-500/10 text-amber-100 rounded-tr-none border border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.1)]'
-                            : msg.user === currentUser 
-                              ? 'bg-sky-600/20 text-sky-100 rounded-tr-none border border-sky-500/20' 
-                              : 'bg-white/5 text-white/90 rounded-tl-none border border-white/10'
-                        }`}>
-                          {msg.message}
+
+              <div className="flex items-center gap-2 w-full md:w-auto">
+                <div className="relative flex-1 md:w-48">
+                  <Search size={14} className="absolute left-3 top-2.5 text-white/30" />
+                  <input
+                    type="text"
+                    value={scanFilterQuery}
+                    onChange={(e) => {
+                      setScanFilterQuery(e.target.value);
+                      runNetworkScan(scanMode, e.target.value);
+                    }}
+                    placeholder="Gmail veya IP Ara..."
+                    className="w-full bg-black/50 border border-white/10 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-purple-400"
+                  />
+                </div>
+                <button
+                  onClick={() => runNetworkScan(scanMode, scanFilterQuery)}
+                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl transition-all shrink-0 flex items-center gap-1.5 shadow-lg shadow-purple-600/20"
+                >
+                  <RefreshCw size={13} className={isScanning ? 'animate-spin' : ''} />
+                  <span>Taramayı Yenile</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Scanning Status Header */}
+            {isScanning ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3 text-purple-300">
+                <div className="relative flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full border-2 border-purple-500/30 border-t-purple-400 animate-spin"></div>
+                  <Radio size={20} className="absolute text-purple-400 animate-ping" />
+                </div>
+                <span className="text-xs font-mono font-bold">Ağ Sinyalleri & Gmail Dizinleri Taranıyor...</span>
+              </div>
+            ) : scanResults ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-[11px] text-white/40 px-1 font-mono">
+                  <span>
+                    {scanMode === 'subnet' && `Toplam ${scanResults.totalScanned} IP Tarandı • ${scanResults.activeNodes} Aktif Cihaz`}
+                    {scanMode === 'global' && `Toplam ${scanResults.totalRegistered} Kayıtlı Gmail • ${scanResults.activeUsers} Çevrimiçi Hesap`}
+                    {scanMode === 'deep' && `Toplam ${scanResults.totalPortsScanned} Port Analiz Edildi • ${scanResults.openSessions} Açık Socket`}
+                  </span>
+                  <span className="text-emerald-400 flex items-center gap-1">
+                    <CheckCircle2 size={12} /> Ağ Durumu: Stabil
+                  </span>
+                </div>
+
+                {/* MODE 1 RESULTS: SUBNET SCAN */}
+                {scanMode === 'subnet' && scanResults.nodes && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {scanResults.nodes.map((node: any) => (
+                      <div key={node.ip} className="bg-black/40 border border-white/10 hover:border-purple-500/40 rounded-2xl p-3.5 transition-all space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{node.avatar}</span>
+                            <div>
+                              <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                                <span>{node.device}</span>
+                                <span className="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] rounded font-mono">
+                                  {node.ping}
+                                </span>
+                              </div>
+                              <div className="text-[10px] text-white/40 font-mono">
+                                IP: {node.ip} | Port: {node.port}
+                              </div>
+                            </div>
+                          </div>
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                         </div>
 
-                        {/* Admin Delete Action for Individual Messages */}
-                        {userRole === 'admin' && (
+                        <div className="p-2 bg-purple-950/20 rounded-xl border border-purple-500/20 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Mail size={13} className="text-purple-400" />
+                            <span className="text-xs font-mono font-bold text-purple-200">{node.gmail}</span>
+                          </div>
                           <button
-                            onClick={() => handleAdminDeleteMessage(msg.id)}
-                            disabled={deletingId === msg.id}
-                            className={`absolute -top-2 ${msg.user === currentUser ? '-left-6' : '-right-6'} opacity-0 group-hover/bubble:opacity-100 transition-opacity p-1 bg-rose-500/20 border border-rose-500/40 text-rose-400 hover:bg-rose-500 rounded-md cursor-pointer hover:text-white`}
-                            title="Mesajı Sil (Yönetici)"
+                            onClick={() => handleStartDmWithGmail(node.gmail)}
+                            className="px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-[10px] font-bold transition-all shadow-md"
                           >
-                            <Trash2 size={11} />
+                            Mesaj At
                           </button>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                );
-              })
-            )}
-          </AnimatePresence>
-        )}
-      </div>
+                    ))}
+                  </div>
+                )}
 
-      {/* Input Area */}
-      <div className="p-4 bg-[#161b22] border-t border-white/5">
-        {chatMode === 'group' && isChatLocked && userRole !== 'admin' ? (
-          <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-center text-xs text-rose-300 font-bold flex items-center justify-center gap-2">
-            <Lock size={14} />
-            Sohbet şu an yöneticiler tarafından kilitlidir.
+                {/* MODE 2 RESULTS: GLOBAL GMAIL DIRECTORY */}
+                {scanMode === 'global' && scanResults.users && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {scanResults.users.map((usr: any) => (
+                      <div key={usr.gmail} className="bg-black/40 border border-white/10 hover:border-purple-500/40 rounded-2xl p-3.5 transition-all space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-xl bg-purple-900/30 border border-purple-500/30 flex items-center justify-center text-base">
+                              {usr.avatar}
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                                <span>{usr.name}</span>
+                                {usr.verified && (
+                                  <span className="text-[9px] px-1 bg-blue-500/20 border border-blue-500/40 text-blue-300 rounded font-bold">✓ Onaylı</span>
+                                )}
+                              </div>
+                              <div className="text-[10px] text-white/40 font-mono">{usr.location} • {usr.role}</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-2 bg-purple-950/20 rounded-xl border border-purple-500/20 flex items-center justify-between">
+                          <div className="flex items-center gap-2 truncate">
+                            <Mail size={13} className="text-purple-400 shrink-0" />
+                            <span className="text-xs font-mono font-bold text-purple-200 truncate">{usr.gmail}</span>
+                          </div>
+                          <button
+                            onClick={() => handleStartDmWithGmail(usr.gmail)}
+                            className="px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-[10px] font-bold transition-all shrink-0 ml-2 shadow-md"
+                          >
+                            Gmail'e Yaz
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* MODE 3 RESULTS: DEEP PORT & DEVICE SCAN */}
+                {scanMode === 'deep' && scanResults.sessions && (
+                  <div className="space-y-2">
+                    {scanResults.sessions.map((sess: any, idx: number) => (
+                      <div key={idx} className="bg-black/40 border border-white/10 hover:border-purple-500/40 rounded-2xl p-3 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-purple-500/10 text-purple-300 rounded-xl border border-purple-500/20">
+                            <Server size={16} />
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-white flex items-center gap-2">
+                              <span>{sess.service}</span>
+                              <span className="px-1.5 py-0.2 bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[9px] rounded font-mono">
+                                Port {sess.port} ({sess.protocol})
+                              </span>
+                            </div>
+                            <div className="text-[10px] font-mono text-white/40 flex items-center gap-2 mt-0.5">
+                              <span>IP: {sess.ip}</span>
+                              <span>•</span>
+                              <span>Gmail: <strong className="text-purple-300">{sess.gmail}</strong></span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => handleStartDmWithGmail(sess.gmail)}
+                          className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition-all shrink-0 shadow-md"
+                        >
+                          Kanal Kur
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
         ) : (
-          <form onSubmit={handleSendMessage} className="flex gap-2">
-            <input 
-              type="text" 
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder={
-                chatMode === 'dm'
-                  ? (activeDmUser ? `${activeDmUser} kişisine özel mesaj...` : "Önce bir kişi seçin...")
-                  : (userRole === 'admin' ? `[${currentGroupObj?.name}] grubunda yönetici mesajı...` : `[${currentGroupObj?.name}] grubunda herkese açık mesaj...`)
-              }
-              disabled={chatMode === 'dm' && !activeDmUser}
-              className={`flex-1 bg-black/40 border rounded-xl px-4 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none transition-all ${
-                chatMode === 'dm'
-                  ? 'border-emerald-500/40 focus:border-emerald-400'
-                  : userRole === 'admin' ? 'border-amber-500/40 focus:border-amber-400' : 'border-white/10 focus:border-sky-500/50'
-              }`}
-            />
-            <button 
-              type="submit"
-              disabled={!newMessage.trim() || (chatMode === 'dm' && !activeDmUser)}
-              className={`p-2.5 text-white rounded-xl disabled:opacity-50 transition-all active:scale-95 flex items-center justify-center ${
-                chatMode === 'dm'
-                  ? 'bg-emerald-600 hover:bg-emerald-500'
-                  : userRole === 'admin' ? 'bg-amber-600 hover:bg-amber-500' : 'bg-sky-600 hover:bg-sky-500'
-              }`}
-            >
-              <Send size={18} />
-            </button>
-          </form>
-        )}
+          /* CHAT MESSAGES VIEW (GROUP OR DM) */
+          <div className="flex-1 flex flex-col justify-between p-4 overflow-hidden">
+            {/* Header Lock Notice */}
+            {chatMode === 'group' && isChatLocked && (
+              <div className="px-3 py-1.5 mb-3 bg-rose-500/15 border border-rose-500/30 rounded-xl flex items-center justify-between text-[11px] text-rose-300 font-mono">
+                <div className="flex items-center gap-2">
+                  <Lock size={12} className="animate-bounce" />
+                  <span>Sohbet Yöneticiler Tarafından Kilitlenmiştir.</span>
+                </div>
+              </div>
+            )}
 
-        <div className="mt-2 flex items-center justify-between px-1">
-          <div className="flex items-center gap-1.5">
-            <div className={`w-2 h-2 rounded-full ${chatMode === 'group' && isChatLocked ? 'bg-rose-500' : 'bg-emerald-500'}`}></div>
-            <span className="text-[9px] text-white/40 uppercase tracking-tighter">
-              {chatMode === 'group' ? `Grup: ${currentGroupObj?.name}` : `Özel Mesaj: ${activeDmUser || 'Seçilmedi'}`}
-            </span>
+            {/* Messages Scroll Area */}
+            <div 
+              ref={scrollRef}
+              className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-1"
+            >
+              {isLoading && messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full gap-3 opacity-40 py-20">
+                  <RefreshCw size={24} className="animate-spin text-emerald-400" />
+                  <span className="text-xs font-mono">Mesajlar yükleniyor...</span>
+                </div>
+              ) : chatMode === 'dm' && !activeDmGmail ? (
+                <div className="flex flex-col items-center justify-center h-full gap-3 py-16 text-center text-white/40">
+                  <Mail size={36} className="text-emerald-400/50" />
+                  <div className="text-xs font-bold text-white/80">Gmail İle 1-e-1 Özel Mesajlaşma</div>
+                  <p className="text-[11px] max-w-xs text-white/40">
+                    Ağdaki herhangi biriyle doğrudan konuşmak için yukardaki "Gmail Ekle / Ara" butonuna basın veya bir Gmail adresi yazın.
+                  </p>
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="text-center py-20 text-white/20 text-[11px] italic flex flex-col items-center justify-center gap-2">
+                  <span className="text-2xl">{chatMode === 'group' ? currentGroupObj?.icon : '✉️'}</span>
+                  <span>
+                    {chatMode === 'group' 
+                      ? `[${currentGroupObj?.name}] kanalında henüz mesaj yok. İlk mesajı yazın!`
+                      : `[${activeDmGmail}] adresi ile henüz sohbetiniz yok. İlk mesajı siz atın!`}
+                  </span>
+                </div>
+              ) : (
+                <AnimatePresence initial={false}>
+                  {messages.map((msg) => {
+                    const isAdminMsg = msg.role === 'admin';
+                    const isMe = msg.user === myGmail;
+                    return (
+                      <motion.div 
+                        key={msg.id}
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        className={`flex gap-3 group relative ${isMe ? 'flex-row-reverse' : ''}`}
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-base shrink-0 select-none relative">
+                          {msg.avatar}
+                          {isAdminMsg && (
+                            <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-500 rounded-full flex items-center justify-center text-[8px] text-slate-950 font-black">
+                              👑
+                            </div>
+                          )}
+                        </div>
+                        <div className={`flex flex-col gap-1 max-w-[80%] ${isMe ? 'items-end' : ''}`}>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[10px] font-bold font-mono flex items-center gap-1 ${isAdminMsg ? 'text-amber-400' : isMe ? 'text-emerald-400' : 'text-sky-400'}`}>
+                              {msg.user}
+                            </span>
+                            <span className="text-[8px] text-white/20 font-mono">{msg.time}</span>
+                          </div>
+                          <div className="relative group/bubble">
+                            <div className={`px-3.5 py-2 rounded-2xl text-[11px] leading-relaxed break-words ${
+                              isAdminMsg
+                                ? 'bg-amber-500/10 text-amber-100 rounded-tr-none border border-amber-500/30'
+                                : isMe 
+                                  ? 'bg-emerald-600/20 text-emerald-100 rounded-tr-none border border-emerald-500/30' 
+                                  : 'bg-white/5 text-white/90 rounded-tl-none border border-white/10'
+                            }`}>
+                              {msg.message}
+                            </div>
+
+                            {/* Admin Delete Action for Individual Messages */}
+                            {userRole === 'admin' && (
+                              <button
+                                onClick={() => handleAdminDeleteMessage(msg.id)}
+                                disabled={deletingId === msg.id}
+                                className={`absolute -top-2 ${isMe ? '-left-6' : '-right-6'} opacity-0 group-hover/bubble:opacity-100 transition-opacity p-1 bg-rose-500/20 border border-rose-500/40 text-rose-400 hover:bg-rose-500 rounded-md cursor-pointer hover:text-white`}
+                                title="Sil"
+                              >
+                                <Trash2 size={11} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              )}
+            </div>
+
+            {/* Input Send Area */}
+            <form onSubmit={handleSendMessage} className="pt-3 border-t border-white/5 flex gap-2 shrink-0">
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder={
+                  chatMode === 'group'
+                    ? `#${currentGroupObj?.name} grubuna yaz...`
+                    : activeDmGmail
+                      ? `${activeDmGmail} adresine mesaj gönder...`
+                      : "Mesaj yazmak için bir Gmail seçin..."
+                }
+                disabled={chatMode === 'group' && isChatLocked && userRole !== 'admin'}
+                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-emerald-500/50 transition-colors disabled:opacity-40"
+              />
+              <button
+                type="submit"
+                disabled={!newMessage.trim() || (chatMode === 'group' && isChatLocked && userRole !== 'admin')}
+                className="px-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white rounded-xl font-bold transition-all flex items-center justify-center shrink-0 shadow-lg shadow-emerald-600/20"
+              >
+                <Send size={15} />
+              </button>
+            </form>
           </div>
-          <div className="text-[9px] text-white/30 font-mono">
-            Mod: {userRole === 'admin' ? '👑 Yönetici' : '👤 Kullanıcı'}
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Admin Create Group Modal */}
+      {/* Add / Search Gmail Modal */}
       <AnimatePresence>
-        {showCreateGroup && (
-          <div className="absolute inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        {showAddDmModal && (
+          <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="w-full max-w-sm bg-[#161b26] border border-amber-500/30 rounded-2xl p-5 shadow-2xl space-y-4"
+              className="w-full max-w-md bg-[#151926] border border-emerald-500/40 rounded-2xl p-5 shadow-2xl space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                  <Mail size={18} />
+                  <span>Ağdaki Gmail İle Sohbet Başlat</span>
+                </div>
+                <button
+                  onClick={() => setShowAddDmModal(false)}
+                  className="text-white/40 hover:text-white"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-white/80 block">
+                  Konuşmak İstediğiniz Kişinin Gmail Adresini Yazın:
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={targetGmailInput}
+                    onChange={(e) => setTargetGmailInput(e.target.value)}
+                    placeholder="Örn: ornek.kullanici@gmail.com"
+                    className="flex-1 bg-black/50 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-emerald-400 font-mono"
+                  />
+                  <button
+                    onClick={() => handleStartDmWithGmail(targetGmailInput)}
+                    disabled={!targetGmailInput.trim()}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shrink-0"
+                  >
+                    Başlat
+                  </button>
+                </div>
+
+                {/* Quick Network Discovery Shortcut Buttons */}
+                <div className="pt-2 border-t border-white/5 space-y-2">
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-white/40 block">
+                    Veya 3 Ağ Taraması Modundan Seçin:
+                  </span>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      onClick={() => {
+                        setShowAddDmModal(false);
+                        setChatMode('scan');
+                        setScanMode('subnet');
+                        runNetworkScan('subnet');
+                      }}
+                      className="p-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 rounded-xl text-[10px] font-bold transition-all text-center flex flex-col items-center gap-1"
+                    >
+                      <Wifi size={14} />
+                      <span>1. Yerel Ağ</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowAddDmModal(false);
+                        setChatMode('scan');
+                        setScanMode('global');
+                        runNetworkScan('global');
+                      }}
+                      className="p-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 rounded-xl text-[10px] font-bold transition-all text-center flex flex-col items-center gap-1"
+                    >
+                      <Globe size={14} />
+                      <span>2. Global Dizin</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowAddDmModal(false);
+                        setChatMode('scan');
+                        setScanMode('deep');
+                        runNetworkScan('deep');
+                      }}
+                      className="p-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 rounded-xl text-[10px] font-bold transition-all text-center flex flex-col items-center gap-1"
+                    >
+                      <Cpu size={14} />
+                      <span>3. Derin Tarama</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setShowAddDmModal(false)}
+                  className="px-4 py-1.5 rounded-xl text-xs font-bold text-white/60 hover:bg-white/5"
+                >
+                  Kapat
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Admin Create Group Modal */}
+      <AnimatePresence>
+        {showCreateGroup && (
+          <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="w-full max-w-sm bg-[#151926] border border-amber-500/40 rounded-2xl p-5 shadow-2xl space-y-4"
             >
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
-                  <FolderPlus size={18} />
+                  <Crown size={18} />
                   <span>Yeni Sohbet Grubu Oluştur</span>
                 </div>
                 <button
@@ -685,63 +1032,45 @@ export const LiveChat: React.FC<LiveChatProps> = ({
                 </button>
               </div>
 
-              {createGroupError && (
-                <div className="p-2.5 bg-rose-500/10 border border-rose-500/30 rounded-lg text-rose-300 text-xs font-mono">
-                  {createGroupError}
-                </div>
-              )}
-
               <form onSubmit={handleAdminCreateGroup} className="space-y-3">
-                <div>
-                  <label className="text-[11px] font-bold text-white/60 mb-1 block">
-                    Grup İkonu (Emoji)
-                  </label>
-                  <div className="flex gap-2">
-                    {['💬', '📢', '🚀', '⚽', '🎮', '💡', '🔥', '👥', '🔐'].map((emoji) => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        onClick={() => setCreateGroupIcon(emoji)}
-                        className={`w-8 h-8 rounded-lg text-base flex items-center justify-center border transition-all ${
-                          createGroupIcon === emoji
-                            ? 'bg-amber-500/20 border-amber-400 text-amber-300'
-                            : 'bg-white/5 border-white/10 hover:bg-white/10'
-                        }`}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
+                {createGroupError && (
+                  <div className="p-2 bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs rounded-xl">
+                    {createGroupError}
                   </div>
-                </div>
-
+                )}
                 <div>
-                  <label className="text-[11px] font-bold text-white/60 mb-1 block">
-                    Grup Adı
-                  </label>
+                  <label className="text-xs font-bold text-white/80 block mb-1">Grup Adı:</label>
                   <input
                     type="text"
                     value={createGroupName}
                     onChange={(e) => setCreateGroupName(e.target.value)}
-                    placeholder="Örn: Oyun Kulübü, Proje Takımı..."
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-amber-400"
-                    autoFocus
+                    placeholder="Örn: Yazılım Ekibi"
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-amber-400"
                   />
                 </div>
-
-                <div className="flex items-center justify-end gap-2 pt-2">
+                <div>
+                  <label className="text-xs font-bold text-white/80 block mb-1">Grup İkonu / Emoji:</label>
+                  <input
+                    type="text"
+                    value={createGroupIcon}
+                    onChange={(e) => setCreateGroupIcon(e.target.value)}
+                    placeholder="💬"
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
                   <button
                     type="button"
                     onClick={() => setShowCreateGroup(false)}
-                    className="px-3 py-1.5 rounded-xl text-xs font-bold text-white/60 hover:bg-white/5"
+                    className="px-3 py-2 rounded-xl text-xs font-bold text-white/60 hover:bg-white/5"
                   >
                     İptal
                   </button>
                   <button
                     type="submit"
-                    disabled={!createGroupName.trim()}
-                    className="px-4 py-1.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 disabled:opacity-50 transition-all"
+                    className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl transition-all"
                   >
-                    Grubu Oluştur
+                    Oluştur
                   </button>
                 </div>
               </form>
@@ -749,95 +1078,6 @@ export const LiveChat: React.FC<LiveChatProps> = ({
           </div>
         )}
       </AnimatePresence>
-
-      {/* Add / Search DM User Modal */}
-      <AnimatePresence>
-        {showAddDmUserModal && (
-          <div className="absolute inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="w-full max-w-sm bg-[#161b26] border border-emerald-500/30 rounded-2xl p-5 shadow-2xl space-y-4"
-            >
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
-                  <User size={18} />
-                  <span>Özel Mesaj Başlat (1-e-1)</span>
-                </div>
-                <button
-                  onClick={() => setShowAddDmUserModal(false)}
-                  className="text-white/40 hover:text-white"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-
-              {otherOnlineUsers.length > 0 && (
-                <div>
-                  <label className="text-[11px] font-bold text-white/60 mb-1.5 block">
-                    Çevrimiçi Kullanıcılar:
-                  </label>
-                  <div className="space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar">
-                    {otherOnlineUsers.map(u => (
-                      <button
-                        key={u.username}
-                        onClick={() => handleStartDmWith(u.username)}
-                        className="w-full flex items-center justify-between p-2 rounded-xl bg-white/5 hover:bg-emerald-500/20 hover:border-emerald-500/40 border border-white/5 transition-all text-left group"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-base">{u.avatar}</span>
-                          <span className="text-xs font-bold text-white group-hover:text-emerald-300">{u.username}</span>
-                        </div>
-                        <span className="text-[10px] text-emerald-400 font-mono font-bold flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Çevrimiçi
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="text-[11px] font-bold text-white/60 mb-1 block">
-                  Kullanıcı Adı ile Ara veya Yaz:
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={customDmUsername}
-                    onChange={(e) => setCustomDmUsername(e.target.value)}
-                    placeholder="Örn: Ahmet, Zeynep..."
-                    className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-400"
-                  />
-                  <button
-                    onClick={() => {
-                      if (customDmUsername.trim()) {
-                        handleStartDmWith(customDmUsername.trim());
-                      }
-                    }}
-                    disabled={!customDmUsername.trim()}
-                    className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all"
-                  >
-                    Başlat
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-1">
-                <button
-                  type="button"
-                  onClick={() => setShowAddDmUserModal(false)}
-                  className="px-3 py-1.5 rounded-xl text-xs font-bold text-white/60 hover:bg-white/5"
-                >
-                  Kapat
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
-

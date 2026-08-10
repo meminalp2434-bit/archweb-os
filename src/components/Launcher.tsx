@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Terminal, Settings, Globe, Folder, Trash2, Search, Power, LogOut, User, Mail, ShoppingBag, Eye, EyeOff, ChevronLeft, ShieldCheck } from 'lucide-react';
+import { Terminal, Settings, Globe, Folder, Trash2, Search, Power, LogOut, User, Mail, ShoppingBag, Eye, EyeOff, ChevronLeft, ShieldCheck, Box, Sparkles, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface LauncherProps {
@@ -32,7 +32,10 @@ export const Launcher: React.FC<LauncherProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
 
   const apps = [
+    { id: 'geminiai', name: 'Gemini AI Asistanı', icon: Sparkles, color: '#a855f7' },
+    { id: 'camera', name: 'Kamera & Canlı Yayın', icon: Camera, color: '#0ea5e9' },
     { id: 'terminal', name: 'Uçbirim', icon: Terminal, color: 'var(--accent)' },
+    { id: 'blender', name: 'Blender 3D Studio', icon: Box, color: '#f59e0b' },
     { id: 'settings', name: 'Ayarlar', icon: Settings, color: '#9c27b0' },
     { id: 'browser', name: 'Tarayıcı', icon: Globe, color: '#4caf50' },
     { id: 'files', name: 'Dosyalar', icon: Folder, color: '#ff9800' },

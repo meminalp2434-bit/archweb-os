@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { HelpDialog } from './components/HelpDialog';
 import { playWindows11StartupSound } from './utils/audio';
 import { getApiUrl } from './utils/api';
-import { getOfflineSettings, saveOfflineSettings, saveOfflineFile } from './utils/localFileSystem';
+import { getOfflineSettings, saveOfflineSettings, saveOfflineFile, getOfflineFilesState } from './utils/localFileSystem';
 import { TopBar } from './components/TopBar';
 import { Terminal } from './components/Terminal';
 import { Settings } from './components/Settings';
@@ -20,11 +20,21 @@ import { ApkInstaller } from './components/ApkInstaller';
 import { IsoInstaller } from './components/IsoInstaller';
 import { SahaApp } from './components/SahaApp';
 import { LiveChat } from './components/LiveChat';
+import { Blender3D } from './components/Blender3D';
 import { TvLauncher } from './components/TvLauncher';
 import { TabletView } from './components/TabletView';
+import { MediaPlayer } from './components/MediaPlayer';
+import { CameraApp } from './components/CameraApp';
+import { GeminiAiApp } from './components/GeminiAiApp';
+import { VoiceRecorder } from './components/VoiceRecorder';
+import { SmartView } from './components/SmartView';
+import { NearbyChat } from './components/NearbyChat';
+import { QuickSettingsPanel } from './components/QuickSettingsPanel';
+import { SystemPermissionsModal } from './components/SystemPermissionsModal';
+import { ExecutableRunner } from './components/ExecutableRunner';
 import { safeStorage } from './utils/safeStorage';
 import { motion, AnimatePresence } from 'motion/react';
-import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock, Mail, Sparkles, Play, Cpu, ShoppingBag, Smartphone, Download, Package, X, ShieldCheck, Tv, Tablet, Monitor, Activity, MessageCircle } from 'lucide-react';
+import { Terminal as TerminalIcon, Settings as SettingsIcon, Folder, Trash2, Globe, FileText, RotateCcw, Clock, Mail, Sparkles, Play, Cpu, ShoppingBag, Smartphone, Download, Package, X, ShieldCheck, Tv, Tablet, Monitor, Activity, MessageCircle, Box, Camera, Mic, User, Lock, Cast } from 'lucide-react';
 
 const getWallpaperGradient = (wallpaper: number, accentColor: string) => {
   switch (wallpaper) {
@@ -95,7 +105,14 @@ export default function App() {
   const [isIsoInstallerOpen, setIsIsoInstallerOpen] = useState(false);
   const [isSahaAppOpen, setIsSahaAppOpen] = useState(false);
   const [isLiveChatOpen, setIsLiveChatOpen] = useState(false);
+  const [isBlender3DOpen, setIsBlender3DOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [activeMediaPlayer, setActiveMediaPlayer] = useState<{ fileName: string; fileContent: string } | null>(null);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [isGeminiAiOpen, setIsGeminiAiOpen] = useState(false);
+  const [isVoiceRecorderOpen, setIsVoiceRecorderOpen] = useState(false);
+  const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
+  const [activeExecutable, setActiveExecutable] = useState<{ fileName: string; fileContent: string } | null>(null);
   const [isPowerDialogOpen, setIsPowerDialogOpen] = useState(false);
   const [isAppLauncherOpen, setIsAppLauncherOpen] = useState(false);
   const [launchedProgramName, setLaunchedProgramName] = useState('');
@@ -129,12 +146,31 @@ export default function App() {
   const [firewallActive, setFirewallActive] = useState(false);
   const [pinRequired, setPinRequired] = useState(false);
   const [pinCode, setPinCode] = useState('1234');
-  const [mobileMode, setMobileMode] = useState(false);
+  const [mobileMode, setMobileMode] = useState(() => {
+    const saved = safeStorage.getItem('archweb_device_mode');
+    if (saved === 'mobile') return true;
+    if (!saved && typeof navigator !== 'undefined') {
+      const ua = navigator.userAgent;
+      if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua) && !/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+        return true;
+      }
+    }
+    return false;
+  });
   const [deviceMode, setDeviceMode] = useState<'desktop' | 'mobile' | 'tablet' | 'tv'>(() => {
     const saved = safeStorage.getItem('archweb_device_mode');
     if (saved) return saved as any;
-    if (typeof navigator !== 'undefined' && /smarttv|tcl|googletv|android tv|tizen|webos|hbbtv|appletv|netcast/i.test(navigator.userAgent)) {
-      return 'tv';
+    if (typeof navigator !== 'undefined') {
+      const ua = navigator.userAgent;
+      if (/smarttv|tcl|googletv|android tv|tizen|webos|hbbtv|appletv|netcast/i.test(ua)) {
+        return 'tv';
+      }
+      if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+        return 'tablet';
+      }
+      if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
+        return 'mobile';
+      }
     }
     return 'desktop';
   });
@@ -151,6 +187,13 @@ export default function App() {
   const [isLocked, setIsLocked] = useState<boolean>(() => {
     return safeStorage.getItem('archweb_is_locked') === 'true';
   });
+  const [preSetupState, setPreSetupState] = useState<'select' | 'developer_code' | 'ready'>('select');
+  const [devCodeInput, setDevCodeInput] = useState('');
+  const [devCodeError, setDevCodeError] = useState(false);
+  const [terminalPendingCommand, setTerminalPendingCommand] = useState<string | undefined>(undefined);
+  const [isSmartViewOpen, setIsSmartViewOpen] = useState(false);
+  const [isLocationOpen, setIsLocationOpen] = useState(false);
+  const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false);
 
   // Sound and Volume Settings
   const [volume, setVolume] = useState<number>(() => {
@@ -167,6 +210,37 @@ export default function App() {
       return {};
     }
   });
+
+  const [installedWebApps, setInstalledWebApps] = useState<{ id: string; name: string; url: string }[]>(() => {
+    const saved = safeStorage.getItem('archweb_installed_web_apps');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const handleInstallWebApp = (name: string, url: string) => {
+    const newApp = { id: 'webapp_' + Date.now(), name, url };
+    const updated = [...installedWebApps, newApp];
+    setInstalledWebApps(updated);
+    safeStorage.setItem('archweb_installed_web_apps', JSON.stringify(updated));
+  };
+
+  const [desktopFiles, setDesktopFiles] = useState<{ name: string; size: string; content: string }[]>([]);
+
+  const loadDesktopFiles = () => {
+    try {
+      const state = getOfflineFilesState();
+      const files = state.allFiles['/home/user/Masaüstü'] || [];
+      setDesktopFiles(files);
+    } catch (e) {
+      console.error("Failed to load desktop files:", e);
+    }
+  };
+
+  useEffect(() => {
+    loadDesktopFiles();
+    const handleRefresh = () => loadDesktopFiles();
+    window.addEventListener('file_saved_refresh', handleRefresh);
+    return () => window.removeEventListener('file_saved_refresh', handleRefresh);
+  }, []);
 
   useEffect(() => {
     const handleAppsChanged = () => {
@@ -189,6 +263,69 @@ export default function App() {
     window.addEventListener('playstore_launch_app', handleLaunchApp);
     return () => window.removeEventListener('playstore_launch_app', handleLaunchApp);
   }, []);
+
+  // URL Path & Web App Route Synchronization
+  useEffect(() => {
+    const handleUrlRoute = () => {
+      const rawPath = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+      if (!rawPath) return;
+
+      if (rawPath === 'terminal') setIsTerminalOpen(true);
+      else if (rawPath === 'settings') setIsSettingsOpen(true);
+      else if (rawPath === 'browser') setIsBrowserOpen(true);
+      else if (rawPath === 'filemanager' || rawPath === 'files') setIsFileManagerOpen(true);
+      else if (rawPath === 'email' || rawPath === 'mail') setIsEmailOpen(true);
+      else if (rawPath === 'playstore' || rawPath === 'store') setIsPlayStoreOpen(true);
+      else if (rawPath === 'texteditor' || rawPath === 'editor') setIsEditorOpen(true);
+      else if (rawPath === 'apkinstaller' || rawPath === 'apk') setIsApkInstallerOpen(true);
+      else if (rawPath === 'isoinstaller' || rawPath === 'iso') setIsIsoInstallerOpen(true);
+      else if (rawPath === 'sahaapp' || rawPath === 'saha') setIsSahaAppOpen(true);
+      else if (rawPath === 'livechat' || rawPath === 'chat') setIsLiveChatOpen(true);
+      else if (rawPath === 'blender3d' || rawPath === 'blender') setIsBlender3DOpen(true);
+      else if (rawPath === 'camera') setIsCameraOpen(true);
+      else if (rawPath === 'voicerecorder' || rawPath === 'recorder') setIsVoiceRecorderOpen(true);
+      else if (rawPath === 'kidapp' || rawPath === 'kid') setIsKidAppOpen(true);
+      else if (rawPath === 'help') setIsHelpOpen(true);
+      else if (rawPath === 'trashbin' || rawPath === 'trash') setIsTrashOpen(true);
+      else if (rawPath === 'smartview') setIsSmartViewOpen(true);
+    };
+
+    handleUrlRoute();
+    window.addEventListener('popstate', handleUrlRoute);
+    return () => window.removeEventListener('popstate', handleUrlRoute);
+  }, []);
+
+  useEffect(() => {
+    let targetPath = '/';
+    if (isTerminalOpen) targetPath = '/Terminal';
+    else if (isSettingsOpen) targetPath = '/Settings';
+    else if (isBrowserOpen) targetPath = '/Browser';
+    else if (isFileManagerOpen) targetPath = '/FileManager';
+    else if (isEmailOpen) targetPath = '/Email';
+    else if (isPlayStoreOpen) targetPath = '/PlayStore';
+    else if (isEditorOpen) targetPath = '/TextEditor';
+    else if (isApkInstallerOpen) targetPath = '/ApkInstaller';
+    else if (isIsoInstallerOpen) targetPath = '/IsoInstaller';
+    else if (isSahaAppOpen) targetPath = '/SahaApp';
+    else if (isLiveChatOpen) targetPath = '/LiveChat';
+    else if (isBlender3DOpen) targetPath = '/Blender3D';
+    else if (isCameraOpen) targetPath = '/Camera';
+    else if (isVoiceRecorderOpen) targetPath = '/VoiceRecorder';
+    else if (isKidAppOpen) targetPath = '/KidApp';
+    else if (isHelpOpen) targetPath = '/Help';
+    else if (isTrashOpen) targetPath = '/TrashBin';
+    else if (isSmartViewOpen) targetPath = '/SmartView';
+
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState({ app: targetPath }, '', targetPath);
+    }
+  }, [
+    isTerminalOpen, isSettingsOpen, isBrowserOpen, isFileManagerOpen,
+    isEmailOpen, isPlayStoreOpen, isEditorOpen, isApkInstallerOpen,
+    isIsoInstallerOpen, isSahaAppOpen, isLiveChatOpen, isBlender3DOpen,
+    isCameraOpen, isVoiceRecorderOpen, isKidAppOpen, isHelpOpen,
+    isTrashOpen, isSmartViewOpen
+  ]);
   const [isMuted, setIsMuted] = useState<boolean>(() => {
     const saved = localStorage.getItem('archweb_muted');
     return saved !== null ? saved === 'true' : false;
@@ -575,6 +712,8 @@ export default function App() {
 
   const handleLaunch = (appId: string) => {
     switch (appId) {
+      case 'geminiai': setIsGeminiAiOpen(true); break;
+      case 'camera': setIsCameraOpen(true); break;
       case 'terminal': setIsTerminalOpen(true); break;
       case 'settings': setIsSettingsOpen(true); break;
       case 'browser': 
@@ -587,6 +726,7 @@ export default function App() {
       case 'playstore': 
         if (!isSafeMode) { setIsPlayStoreOpen(true); }
         break;
+      case 'blender': setIsBlender3DOpen(true); break;
       case 'help': setIsHelpOpen(true); break;
       case 'trash': setIsTrashOpen(true); break;
     }
@@ -709,9 +849,11 @@ export default function App() {
   };
 
 
+  const isMobileView = mobileMode || deviceMode === 'mobile';
+
   const desktopContent = (
     <div 
-      className={`relative ${mobileMode ? 'h-full w-full rounded-none sm:rounded-[32px]' : 'h-screen w-screen'} overflow-hidden flex flex-col selection:bg-[var(--accent)] selection:bg-opacity-30 transition-all duration-700`}
+      className={`relative ${isMobileView ? 'h-full w-full rounded-none sm:rounded-[32px]' : 'h-screen w-screen'} overflow-hidden flex flex-col selection:bg-[var(--accent)] selection:bg-opacity-30 transition-all duration-700`}
       style={{ 
         background: getWallpaperGradient(wallpaper, accentColor),
         fontSize: fontSize === 'small' ? '12px' : fontSize === 'large' ? '16px' : '14px',
@@ -868,6 +1010,39 @@ export default function App() {
         }}
         deviceMode={deviceMode}
         onChangeDeviceMode={handleChangeDeviceMode}
+        isSmartViewOpen={isSmartViewOpen}
+        onSmartViewToggle={() => setIsSmartViewOpen(!isSmartViewOpen)}
+        isLocationOpen={isLocationOpen}
+        onLocationToggle={() => setIsLocationOpen(!isLocationOpen)}
+        onQuickSettingsToggle={() => setIsQuickSettingsOpen(!isQuickSettingsOpen)}
+      />
+
+      <AnimatePresence>
+        {isSmartViewOpen && (
+          <SmartView
+            onClose={() => setIsSmartViewOpen(false)}
+            deviceMode={deviceMode}
+            onChangeDeviceMode={handleChangeDeviceMode}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isLocationOpen && (
+          <NearbyChat
+            onClose={() => setIsLocationOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <QuickSettingsPanel
+        isOpen={isQuickSettingsOpen}
+        onClose={() => setIsQuickSettingsOpen(false)}
+        onOpen={() => setIsQuickSettingsOpen(true)}
+        volume={volume}
+        setVolume={setVolume}
+        deviceMode={deviceMode}
+        onChangeDeviceMode={handleChangeDeviceMode}
       />
 
       {/* Main Workspace */}
@@ -915,7 +1090,11 @@ export default function App() {
               transition={{ duration: 0.3, ease: "easeOut" }}
               className={`absolute w-full h-full transition-all duration-300 z-10 ${mobileMode ? 'inset-0 max-w-none max-h-none rounded-none' : 'inset-0 m-auto max-w-4xl max-h-[600px] rounded-lg'}`}
             >
-              <Terminal onClose={() => setIsTerminalOpen(false)} />
+              <Terminal 
+                onClose={() => setIsTerminalOpen(false)} 
+                initialCommand={terminalPendingCommand}
+                onClearInitialCommand={() => setTerminalPendingCommand(undefined)}
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -946,6 +1125,19 @@ export default function App() {
               avatar={kidAvatar}
               userRole={userRole}
             />
+          </motion.div>
+        </div>
+      )}
+
+      {isBlender3DOpen && (
+        <div className="fixed inset-0 z-[85] flex items-center justify-center p-0 sm:p-2 md:p-4 bg-black/60 backdrop-blur-md">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className={`w-full h-full ${isMobileView ? 'max-w-full max-h-full rounded-none' : 'max-w-5xl max-h-[720px] rounded-xl'} overflow-hidden shadow-2xl border border-white/10`}
+          >
+            <Blender3D onClose={() => setIsBlender3DOpen(false)} />
           </motion.div>
         </div>
       )}
@@ -1010,7 +1202,7 @@ export default function App() {
               transition={{ duration: 0.3, ease: "easeOut" }}
               className={`absolute w-full h-full transition-all duration-300 z-30 ${mobileMode ? 'inset-0 max-w-none max-h-none rounded-none' : 'inset-0 m-auto max-w-5xl max-h-[700px] rounded-lg'}`}
             >
-              <Browser onClose={() => setIsBrowserOpen(false)} />
+              <Browser onClose={() => setIsBrowserOpen(false)} onInstallWebApp={handleInstallWebApp} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -1026,6 +1218,8 @@ export default function App() {
             >
               <FileManager 
                 onClose={() => setIsFileManagerOpen(false)} 
+                onOpenMediaPlayer={(name, content) => setActiveMediaPlayer({ fileName: name, fileContent: content })}
+                onOpenExecutable={(name, content) => setActiveExecutable({ fileName: name, fileContent: content })}
                 onOpenFile={(name, content, path) => {
                   if (name === 'uygulamayi_ac.sh' || name === 'baslat.desktop' || name === 'archweb_launcher.exe' || name === 'archweb kids setup.bat') {
                     handleExecuteProgram(name);
@@ -1044,6 +1238,38 @@ export default function App() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {activeMediaPlayer && (
+          <MediaPlayer 
+            fileName={activeMediaPlayer.fileName}
+            fileContent={activeMediaPlayer.fileContent}
+            onClose={() => setActiveMediaPlayer(null)}
+          />
+        )}
+
+        {isCameraOpen && (
+          <CameraApp onClose={() => setIsCameraOpen(false)} />
+        )}
+
+        {isGeminiAiOpen && (
+          <GeminiAiApp onClose={() => setIsGeminiAiOpen(false)} />
+        )}
+
+        {isVoiceRecorderOpen && (
+          <VoiceRecorder onClose={() => setIsVoiceRecorderOpen(false)} />
+        )}
+
+        {isPermissionsModalOpen && (
+          <SystemPermissionsModal onClose={() => setIsPermissionsModalOpen(false)} />
+        )}
+
+        {activeExecutable && (
+          <ExecutableRunner 
+            fileName={activeExecutable.fileName}
+            fileContent={activeExecutable.fileContent}
+            onClose={() => setActiveExecutable(null)}
+          />
+        )}
 
         <AnimatePresence>
           {isAppLauncherOpen && (
@@ -1294,6 +1520,15 @@ export default function App() {
           else if (app.id === 'space_explorer') AppContent = SpaceExplorer;
           else if (app.id === 'coloring_book') AppContent = ColoringBook;
           else if (app.id === 'yt_kids') AppContent = YTKids;
+          else if (app.id === 'camera') {
+            AppContent = () => <CameraApp onClose={() => setActivePlayApps(prev => ({ ...prev, camera: false }))} />;
+          }
+          else if (app.id === 'voicerecorder') {
+            AppContent = () => <VoiceRecorder onClose={() => setActivePlayApps(prev => ({ ...prev, voicerecorder: false }))} />;
+          }
+          else if (app.id === 'blender3d') {
+            AppContent = () => <Blender3D onClose={() => setActivePlayApps(prev => ({ ...prev, blender3d: false }))} />;
+          }
           else if (app.id === 'archweb_kids') {
             AppContent = () => (
               <KidApp 
@@ -1486,7 +1721,18 @@ export default function App() {
         <AnimatePresence>
           {isHelpOpen && (
             <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-              <HelpDialog onClose={() => setIsHelpOpen(false)} />
+              <HelpDialog 
+                onClose={() => setIsHelpOpen(false)} 
+                onOpenTerminal={() => {
+                  setIsHelpOpen(false);
+                  setIsTerminalOpen(true);
+                }}
+                onRunTerminalCommand={(cmd) => {
+                  setIsHelpOpen(false);
+                  setTerminalPendingCommand(cmd);
+                  setIsTerminalOpen(true);
+                }}
+              />
             </div>
           )}
         </AnimatePresence>
@@ -1504,6 +1750,21 @@ export default function App() {
               <span className="text-[10px] font-mono text-yellow-300 group-hover:text-yellow-200 font-bold">Çocuk Dünyası</span>
               <div className="absolute -top-1.5 -right-1 px-1 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full border border-pink-400 text-[8px] font-bold text-white scale-90 px-1 py-0.5 animate-pulse leading-none uppercase">
                 Aktif
+              </div>
+            </button>
+          </motion.div>
+
+          <motion.div drag dragMomentum={false}>
+            <button 
+              onClick={() => handleAppOpen('geminiai', setIsGeminiAiOpen)}
+              className="flex flex-col items-center gap-1 group relative cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-gradient-to-tr from-purple-600/30 to-indigo-500/30 border border-purple-400/40 rounded-xl flex items-center justify-center group-hover:bg-purple-600/40 group-hover:border-purple-300 transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                <Sparkles size={24} className="text-yellow-300 group-hover:scale-110 transition-transform animate-spin-slow" />
+              </div>
+              <span className="text-[10px] font-mono text-purple-300 group-hover:text-purple-200 font-bold">Gemini AI</span>
+              <div className="absolute -top-1.5 -right-1 px-1 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full border border-purple-400 text-[8px] font-bold text-white scale-90 px-1 py-0.5 leading-none uppercase">
+                YAPAY ZEKA
               </div>
             </button>
           </motion.div>
@@ -1582,6 +1843,21 @@ export default function App() {
 
           <motion.div drag dragMomentum={false}>
             <button 
+              onClick={() => handleAppOpen('blender', setIsBlender3DOpen)}
+              className="flex flex-col items-center gap-1 group relative cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-center group-hover:bg-amber-500/20 group-hover:border-amber-400 transition-all shadow-[0_0_12px_rgba(245,158,11,0.2)]">
+                <Box size={24} className="text-amber-400 group-hover:scale-110 transition-transform" />
+              </div>
+              <span className="text-[10px] font-mono text-amber-300 group-hover:text-amber-200 font-bold">Blender 3D</span>
+              <div className="absolute -top-1.5 -right-1 px-1 bg-amber-500 rounded-full border border-amber-400 text-[8px] font-bold text-black scale-90 px-1 py-0.5 leading-none font-mono">
+                3D
+              </div>
+            </button>
+          </motion.div>
+
+          <motion.div drag dragMomentum={false}>
+            <button 
               onClick={() => handleAppOpen('editor', setIsEditorOpen)}
               className="flex flex-col items-center gap-1 group cursor-pointer"
             >
@@ -1591,6 +1867,63 @@ export default function App() {
               <span className="text-[10px] font-mono text-white/60 group-hover:text-white">Notlar.txt</span>
             </button>
           </motion.div>
+
+          <motion.div drag dragMomentum={false}>
+            <button 
+              onClick={() => setIsCameraOpen(true)}
+              className="flex flex-col items-center gap-1 group cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-pink-500/10 border border-pink-500/30 rounded-xl flex items-center justify-center group-hover:bg-pink-500/20 group-hover:border-pink-400 transition-all">
+                <Camera size={24} className="text-pink-400 group-hover:scale-110 transition-transform" />
+              </div>
+              <span className="text-[10px] font-mono text-pink-300 group-hover:text-pink-200">Kamera</span>
+            </button>
+          </motion.div>
+
+          <motion.div drag dragMomentum={false}>
+            <button 
+              onClick={() => setIsVoiceRecorderOpen(true)}
+              className="flex flex-col items-center gap-1 group cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-purple-500/10 border border-purple-500/30 rounded-xl flex items-center justify-center group-hover:bg-purple-500/20 group-hover:border-purple-400 transition-all">
+                <Mic size={24} className="text-purple-400 group-hover:scale-110 transition-transform" />
+              </div>
+              <span className="text-[10px] font-mono text-purple-300 group-hover:text-purple-200">Ses Kaydı</span>
+            </button>
+          </motion.div>
+
+          <motion.div drag dragMomentum={false}>
+            <button 
+              onClick={() => setIsPermissionsModalOpen(true)}
+              className="flex flex-col items-center gap-1 group cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center group-hover:bg-emerald-500/20 group-hover:border-emerald-400 transition-all">
+                <ShieldCheck size={24} className="text-emerald-400 group-hover:scale-110 transition-transform" />
+              </div>
+              <span className="text-[10px] font-mono text-emerald-300 group-hover:text-emerald-200">İzinler</span>
+            </button>
+          </motion.div>
+
+          {/* User Desktop Files (placed in /home/user/Masaüstü) */}
+          {desktopFiles.map((df) => {
+            if (df.name === 'notlar.txt') return null;
+            return (
+              <motion.div key={df.name} drag dragMomentum={false}>
+                <button 
+                  onClick={() => {
+                    handleAppOpen('filemanager', setIsFileManagerOpen);
+                  }}
+                  className="flex flex-col items-center gap-1 group cursor-pointer"
+                  title={`Masaüstü Dosyası: ${df.name}`}
+                >
+                  <div className="w-12 h-12 bg-sky-500/10 border border-sky-500/30 rounded-xl flex items-center justify-center group-hover:bg-sky-500/20 group-hover:border-sky-400 transition-all shadow-[0_0_10px_rgba(14,165,233,0.15)]">
+                    <FileText size={24} className="text-sky-300 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <span className="text-[10px] font-mono text-sky-200 group-hover:text-white truncate max-w-[70px]">{df.name}</span>
+                </button>
+              </motion.div>
+            );
+          })}
 
           {userRole === 'admin' && (
             <motion.div drag dragMomentum={false}>
@@ -1660,7 +1993,23 @@ export default function App() {
             </button>
           </motion.div>
 
-          {/* Installed Play Store Apps */}
+          {/* Installed Web Apps from Browser */}
+          {installedWebApps.map((webApp) => (
+            <motion.div key={webApp.id} drag dragMomentum={false}>
+              <button 
+                onClick={() => {
+                  setIsBrowserOpen(true);
+                }}
+                className="flex flex-col items-center gap-1 group relative cursor-pointer"
+                title={webApp.url}
+              >
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-xl flex items-center justify-center group-hover:bg-emerald-500/30 transition-all">
+                  <Globe size={24} className="text-emerald-400 group-hover:scale-110 transition-transform" />
+                </div>
+                <span className="text-[10px] font-mono text-white/60 group-hover:text-white max-w-[64px] text-center truncate">{webApp.name}</span>
+              </button>
+            </motion.div>
+          ))}
           {playStoreApps
             .filter((app) => installedPlayStoreApps[app.id])
             .map((app) => {
@@ -1687,6 +2036,16 @@ export default function App() {
       {/* Bottom Dock */}
       <div className="h-16 w-full flex items-center justify-center pb-[calc(1rem+var(--sab))] z-[100] px-2 shrink-0">
         <div className="bg-black/40 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-2xl flex items-center gap-2 sm:gap-4 shadow-2xl max-w-full overflow-x-auto overflow-y-hidden" style={{ scrollbarWidth: 'none' }}>
+          <button 
+            onClick={() => setIsSmartViewOpen(true)}
+            className={`p-2 rounded-xl transition-all hover:scale-110 ${isSmartViewOpen ? 'bg-sky-500/20 border border-sky-500/40' : 'bg-white/5 border border-white/10 hover:bg-white/10'}`}
+            title="Smart View (Ekran Yansıtma)"
+          >
+            <Cast size={20} className={isSmartViewOpen ? 'text-sky-400 animate-pulse' : 'text-white/70'} />
+          </button>
+          
+          <div className="w-px h-6 bg-white/10 mx-1"></div>
+
           <button 
             onClick={() => handleChangeDeviceMode(deviceMode === 'mobile' ? 'desktop' : 'mobile')}
             className={`p-2 rounded-xl transition-all hover:scale-110 ${deviceMode === 'mobile' ? 'bg-[var(--accent)]/20 border border-[var(--accent)]/40' : 'bg-white/5 border border-white/10 hover:bg-white/10'}`}
@@ -1884,7 +2243,123 @@ export default function App() {
         </div>
       );
     } else if (!isSetupComplete) {
-      mainUI = <KidLogin onComplete={handleSetupComplete} />;
+      if (preSetupState === 'select') {
+        mainUI = (
+          <div className="fixed inset-0 z-[5000] flex flex-col items-center justify-center bg-[#0a0a0a] text-white p-6 font-mono selection:bg-[var(--accent)] selection:bg-opacity-30">
+            <div className="max-w-md w-full flex flex-col items-center gap-8">
+              <div className="w-20 h-20 rounded-full bg-[var(--accent)]/20 border border-[var(--accent)]/40 flex items-center justify-center text-4xl shadow-[0_0_30px_rgba(var(--accent-rgb),0.3)]">
+                🦊
+              </div>
+              <div className="text-center space-y-2">
+                <h1 className="text-2xl font-bold tracking-tight">ArchWeb OS'e Hoş Geldiniz</h1>
+                <p className="text-white/50 text-sm">Lütfen kurulum modunu seçin</p>
+              </div>
+
+              <div className="w-full space-y-4">
+                <button
+                  onClick={() => setPreSetupState('ready')}
+                  className="w-full p-4 rounded-xl bg-[var(--accent)]/10 border border-[var(--accent)]/30 hover:bg-[var(--accent)]/20 hover:border-[var(--accent)]/50 transition-all flex items-center gap-4 group text-left cursor-pointer"
+                >
+                  <div className="w-12 h-12 rounded-lg bg-[var(--accent)]/20 flex items-center justify-center text-[var(--accent)] group-hover:scale-110 transition-transform shrink-0">
+                    <User size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-[var(--accent)]">1. Kişisel Kullanım</h3>
+                    <p className="text-xs text-white/50 mt-1">Standart kurulum ve günlük kullanım için</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setPreSetupState('developer_code')}
+                  className="w-full p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 hover:border-purple-500/50 transition-all flex items-center gap-4 group text-left cursor-pointer"
+                >
+                  <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform shrink-0">
+                    <TerminalIcon size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-purple-400">2. Geliştirici Modu</h3>
+                    <p className="text-xs text-white/50 mt-1">Gelişmiş özellikler ve sistem erişimi için</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      } else if (preSetupState === 'developer_code') {
+        mainUI = (
+          <div className="fixed inset-0 z-[5000] flex flex-col items-center justify-center bg-[#0a0a0a] text-white p-6 font-mono selection:bg-[var(--accent)] selection:bg-opacity-30">
+            <div className="max-w-sm w-full flex flex-col items-center gap-6 bg-black/40 border border-white/10 p-8 rounded-2xl shadow-2xl backdrop-blur-xl">
+              <div className="w-16 h-16 rounded-full bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 shrink-0">
+                <Lock size={32} />
+              </div>
+              <div className="text-center space-y-1 w-full">
+                <h2 className="text-lg font-bold text-purple-400">Geliştirici Doğrulaması</h2>
+                <p className="text-xs text-white/40">Devam etmek için özel erişim kodunu girin</p>
+              </div>
+              <div className="w-full space-y-3">
+                <input
+                  type="password"
+                  value={devCodeInput}
+                  onChange={(e) => setDevCodeInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (devCodeInput === '2434ytact_premium') {
+                        handleSetupComplete(
+                          'meminalp2434@gmail.com',
+                          'science',
+                          '👨‍💻',
+                          'email',
+                          '2434ytact_premium',
+                          'admin'
+                        );
+                      } else {
+                        setDevCodeError(true);
+                        setDevCodeInput('');
+                        setTimeout(() => setDevCodeError(false), 1500);
+                      }
+                    }
+                  }}
+                  placeholder="Erişim Kodu"
+                  className={`w-full bg-black/60 border rounded-lg px-4 py-3 text-center text-white text-sm focus:border-purple-500 outline-none transition-all ${devCodeError ? 'border-red-500 animate-bounce' : 'border-white/10'}`}
+                  autoFocus
+                />
+                {devCodeError && (
+                  <p className="text-red-400 text-xs text-center font-bold">Hatalı veya geçersiz kod!</p>
+                )}
+                <button
+                  onClick={() => {
+                    if (devCodeInput === '2434ytact_premium') {
+                      handleSetupComplete(
+                        'meminalp2434@gmail.com',
+                        'science',
+                        '👨‍💻',
+                        'email',
+                        '2434ytact_premium',
+                        'admin'
+                      );
+                    } else {
+                      setDevCodeError(true);
+                      setDevCodeInput('');
+                      setTimeout(() => setDevCodeError(false), 1500);
+                    }
+                  }}
+                  className="w-full py-3 rounded-lg bg-purple-500 text-white font-bold hover:bg-purple-600 transition-colors cursor-pointer"
+                >
+                  Doğrula ve Devam Et
+                </button>
+                <button
+                  onClick={() => { setPreSetupState('select'); setDevCodeError(false); setDevCodeInput(''); }}
+                  className="w-full py-2 rounded-lg bg-transparent text-white/50 hover:text-white transition-colors text-xs cursor-pointer"
+                >
+                  Geri Dön
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      } else {
+        mainUI = <KidLogin onComplete={handleSetupComplete} onBack={() => setPreSetupState('select')} />;
+      }
     } else if (mobileMode) {
       mainUI = mobileUI;
     } else {

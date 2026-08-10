@@ -199,7 +199,7 @@ export const TvLauncher: React.FC<TvLauncherProps> = ({
               </div>
             </div>
 
-            <div className="text-xs text-white/40 font-mono">ArchWeb OS Google TV Engine v20.1.2</div>
+            <div className="text-xs text-white/40 font-mono">ArchWeb OS Google TV Motoru v20.1.2</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -584,7 +584,7 @@ export const TvLauncher: React.FC<TvLauncherProps> = ({
                 onClick={handleVoiceSearch}
                 className="py-1.5 px-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-xl text-[10px] font-bold text-red-400 flex items-center justify-center gap-1"
               >
-                <Mic size={12} /> Google Assistant
+                <Mic size={12} /> Google Asistan
               </button>
               <button 
                 onClick={onClose}

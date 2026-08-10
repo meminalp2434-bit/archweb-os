@@ -1,0 +1,7 @@
+ArchWeb OS Standalone Windows Executable Application (.EXE)
+===================================================
+Version: 20.1.2
+Architecture: x64 / ARM64 Universal
+Type: Standalone Native Executable Application
+
+Bu bağımsız .exe dosyası, Node.js veya ekstra bağımlılık gerektirmeden ArchWeb OS masaüstü çekirdeğini doğrudan Windows ortamında çalıştırır.

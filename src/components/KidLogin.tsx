@@ -3,6 +3,7 @@ import { Mail, Check, AlertCircle, ChevronRight, ArrowLeft, Star, Sparkles, Brai
 import { motion, AnimatePresence } from 'motion/react';
 
 interface KidLoginProps {
+  onBack?: () => void;
   onComplete: (
     gmail: string,
     category: 'education' | 'gaming' | 'creativity' | 'science',
@@ -61,7 +62,7 @@ const CATEGORIES = [
   },
 ];
 
-export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
+export const KidLogin: React.FC<KidLoginProps> = ({ onComplete, onBack }) => {
   // Always default to step 1 (Yeni Hesap Ekle / Oluştur) on initial site access
   const [step, setStep] = useState<0 | 1 | 2>(1);
   const [email, setEmail] = useState('');
@@ -285,6 +286,15 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
             exit={{ opacity: 0, scale: 0.95 }}
             className="w-full max-w-md bg-white/5 border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative space-y-5"
           >
+            {onBack && (
+              <button 
+                onClick={onBack}
+                className="absolute top-4 left-4 p-2 rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-all flex items-center justify-center cursor-pointer z-10"
+                title="Geri Dön"
+              >
+                <ArrowLeft size={16} />
+              </button>
+            )}
             <div className="text-center space-y-1">
               <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 bg-clip-text text-transparent">Hesabını Seç</h1>
               <p className="text-xs text-white/60">Giriş yapmak için kayıtlı bir hesap seç:</p>
@@ -330,7 +340,7 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
             exit={{ opacity: 0, scale: 0.95 }}
             className="w-full max-w-md bg-white/5 border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative space-y-5"
           >
-            {savedUsers.length > 0 && (
+            {savedUsers.length > 0 ? (
               <button 
                 onClick={() => setStep(0)}
                 className="absolute top-4 left-4 p-2 rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-all flex items-center justify-center cursor-pointer z-10"
@@ -338,7 +348,15 @@ export const KidLogin: React.FC<KidLoginProps> = ({ onComplete }) => {
               >
                 <ArrowLeft size={16} />
               </button>
-            )}
+            ) : onBack ? (
+              <button 
+                onClick={onBack}
+                className="absolute top-4 left-4 p-2 rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-all flex items-center justify-center cursor-pointer z-10"
+                title="Geri Dön"
+              >
+                <ArrowLeft size={16} />
+              </button>
+            ) : null}
 
             {/* Playful Floating Badge */}
             <div className="absolute -top-4 -right-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-black px-3 py-1.5 rounded-full text-[10px] font-extrabold tracking-wider shadow-lg flex items-center gap-1">

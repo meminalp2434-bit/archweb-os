@@ -1,7 +1,12 @@
 {
   "name": "ArchWeb for Kids",
   "description": "Çocuklar için özel olarak tasarlanmış, web tabanlı Arch Linux terminal ve sistem simülasyonu.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation",
+    "notifications"
+  ],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
   ]

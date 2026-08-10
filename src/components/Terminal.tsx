@@ -15,6 +15,8 @@ interface LogEntry {
 
 interface TerminalProps {
   onClose?: () => void;
+  initialCommand?: string;
+  onClearInitialCommand?: () => void;
 }
 
 interface FSNode {
@@ -40,9 +42,17 @@ const defaultFS: Record<string, FSNode> = {
   '/var/log/pacman.log': { type: 'file', content: '[2026-07-14 00:12] [PACMAN] Synchronizing package databases...\n[2026-07-14 00:13] [PACMAN] System is up to date.' },
 };
 
-export const Terminal: React.FC<TerminalProps> = ({ onClose }) => {
+export const Terminal: React.FC<TerminalProps> = ({ onClose, initialCommand, onClearInitialCommand }) => {
   const [input, setInput] = useState('');
   const [isMaximized, setIsMaximized] = useState(false);
+  
+  // Handle initialCommand if passed from HelpDialog or elsewhere
+  useEffect(() => {
+    if (initialCommand) {
+      handleCommand(initialCommand);
+      if (onClearInitialCommand) onClearInitialCommand();
+    }
+  }, [initialCommand]);
   
   // Simulated State Filesystem
   const [fs, setFs] = useState<Record<string, FSNode>>(() => {
@@ -177,7 +187,7 @@ export const Terminal: React.FC<TerminalProps> = ({ onClose }) => {
     return dir;
   };
 
-  const handleCommand = (rawCmd: string) => {
+  const handleCommand = async (rawCmd: string) => {
     const trimmed = rawCmd.trim();
     if (!trimmed) return;
 
@@ -216,6 +226,8 @@ export const Terminal: React.FC<TerminalProps> = ({ onClose }) => {
     switch (mainCommand) {
       case 'help':
         output = `ArchWeb Bash v3.2 - Kullanılabilir komutlar:\n` +
+                 `  curl <url>          REST API ve HTTP isteklerini çalıştırır (Örn: curl /api/chat)\n` +
+                 `  apis                Tüm sistem REST API rotalarını listeler\n` +
                  `  pwd                 Mevcut çalışma dizinini gösterir\n` +
                  `  ls [yol]            Dizindeki dosya ve klasörleri listeler\n` +
                  `  cd <yol>            Çalışma dizinini değiştirir\n` +
@@ -223,19 +235,12 @@ export const Terminal: React.FC<TerminalProps> = ({ onClose }) => {
                  `  touch <dosya>       Yeni bir boş dosya oluşturur\n` +
                  `  cat <dosya>         Dosya içeriğini ekrana yazdırır\n` +
                  `  rm <dosya>          Bir dosyayı siler\n` +
-                 `  rmdir <klasör>      Boş bir klasörü siler\n` +
-                 `  echo [metin]        Metni ekrana yazdırır veya dosyaya yönlendirir (> veya >>)\n` +
+                 `  echo [metin]        Metni ekrana yazdırır veya dosyaya yönlendirir\n` +
                  `  nano <dosya>        Terminal içi metin editörünü başlatır\n` +
                  `  neofetch            Sistem bilgilerini gösterir\n` +
                  `  whoami              Aktif kullanıcı adını gösterir\n` +
                  `  date                Sistem tarih ve saatini gösterir\n` +
-                 `  uname -a            Kernel versiyonunu gösterir\n` +
-                 `  ping <sunucu>       Belirtilen sunucuya ping atar (Ctrl+C gerektirmez)\n` +
-                 `  df -h               Disk alanını listeler\n` +
-                 `  free -m             Bellek kullanımını görüntüler\n` +
-                 `  uptime              Çalışma süresini gösterir\n` +
-                 `  pacman -Syu         Sistemi günceller\n` +
-                 `  pacman -S <paket>   Simüle paket yükler (Örn: pacman -S sl, pacman -S cmatrix)\n` +
+                 `  ping <sunucu>       Belirtilen sunucuya ping atar\n` +
                  `  clear               Ekranı temizler\n` +
                  `  history             Komut geçmişini gösterir`;
         break;
@@ -564,6 +569,115 @@ export const Terminal: React.FC<TerminalProps> = ({ onClose }) => {
             return;
           }
         }
+        break;
+      }
+
+      case 'curl':
+      case 'fetch':
+      case 'api': {
+        if (args.length <= 1) {
+          output = `🌐 ArchWeb cURL HTTP/REST İstemcisi\n` +
+                   `Kullanım: curl [seçenekler] <URL veya Rota>\n\n` +
+                   `Örnekler:\n` +
+                   `  curl /api/health\n` +
+                   `  curl /api/chat\n` +
+                   `  curl /api/chat/network-scan?mode=subnet\n` +
+                   `  curl -X POST /api/chat -d '{"user":"Emin","message":"Terminalden Selam!"}'\n` +
+                   `  curl -X POST /api/gemini/chat -d '{"message":"Yapay Zeka sorusu"}'\n\n` +
+                   `Tüm kullanılabilir API rotalarını listelemek için 'apis' yazın.`;
+          break;
+        }
+
+        let method = 'GET';
+        let url = '';
+        let bodyData: any = null;
+
+        for (let i = 1; i < args.length; i++) {
+          const arg = args[i];
+          if (arg === '-X' || arg === '--request') {
+            method = (args[i + 1] || 'GET').toUpperCase();
+            i++;
+          } else if (arg === '-d' || arg === '--data') {
+            const rawData = commandToRun.slice(commandToRun.indexOf(arg) + arg.length).trim();
+            let jsonStr = rawData;
+            if ((jsonStr.startsWith("'") && jsonStr.endsWith("'")) || (jsonStr.startsWith('"') && jsonStr.endsWith('"'))) {
+              jsonStr = jsonStr.slice(1, -1);
+            }
+            try {
+              bodyData = JSON.parse(jsonStr);
+            } catch (e) {
+              bodyData = jsonStr;
+            }
+            if (method === 'GET') method = 'POST';
+            break;
+          } else if (!arg.startsWith('-')) {
+            url = arg;
+          }
+        }
+
+        if (!url) {
+          output = `curl: URL veya Rota belirtilmedi. Örnek: curl /api/chat`;
+          isError = true;
+          break;
+        }
+
+        let targetUrl = url;
+        if (targetUrl.startsWith('/')) {
+          targetUrl = window.location.origin + targetUrl;
+        } else if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+          targetUrl = window.location.origin + '/api/' + targetUrl;
+        }
+
+        try {
+          const reqOptions: RequestInit = {
+            method,
+            headers: { 'Content-Type': 'application/json' }
+          };
+          if (bodyData) {
+            reqOptions.body = typeof bodyData === 'string' ? bodyData : JSON.stringify(bodyData);
+          }
+
+          const startTime = Date.now();
+          const res = await fetch(targetUrl, reqOptions);
+          const duration = Date.now() - startTime;
+          const contentType = res.headers.get('content-type') || '';
+
+          let resText = '';
+          if (contentType.includes('application/json')) {
+            const jsonObj = await res.json();
+            resText = JSON.stringify(jsonObj, null, 2);
+          } else {
+            resText = await res.text();
+            if (resText.length > 2000) resText = resText.slice(0, 2000) + '...\n(Çıktı kısaltıldı)';
+          }
+
+          output = `HTTP/1.1 ${res.status} ${res.statusText || 'OK'} (${duration}ms)\n` +
+                   `Content-Type: ${contentType}\n\n` +
+                   resText;
+        } catch (err: any) {
+          output = `curl: (7) Sunucuya bağlanılamadı veya hata oluştu: ${err.message || 'Ağ Hatası'}`;
+          isError = true;
+        }
+        break;
+      }
+
+      case 'apis':
+      case 'routes': {
+        output = `🌐 ArchWeb OS REST API Kataloğu & Rotalar:\n\n` +
+                 `1. GET  /api/health\n` +
+                 `   Çalıştır: curl /api/health\n\n` +
+                 `2. GET  /api/chat\n` +
+                 `   Çalıştır: curl /api/chat\n\n` +
+                 `3. POST /api/chat\n` +
+                 `   Çalıştır: curl -X POST /api/chat -d '{"user":"Emin","message":"Terminalden Selam!"}'\n\n` +
+                 `4. GET  /api/chat/network-scan?mode=subnet|global|deep\n` +
+                 `   Çalıştır: curl /api/chat/network-scan?mode=subnet\n\n` +
+                 `5. POST /api/gemini/chat\n` +
+                 `   Çalıştır: curl -X POST /api/gemini/chat -d '{"message":"Yapay Zeka sorusu"}'\n\n` +
+                 `6. GET  /api/files\n` +
+                 `   Çalıştır: curl /api/files\n\n` +
+                 `7. GET  /api/auth/identify\n` +
+                 `   Çalıştır: curl /api/auth/identify`;
         break;
       }
 

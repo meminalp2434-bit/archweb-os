@@ -1,0 +1,4 @@
+# ArchWeb OS Linux AppImage Package (.AppImage)
+Type: Portable Universal Linux Executable Application
+Architecture: x86_64 / ARM64
+Minimum Kernel: Linux 4.19+

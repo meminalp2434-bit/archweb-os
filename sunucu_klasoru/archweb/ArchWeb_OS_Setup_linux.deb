@@ -1,0 +1,8 @@
+Package: archweb-os
+Version: 20.1.2
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: ArchWeb Software <support@archweb.com>
+Description: ArchWeb OS Debian / Ubuntu Linux Package (.DEB)
+ ArchWeb OS web tabanlı işletim sisteminin Linux Debian ve Ubuntu dağıtımları için paketlenmiş sürümüdür.

@@ -1,0 +1,7 @@
+ARCHWEB_SYSTEM_RECOVERY_PACKAGE_V20_1_2
+This is a standalone recovery RAR archive package for ArchWeb OS.
+Contents:
+- System Core Assets
+- Offline Support Data
+- Recovery Tools
+Please extract this .rar archive to your installation directory.

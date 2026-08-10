@@ -1,13 +1,63 @@
-import React from 'react';
-import { X, HelpCircle, Book, MessageSquare, ShieldCheck, ExternalLink, Info, Terminal, Monitor, Smartphone } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, HelpCircle, Book, MessageSquare, ShieldCheck, ExternalLink, Info, Terminal, Monitor, Smartphone, Code, Play, Copy, Check, Server } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface HelpDialogProps {
   onClose: () => void;
+  onOpenTerminal?: () => void;
+  onRunTerminalCommand?: (command: string) => void;
 }
 
-export const HelpDialog: React.FC<HelpDialogProps> = ({ onClose }) => {
-  const [isMaximized, setIsMaximized] = React.useState(false);
+export const HelpDialog: React.FC<HelpDialogProps> = ({ onClose, onOpenTerminal, onRunTerminalCommand }) => {
+  const [isMaximized, setIsMaximized] = useState(false);
+  const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
+
+  const handleCopy = (cmd: string) => {
+    navigator.clipboard.writeText(cmd);
+    setCopiedCmd(cmd);
+    setTimeout(() => setCopiedCmd(null), 2000);
+  };
+
+  const handleRun = (cmd: string) => {
+    if (onRunTerminalCommand) {
+      onRunTerminalCommand(cmd);
+    } else if (onOpenTerminal) {
+      onOpenTerminal();
+    }
+  };
+
+  const apiEndpoints = [
+    {
+      name: "GET /api/chat",
+      desc: "Canlı sohbet mesajlarını, aktif kanalları ve çevrimiçi kullanıcıları getirir.",
+      cmd: "curl /api/chat"
+    },
+    {
+      name: "POST /api/chat",
+      desc: "Sohbete yeni mesaj gönderir veya kanal mesajlarını günceller.",
+      cmd: `curl -X POST /api/chat -d '{"user":"Emin","message":"Terminalden Selam!"}'`
+    },
+    {
+      name: "GET /api/chat/network-scan",
+      desc: "Ağ üzerindeki aktif ArchWeb OS nodelarını ve cihazları tarar.",
+      cmd: "curl /api/chat/network-scan?mode=subnet"
+    },
+    {
+      name: "POST /api/gemini/chat",
+      desc: "Gemini 3.6 Flash Yapay Zeka modeli ile doğrudan iletişim kurar.",
+      cmd: `curl -X POST /api/gemini/chat -d '{"message":"Kod oluşturabilir misin?"}'`
+    },
+    {
+      name: "GET /api/health",
+      desc: "Sunucu ve sistem çalışma durumunu kontrol eder.",
+      cmd: "curl /api/health"
+    },
+    {
+      name: "GET /api/files",
+      desc: "Sunucudaki sanal dosya sistemini listeler.",
+      cmd: "curl /api/files"
+    }
+  ];
 
   return (
     <motion.div 
@@ -100,6 +150,62 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ onClose }) => {
           </div>
         </section>
 
+        {/* REST API & Webhook Catalog */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between border-b border-white/5 pb-2">
+            <div className="flex items-center gap-2 text-white/80">
+              <Server size={16} className="text-[var(--accent)]" />
+              <h3 className="text-xs font-bold uppercase tracking-wider">REST API & Webhook Kataloğu</h3>
+            </div>
+            <span className="text-[10px] text-white/40 font-mono">/api/* Rotaları</span>
+          </div>
+
+          <p className="text-[10px] text-white/60 leading-relaxed">
+            Aşağıdaki REST API rotalarını ArchWeb Terminali üzerinden <code className="bg-black/50 px-1 py-0.5 rounded text-[var(--accent)] font-mono">curl</code> veya <code className="bg-black/50 px-1 py-0.5 rounded text-[var(--accent)] font-mono">fetch</code> komutuyla doğrudan çalıştırabilirsiniz.
+          </p>
+
+          <div className="grid grid-cols-1 gap-3">
+            {apiEndpoints.map((ep, idx) => (
+              <div key={idx} className="bg-black/40 border border-white/10 rounded-xl p-3.5 space-y-2 hover:border-[var(--accent)]/30 transition-colors">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded font-mono ${ep.name.startsWith('POST') ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}`}>
+                      {ep.name.split(' ')[0]}
+                    </span>
+                    <span className="text-[11px] font-mono font-bold text-white/90">
+                      {ep.name.split(' ')[1]}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => handleCopy(ep.cmd)}
+                      className="px-2 py-1 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded text-[9px] font-mono flex items-center gap-1 transition-colors border border-white/10"
+                      title="Kodu Kopyala"
+                    >
+                      {copiedCmd === ep.cmd ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+                      <span>{copiedCmd === ep.cmd ? 'Kopyalandı' : 'Kopyala'}</span>
+                    </button>
+                    <button
+                      onClick={() => handleRun(ep.cmd)}
+                      className="px-2.5 py-1 bg-[var(--accent)]/20 hover:bg-[var(--accent)] text-[var(--accent)] hover:text-black rounded text-[9px] font-bold flex items-center gap-1 transition-all border border-[var(--accent)]/40"
+                      title="Terminal'de Çalıştır"
+                    >
+                      <Play size={10} fill="currentColor" />
+                      <span>Terminal'de Çalıştır</span>
+                    </button>
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-white/50">{ep.desc}</p>
+
+                <div className="bg-black/60 p-2 rounded-lg font-mono text-[10px] text-[var(--accent)] border border-white/5 overflow-x-auto select-all">
+                  <code>{ep.cmd}</code>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* Terminal Commands */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-white/80 border-b border-white/5 pb-2">
@@ -107,6 +213,14 @@ export const HelpDialog: React.FC<HelpDialogProps> = ({ onClose }) => {
             <h3 className="text-xs font-bold uppercase tracking-wider">Temel Komutlar</h3>
           </div>
           <div className="bg-black/40 p-4 rounded-xl font-mono text-[10px] space-y-2 text-[var(--accent)] border border-white/5">
+            <div className="flex justify-between">
+              <span>curl /api/chat</span>
+              <span className="text-white/30">Canlı sohbet API verisini getir</span>
+            </div>
+            <div className="flex justify-between">
+              <span>apis</span>
+              <span className="text-white/30">Tüm REST API rotalarını listele</span>
+            </div>
             <div className="flex justify-between">
               <span>help</span>
               <span className="text-white/30">Tüm komutları listele</span>

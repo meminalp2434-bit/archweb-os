@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Cpu, HardDrive, Wifi, Battery, Clock, Search, LayoutGrid, Terminal as TerminalIcon, Shield, Volume2, VolumeX, Smartphone, Lock } from 'lucide-react';
+import { Cpu, HardDrive, Wifi, Battery, Clock, Search, LayoutGrid, Terminal as TerminalIcon, Shield, Volume2, VolumeX, Smartphone, Lock, Cast, MapPin, Bell } from 'lucide-react';
 
 interface TopBarProps {
   onLauncherToggle: () => void;
@@ -15,6 +15,11 @@ interface TopBarProps {
   onMobileToggle?: () => void;
   deviceMode?: 'desktop' | 'mobile' | 'tablet' | 'tv';
   onChangeDeviceMode?: (mode: 'desktop' | 'mobile' | 'tablet' | 'tv') => void;
+  onSmartViewToggle?: () => void;
+  isSmartViewOpen?: boolean;
+  onLocationToggle?: () => void;
+  isLocationOpen?: boolean;
+  onQuickSettingsToggle?: () => void;
 }
 
 const TopBarClock = () => {
@@ -46,11 +51,34 @@ export const TopBar: React.FC<TopBarProps> = ({
   mobileMode = false,
   onMobileToggle,
   deviceMode = 'desktop',
-  onChangeDeviceMode
+  onChangeDeviceMode,
+  onSmartViewToggle,
+  isSmartViewOpen,
+  onLocationToggle,
+  isLocationOpen,
+  onQuickSettingsToggle
 }) => {
   return (
     <div className="h-8 w-full bg-black/40 backdrop-blur-sm border-b border-white/5 flex items-center justify-between px-4 text-[11px] font-mono text-white/60 z-50">
       <div className="flex items-center gap-2 sm:gap-4">
+        {onLocationToggle && (
+          <button 
+            onClick={onLocationToggle}
+            className={`p-1 rounded-md transition-all cursor-pointer flex items-center justify-center ${isLocationOpen ? 'text-green-400 bg-green-400/15 border border-green-400/30 scale-110' : 'text-white/60 hover:text-white'}`}
+            title="ArchWeb Yakındaki Kişiler (Radar)"
+          >
+            <MapPin size={14} />
+          </button>
+        )}
+        {onSmartViewToggle && (
+          <button 
+            onClick={onSmartViewToggle}
+            className={`p-1 rounded-md transition-all cursor-pointer flex items-center justify-center ${isSmartViewOpen ? 'text-cyan-400 bg-cyan-400/15 border border-cyan-400/30 scale-110' : 'text-white/60 hover:text-white'}`}
+            title="Smart View (Yansıt)"
+          >
+            <Cast size={14} />
+          </button>
+        )}
         <div 
           onClick={onLauncherToggle}
           className="flex items-center gap-1.5 hover:text-white cursor-pointer transition-colors group shrink-0"
@@ -78,8 +106,16 @@ export const TopBar: React.FC<TopBarProps> = ({
             <HardDrive size={12} />
             <span>45GB</span>
           </div>
-          <Wifi size={14} className="shrink-0" />
-          <Battery size={14} className="shrink-0" />
+          
+          <button 
+            onClick={onQuickSettingsToggle}
+            className="flex items-center gap-2 hover:bg-white/10 px-2 py-0.5 rounded transition-colors cursor-pointer"
+            title="Hızlı Ayarlar ve Bildirimler"
+          >
+            <Bell size={14} className="shrink-0" />
+            <Wifi size={14} className="shrink-0" />
+            <Battery size={14} className="shrink-0" />
+          </button>
           
           {/* Hover-expandable Volume Control */}
           <div className="relative flex items-center gap-1.5 group/vol px-1">

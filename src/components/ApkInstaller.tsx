@@ -44,7 +44,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
     }
   };
 
-  const handleDownloadFile = (fileType: 'archwebapp_apk' | 'apk' | 'ipa' | 'exe' | 'bat' | 'dmg' | 'deb' | 'dev' | 'server_apk' | 'zip' | 'iso') => {
+  const handleDownloadFile = (fileType: 'archwebapp_apk' | 'apk' | 'ipa' | 'exe' | 'bat' | 'dmg' | 'deb' | 'dev' | 'server_apk' | 'zip' | 'rar' | '7z' | 'iso') => {
     if (downloadingFile) return;
     setDownloadingFile(fileType);
     setDownloadProgress(0);
@@ -72,6 +72,8 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
               bat: `@echo off\ntitle ArchWeb OS - Launcher\ncd /d "%~dp0"\necho [1/2] Node.js Kontrol Ediliyor...\nwhere node >nul 2>nul\nif %errorlevel% neq 0 ( echo Node.js bulunamadi! & pause & exit )\necho [2/2] Sistem Baslatiliyor...\ncall npm install && call npm run dev\npause`,
               iso: `ARCHWEB OS ISO IMAGE\nVersion: 20.1.2\nEdition: Chromebook Edition\nBuild: Beta Test Stage\n`,
               zip: `ArchWeb OS Standalone System Package (.ZIP)\n==========================================\nVersion: 20.1.2\nType: Recovery & Offline Support\n`,
+              rar: `ArchWeb OS Standalone System Package (.RAR)\n==========================================\nVersion: 20.1.2\nType: Recovery & Offline Support\n`,
+              '7z': `ArchWeb OS Standalone System Package (.7Z)\n==========================================\nVersion: 20.1.2\nType: Recovery & Offline Support\n`,
               dmg: `ArchWeb OS for macOS Installer\n==================================\n`,
               deb: `Package: archweb-os\nVersion: 20.1.2\n`,
               dev: `Package: archweb-os\nVersion: 20.1.2\n`
@@ -85,14 +87,16 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
             else if (fileType === 'exe') filename = 'ArchWeb_Launcher.cs';
             else if (fileType === 'bat') filename = 'ArchWeb_OS_Launcher.bat';
             else if (fileType === 'iso') filename = 'archweb_v20_chromebook.iso';
-            else if (fileType === (('zip' as any) as typeof fileType)) filename = 'archweb_system.zip';
+            else if (fileType === 'zip') filename = 'archweb_system.zip';
+            else if (fileType === 'rar') filename = 'archweb_system.rar';
+            else if (fileType === '7z') filename = 'archweb_system.7z';
             else if (fileType === 'dmg') filename = 'archweb.dmg';
             else if (fileType === 'deb') filename = 'archweb.deb';
             else if (fileType === 'dev') filename = 'archweb.dev';
 
             const link = document.createElement('a');
 
-            if (fileType === 'archwebapp_apk' || fileType === 'apk' || fileType === 'ipa' || fileType === 'server_apk' || fileType === 'zip' || fileType === 'iso' || fileType === 'dmg' || fileType === 'deb') {
+            if (fileType === 'archwebapp_apk' || fileType === 'apk' || fileType === 'ipa' || fileType === 'server_apk' || fileType === 'zip' || fileType === 'rar' || fileType === '7z' || fileType === 'iso' || fileType === 'dmg' || fileType === 'deb') {
               link.href = '/' + filename;
             } else {
               const content = fileContentsMap[fileType] || '';
@@ -105,7 +109,7 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            if (fileType !== 'archwebapp_apk' && fileType !== 'apk' && fileType !== 'ipa' && fileType !== 'server_apk' && fileType !== 'exe' && fileType !== 'zip' && fileType !== 'bat' && fileType !== 'dmg' && fileType !== 'deb') {
+            if (fileType !== 'archwebapp_apk' && fileType !== 'apk' && fileType !== 'ipa' && fileType !== 'server_apk' && fileType !== 'exe' && fileType !== 'zip' && fileType !== 'rar' && fileType !== '7z' && fileType !== 'bat' && fileType !== 'dmg' && fileType !== 'deb') {
               URL.revokeObjectURL(link.href);
             }
           }, 300);
@@ -833,42 +837,91 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
                 </div>
               </div>
 
-              {/* System ZIP Section */}
+              {/* System Archives Section (.zip, .rar, .7z) */}
               <div className="bg-white/5 border border-white/10 p-5 rounded-xl space-y-4 flex flex-col justify-between">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-[9px] text-amber-400 font-mono font-bold uppercase">
-                      Yedek Paketi
+                      Yedek Paketi (Arşiv)
                     </span>
-                    <span className="text-[10px] font-mono text-white/40">.zip</span>
+                    <span className="text-[10px] font-mono text-amber-300 font-bold">.ZIP / .RAR / .7Z</span>
                   </div>
-                  <h4 className="text-xs font-bold text-white">Recovery System (.zip)</h4>
+                  <h4 className="text-xs font-bold text-white">System Recovery Archives</h4>
                   <p className="text-[11px] text-white/60 leading-relaxed">
-                    Sistem kurtarma ve cevrimdisi calisma modulleri.
+                    Sistem kurtarma ve çevrimdışı çalışma modülleri paketi (.zip, .rar ve .7z formatlarında).
                   </p>
                 </div>
 
-                <div className="pt-2">
+                <div className="pt-2 space-y-2">
+                  {/* ZIP Option */}
                   {downloadingFile === 'zip' ? (
                     <div className="space-y-1">
                       <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
                         <div className="h-full bg-amber-400 rounded-full transition-all duration-150" style={{ width: `${downloadProgress}%` }} />
                       </div>
-                      <div className="text-[10px] text-white/40 text-center">%{downloadProgress} Hazirlaniyor...</div>
+                      <div className="text-[10px] text-white/40 text-center">%{downloadProgress} Hazırlanıyor...</div>
                     </div>
                   ) : downloadedFiles['zip'] ? (
                     <button 
                       onClick={() => handleDownloadFile('zip')}
-                      className="w-full py-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="w-full py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <CheckCircle2 size={12} /> archweb_system.zip İndirildi
                     </button>
                   ) : (
                     <button
                       onClick={() => handleDownloadFile('zip')}
-                      className="w-full py-2.5 bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-500/30 hover:border-amber-400 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="w-full py-2 bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-500/30 hover:border-amber-400 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <Download size={14} /> archweb_system.zip
+                      <Download size={13} /> archweb_system.zip
+                    </button>
+                  )}
+
+                  {/* RAR Option */}
+                  {downloadingFile === 'rar' ? (
+                    <div className="space-y-1">
+                      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-purple-400 rounded-full transition-all duration-150" style={{ width: `${downloadProgress}%` }} />
+                      </div>
+                      <div className="text-[10px] text-white/40 text-center">%{downloadProgress} Hazırlanıyor...</div>
+                    </div>
+                  ) : downloadedFiles['rar'] ? (
+                    <button 
+                      onClick={() => handleDownloadFile('rar')}
+                      className="w-full py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <CheckCircle2 size={12} /> archweb_system.rar İndirildi
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleDownloadFile('rar')}
+                      className="w-full py-2 bg-purple-500/20 hover:bg-purple-500/35 text-purple-300 border border-purple-500/30 hover:border-purple-400 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Download size={13} /> archweb_system.rar
+                    </button>
+                  )}
+
+                  {/* 7Z Option */}
+                  {downloadingFile === '7z' ? (
+                    <div className="space-y-1">
+                      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-cyan-400 rounded-full transition-all duration-150" style={{ width: `${downloadProgress}%` }} />
+                      </div>
+                      <div className="text-[10px] text-white/40 text-center">%{downloadProgress} Hazırlanıyor...</div>
+                    </div>
+                  ) : downloadedFiles['7z'] ? (
+                    <button 
+                      onClick={() => handleDownloadFile('7z')}
+                      className="w-full py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <CheckCircle2 size={12} /> archweb_system.7z İndirildi
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleDownloadFile('7z')}
+                      className="w-full py-2 bg-cyan-500/20 hover:bg-cyan-500/35 text-cyan-300 border border-cyan-500/30 hover:border-cyan-400 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Download size={13} /> archweb_system.7z
                     </button>
                   )}
                 </div>

@@ -1,0 +1,7 @@
+ArchWeb OS Windows Installer Setup Package (.MSI)
+===========================================
+Version: 20.1.2
+Publisher: ArchWeb Software Technologies
+Target OS: Windows 10 / 11 (x64)
+
+Bu .msi Kurulum (Setup) paketi ArchWeb OS sistemini Program Files dizinine kurar ve sistem servislerini yapılandırır.

@@ -55,6 +55,8 @@ const getInitialFilesState = (): VirtualFilesState => {
       { name: "ArchWeb_Desktop.exe", size: "4.2 KB", content: "#include <iostream>\n#include <windows.h>\n#include <string>\n\nint main() {\n    SetConsoleTitleA(\"ArchWeb OS - Desktop Core v20.1.2\");\n    \n    std::cout << \"========================================\" << std::endl;\n    std::cout << \"       ARCHWEB OS - DESKTOP CORE        \" << std::endl;\n    std::cout << \"       Yapimci: Emin Alp                \" << std::endl;\n    std::cout << \"========================================\" << std::endl;\n    std::cout << \"[SYSTEM] C++ Native Kernel baslatiliyor...\" << std::endl;\n    \n    // Sunucu kontrolu ve baslatma simülasyonu\n    std::cout << \"[INFO] Port 3000 kontrol ediliyor...\" << std::endl;\n    Sleep(1000);\n    \n    std::cout << \"[INFO] Yerel sunucu adresi: http://localhost:3000\" << std::endl;\n    std::cout << \"[SYSTEM] Arayuz motoru yukleniyor...\" << std::endl;\n    \n    // Node.js uzerinden sistemi baslat\n    system(\"npm run dev\");\n\n    return 0;\n}" },
       { name: "ArchWeb_OS_Launcher.bat", size: "1.2 KB", content: "@echo off\n:: ArchWeb Native Bridge\nif exist \"ArchWeb_Desktop.exe\" (\n    echo [BILGI] C++ Native Core baslatiliyor...\n    start ArchWeb_Desktop.exe\n) else (\n    color 0C\n    echo [HATA] Native Core bulunamadi! Manuel baslatiliyor...\n    call npm run dev\n)" },
       { name: "archweb_system.zip", size: "15 MB", content: "ARCHWEB_SYSTEM_RECOVERY_PACKAGE_V20_1_2\n\nBu dosya bagimsiz sistem kurtarma ve cevrimdisi destek varliklarini iceren bir pakettir." },
+      { name: "archweb_system.rar", size: "14 MB", content: "ARCHWEB_SYSTEM_RECOVERY_PACKAGE_V20_1_2\n\nBu dosya RAR formatinda bagimsiz sistem kurtarma paketidir." },
+      { name: "archweb_system.7z", size: "11 MB", content: "ARCHWEB_SYSTEM_RECOVERY_PACKAGE_V20_1_2\n\nBu dosya 7-Zip (7z) formatinda yüksek sıkıştırmalı sistem kurtarma paketidir." },
       { name: "archweb_v20_chromebook.iso", size: "2.4 GB", content: "ARCHWEB OS ISO IMAGE\nVersion: 20.1.2\nEdition: Chromebook Edition\nBuild: Beta Test Stage" },
       { name: "Server.apk", size: "1.2 KB", content: "package com.archweb.server;\n\nimport android.os.Bundle;\nimport com.getcapacitor.BridgeActivity;\n\npublic class MainActivity extends BridgeActivity {\n    @Override\n    public void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        // ArchWeb Server Native Kernel Initialization\n        this.getBridge().getWebView().getSettings().setDomStorageEnabled(true);\n    }\n}" },
       { name: "archweb.dmg", size: "45 B", content: "ArchWeb OS for macOS Installer\n==================================\n" },
@@ -62,7 +64,34 @@ const getInitialFilesState = (): VirtualFilesState => {
       { name: "archweb.dev", size: "38 B", content: "Package: archweb-os\nVersion: 20.1.2\n" }
     ],
     "/archweb": [
-      { name: "archweb_v20_chromebook.iso", size: "2.4 GB", content: "ARCHWEB OS ISO IMAGE\nEdition: Chromebook Edition" }
+      { name: "ArchWeb_OS_Portable_windows.exe", size: "4.2 MB", content: "ArchWeb OS Portable Windows Executable Application (.EXE)\n===================================================\nVersion: 20.1.2\nType: Portable Native Executable Application (Windows Taşınabilir Sürüm)\n\nBu taşınabilir (Portable) .exe dosyası kurulum gerektirmez. Doğrudan USB bellekten veya bilgisayarınızdan tıklayarak çalıştırabilirsiniz." },
+      { name: "ArchWeb_OS_Setup_windows.exe", size: "4.8 MB", content: "ArchWeb OS Setup Windows Executable Installer (.EXE)\n===================================================\nVersion: 20.1.2\nType: Windows Executable Setup Package (Windows Kurulum Sürümü)\n\nBu Kurulum (Setup) .exe dosyası ArchWeb OS sistemini bilgisayarınıza yükler." },
+      { name: "ArchWeb_OS_Standalone_windows.exe", size: "4.2 MB", content: "ArchWeb OS Standalone Windows Executable Application (.EXE)" },
+      { name: "ArchWeb_OS_Setup_windows.msi", size: "8.5 MB", content: "ArchWeb OS Windows Installer Setup Package (.MSI)\n===========================================\nVersion: 20.1.2\nPublisher: ArchWeb Software Technologies" },
+      { name: "ArchWeb_OS_Setup_windows.msix", size: "7.9 MB", content: "ArchWeb OS Windows App Package (.MSIX)" },
+      { name: "ArchWeb_OS_Setup_windows.msixbundle", size: "9.2 MB", content: "ArchWeb OS Modern Windows Setup App Bundle (.MSIXBUNDLE)" },
+      { name: "ArchWeb_OS_Launcher_windows.bat", size: "1.2 KB", content: "ArchWeb OS Windows Launcher Script (.BAT)" },
+      { name: "ArchWeb_OS_Portable_windows.bat", size: "1.2 KB", content: "ArchWeb OS Portable Windows Launcher Script (.BAT)" },
+      { name: "ArchWeb_OS_Launcher_windows.ps1", size: "1.4 KB", content: "ArchWeb OS Windows PowerShell Script (.PS1)" },
+      { name: "ArchWeb_OS_Setup_macos.dmg", size: "12.4 MB", content: "ArchWeb OS macOS Universal Installer Disk Image (.DMG)" },
+      { name: "ArchWeb_OS_Portable_macos.dmg", size: "11.8 MB", content: "ArchWeb OS macOS Portable Disk Image (.DMG)" },
+      { name: "ArchWeb_OS_Setup_macos.pkg", size: "12.8 MB", content: "ArchWeb OS macOS PKG Installer Package (.PKG)" },
+      { name: "ArchWeb_OS_Launcher_macos.command", size: "1.5 KB", content: "ArchWeb OS macOS Script (.COMMAND)" },
+      { name: "ArchWeb_OS_Portable_macos.command", size: "1.5 KB", content: "ArchWeb OS Portable macOS Script (.COMMAND)" },
+      { name: "ArchWeb_OS_Setup_linux.deb", size: "5.4 MB", content: "ArchWeb OS Debian / Ubuntu Package (.DEB)" },
+      { name: "ArchWeb_OS_Setup_linux.rpm", size: "5.8 MB", content: "ArchWeb OS RedHat / Fedora RPM Package (.RPM)" },
+      { name: "ArchWeb_OS_Portable_linux.AppImage", size: "14.2 MB", content: "ArchWeb OS Linux AppImage Package (.AppImage)" },
+      { name: "ArchWeb_OS_Launcher_linux.sh", size: "1.1 KB", content: "ArchWeb OS Linux Launcher Shell Script (.SH)" },
+      { name: "ArchWeb_OS_Portable_linux.sh", size: "1.1 KB", content: "ArchWeb OS Portable Linux Shell Script (.SH)" },
+      { name: "ArchWeb_OS_Setup_android.apk", size: "6.8 MB", content: "ArchWeb OS Android Application Setup Package (.APK)" },
+      { name: "ArchWeb_OS_Setup_ios.ipa", size: "10.2 MB", content: "ArchWeb OS iOS Application Setup Package (.IPA)" },
+      { name: "ArchWeb_OS_windows.zip", size: "12.4 MB", content: "ArchWeb OS Windows Complete Zip Package (.ZIP)" },
+      { name: "ArchWeb_OS_macos.zip", size: "11.2 MB", content: "ArchWeb OS macOS Complete Zip Package (.ZIP)" },
+      { name: "ArchWeb_OS_linux.zip", size: "10.8 MB", content: "ArchWeb OS Linux Complete Zip Package (.ZIP)" },
+      { name: "ArchWeb_OS_android.zip", size: "7.2 MB", content: "ArchWeb OS Android Complete Zip Package (.ZIP)" },
+      { name: "ArchWeb_OS_ios.zip", size: "10.5 MB", content: "ArchWeb OS iOS Complete Zip Package (.ZIP)" },
+      { name: "ArchWeb_OS_universal.zip", size: "28.5 MB", content: "ArchWeb OS Universal Zip Package for All Platforms (Windows, macOS, Linux, Android, iOS)" },
+      { name: "archweb_kids_os.zip", size: "15.0 MB", content: "ArchWeb for Kids OS Source Code & Package ZIP" }
     ],
     "/home/user/Müzik": [],
     "/home/user/Resimler": [],
@@ -110,12 +139,58 @@ export const getOfflineFilesState = (): VirtualFilesState => {
   return initialState;
 };
 
-// 2. Save entire offline files state
+// Helper to trim state if localStorage quota is reached
+const trimStateForStorage = (state: VirtualFilesState, maxContentLength: number): VirtualFilesState => {
+  const trimmedFiles: Record<string, FileItem[]> = {};
+  for (const dir in state.allFiles) {
+    trimmedFiles[dir] = state.allFiles[dir].map(file => {
+      if (file.content && file.content.length > maxContentLength) {
+        if (file.content.startsWith('data:')) {
+          const header = file.content.substring(0, file.content.indexOf(',') + 1);
+          return {
+            ...file,
+            content: `${header}[İçerik Sunucuda / Cihazda Kayıtlı - Boyut: ${file.size}]`
+          };
+        } else {
+          return {
+            ...file,
+            content: file.content.substring(0, maxContentLength) + `\n\n...[İçerik kısaltıldı - Boyut: ${file.size}]`
+          };
+        }
+      }
+      return file;
+    });
+  }
+  return {
+    allFiles: trimmedFiles,
+    subFolders: state.subFolders
+  };
+};
+
+// 2. Save entire offline files state safely without exceeding localStorage quota
 export const saveOfflineFilesState = (state: VirtualFilesState): void => {
   try {
     localStorage.setItem("archweb_virtual_files", JSON.stringify(state));
-  } catch (e) {
-    console.error("Failed to save virtual files to localStorage:", e);
+  } catch {
+    try {
+      // First fallback: trim file content over 15KB for localStorage cache
+      const trimmed = trimStateForStorage(state, 15000);
+      localStorage.setItem("archweb_virtual_files", JSON.stringify(trimmed));
+    } catch {
+      try {
+        // Second fallback: trim file content over 1KB
+        const trimmedAggressively = trimStateForStorage(state, 1000);
+        localStorage.setItem("archweb_virtual_files", JSON.stringify(trimmedAggressively));
+      } catch {
+        try {
+          // Third fallback: store minimal file metadata only
+          const metadataOnly = trimStateForStorage(state, 100);
+          localStorage.setItem("archweb_virtual_files", JSON.stringify(metadataOnly));
+        } catch {
+          // Ignored if browser storage quota is completely full or restricted
+        }
+      }
+    }
   }
 };
 
@@ -215,6 +290,106 @@ export const deleteOfflineItem = (virtualPath: string): void => {
   saveOfflineFilesState(state);
 };
 
+// Move offline file or folder to new directory
+export const moveOfflineItem = (sourceVirtualPath: string, destDirVirtualPath: string): boolean => {
+  const state = getOfflineFilesState();
+  
+  if (sourceVirtualPath === destDirVirtualPath || sourceVirtualPath.startsWith(destDirVirtualPath + "/")) {
+    return false; // Cannot move directory into itself
+  }
+
+  const lastIndex = sourceVirtualPath.lastIndexOf("/");
+  if (lastIndex === -1) return false;
+
+  const oldParentDir = sourceVirtualPath.substring(0, lastIndex);
+  const itemName = sourceVirtualPath.substring(lastIndex + 1);
+
+  if (!state.allFiles[destDirVirtualPath]) state.allFiles[destDirVirtualPath] = [];
+  if (!state.subFolders[destDirVirtualPath]) state.subFolders[destDirVirtualPath] = [];
+
+  // Is it a file?
+  const fileIndex = state.allFiles[oldParentDir]?.findIndex(f => f.name === itemName);
+  if (fileIndex !== undefined && fileIndex > -1) {
+    const fileObj = state.allFiles[oldParentDir][fileIndex];
+    state.allFiles[oldParentDir].splice(fileIndex, 1);
+    
+    const existingInDest = state.allFiles[destDirVirtualPath].findIndex(f => f.name === itemName);
+    if (existingInDest > -1) {
+      state.allFiles[destDirVirtualPath][existingInDest] = fileObj;
+    } else {
+      state.allFiles[destDirVirtualPath].push(fileObj);
+    }
+
+    saveOfflineFilesState(state);
+    return true;
+  }
+
+  // Is it a folder?
+  const folderIndex = state.subFolders[oldParentDir]?.findIndex(f => f.name === itemName);
+  if (folderIndex !== undefined && folderIndex > -1) {
+    const folderObj = state.subFolders[oldParentDir][folderIndex];
+    state.subFolders[oldParentDir].splice(folderIndex, 1);
+
+    const existingInDestFolder = state.subFolders[destDirVirtualPath].some(f => f.name === itemName);
+    if (!existingInDestFolder) {
+      state.subFolders[destDirVirtualPath].push(folderObj);
+    }
+
+    const newVirtualPath = `${destDirVirtualPath}/${itemName}`;
+
+    const updateKeys = (oldPrefix: string, newPrefix: string) => {
+      Object.keys(state.allFiles).forEach(key => {
+        if (key === oldPrefix || key.startsWith(oldPrefix + "/")) {
+          const suffix = key.substring(oldPrefix.length);
+          const newKey = newPrefix + suffix;
+          state.allFiles[newKey] = state.allFiles[key];
+          if (key !== newKey) delete state.allFiles[key];
+        }
+      });
+      Object.keys(state.subFolders).forEach(key => {
+        if (key === oldPrefix || key.startsWith(oldPrefix + "/")) {
+          const suffix = key.substring(oldPrefix.length);
+          const newKey = newPrefix + suffix;
+          state.subFolders[newKey] = state.subFolders[key];
+          if (key !== newKey) delete state.subFolders[key];
+        }
+      });
+    };
+
+    updateKeys(sourceVirtualPath, newVirtualPath);
+
+    saveOfflineFilesState(state);
+    return true;
+  }
+
+  return false;
+};
+
+// Get list of all available virtual directories
+export const getAllOfflineDirectories = (): string[] => {
+  const state = getOfflineFilesState();
+  const dirs = new Set<string>([
+    '/home/user', 
+    '/home/user/Masaüstü', 
+    '/home/user/Belgeler', 
+    '/home/user/İndirilenler', 
+    '/home/user/Müzik', 
+    '/home/user/Resimler', 
+    '/home/user/Videolar', 
+    '/home/user/Çocuk Dünyası', 
+    '/archweb'
+  ]);
+  
+  Object.keys(state.subFolders).forEach(path => {
+    if (path) dirs.add(path);
+  });
+  Object.keys(state.allFiles).forEach(path => {
+    if (path) dirs.add(path);
+  });
+
+  return Array.from(dirs).sort();
+};
+
 // 6. Get offline settings
 export const getOfflineSettings = () => {
   try {
@@ -232,7 +407,7 @@ export const getOfflineSettings = () => {
 export const saveOfflineSettings = (settings: any): void => {
   try {
     localStorage.setItem("archweb_virtual_settings", JSON.stringify(settings));
-  } catch (e) {
-    console.error("Failed to save virtual settings:", e);
+  } catch {
+    // Ignored if storage quota exceeded or restricted
   }
 };

@@ -1,0 +1,7 @@
+ArchWeb OS Windows App Package (.MSIX)
+========================================
+Publisher ID: CN=ArchWebSoftware
+Package Identity: ArchWebOS.Desktop.Setup_20.1.2.0_x64
+Target Platform: Windows 10 / 11
+
+Windows MSIX kurulum paketi.

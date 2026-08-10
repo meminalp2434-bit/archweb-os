@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>com.archweb.os.ios.setup</string>
+    <key>CFBundleDisplayName</key>
+    <string>ArchWeb OS iOS Setup</string>
+    <key>CFBundleShortVersionString</key>
+    <string>20.1.2</string>
+</dict>
+</plist>

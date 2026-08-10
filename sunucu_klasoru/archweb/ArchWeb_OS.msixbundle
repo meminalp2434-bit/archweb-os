@@ -1,0 +1,7 @@
+ArchWeb OS Modern Windows App Bundle (.MSIXBUNDLE)
+===================================================
+Publisher ID: CN=ArchWebSoftware
+Package Identity: ArchWebOS.Desktop.Bundle_20.1.2.0_neutral_~_8x3g2j90zk
+Target Platform: Windows 10 / 11 (UWP & App Installer)
+
+Windows App Installer ile doğrudan tıklayıp güvenli mağaza sandbox ortamında çalıştırabileceğiniz MSIXBundle paketi.
