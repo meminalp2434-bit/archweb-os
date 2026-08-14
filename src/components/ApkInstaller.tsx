@@ -396,9 +396,65 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
               </div>
             </div>
 
-            {/* APK Download Section */}
+            {/* APK Download Section - base.apk AT THE VERY TOP */}
             <div id="apk_section" className="grid grid-cols-1 md:grid-cols-3 gap-4">
               
+              {/* 1. SIRA: Base APK Box - com.archwebos.tr / base.apk */}
+              <div className="bg-gradient-to-br from-emerald-500/20 via-[var(--accent)]/15 to-blue-500/10 border-2 border-emerald-400 rounded-xl p-5 space-y-4 flex flex-col justify-between relative overflow-hidden shadow-xl shadow-emerald-500/10">
+                <div className="space-y-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="text-xs font-black font-mono tracking-wider text-emerald-300 uppercase flex items-center gap-1.5">
+                      <Package size={15} className="text-emerald-400 animate-bounce" /> 1. SIRA: Base APK Paketi
+                    </h4>
+                    <span className="px-2 py-0.5 rounded bg-emerald-400 text-black text-[9px] font-black uppercase tracking-wider shrink-0 shadow-sm">
+                      EN BAŞTA
+                    </span>
+                  </div>
+                  <p className="text-sm text-white font-black mt-1 tracking-wide flex items-center gap-1">
+                    <span>base.apk</span>
+                    <span className="text-[10px] text-emerald-300 font-mono bg-black/40 px-1.5 py-0.5 rounded border border-emerald-500/30">com.archwebos.tr</span>
+                  </p>
+                  <p className="text-[11px] text-emerald-100/90 leading-relaxed">Ana sistem veri klasörünün (<code className="bg-black/50 px-1 rounded text-emerald-300 font-mono">com.archwebos.tr</code>) temel kurulum paketi.</p>
+                </div>
+
+                <div className="pt-2">
+                  {downloadingFile === 'apk' ? (
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[10px] font-mono text-emerald-300 font-bold">
+                        <span>İndiriliyor...</span>
+                        <span>%{downloadProgress}</span>
+                      </div>
+                      <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden border border-emerald-500/30">
+                        <div 
+                          className="h-full bg-emerald-400 transition-all duration-150 rounded-full shadow-lg shadow-emerald-400/50"
+                          style={{ width: `${downloadProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                  ) : downloadedFiles['apk'] ? (
+                    <div className="text-center space-y-2">
+                      <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-400/20 border border-emerald-400 text-[11px] text-emerald-300 font-extrabold shadow-sm">
+                        <CheckCircle2 size={13} /> İndirildi!
+                      </div>
+                      <button 
+                        onClick={() => handleDownloadFile('apk')}
+                        className="text-[11px] text-emerald-300 hover:underline flex items-center gap-1 justify-center mx-auto cursor-pointer font-bold"
+                      >
+                        <ArrowDownToLine size={10} /> Tekrar İndir (base.apk)
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleDownloadFile('apk')}
+                      className="w-full py-2.5 px-3 bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-black text-xs rounded-lg shadow-lg shadow-emerald-500/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                    >
+                      <Download size={14} className="stroke-[2.5]" />
+                      <span>base.apk İndir (1. Sıra)</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
               {/* Standalone Application APK Box - archwebapp.apk */}
               <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-5 space-y-4 flex flex-col justify-between relative overflow-hidden">
                 <div className="space-y-1">
@@ -447,59 +503,6 @@ export const ApkInstaller: React.FC<ApkInstallerProps> = ({ onClose }) => {
                     >
                       <Download size={13} className="stroke-[2.5]" />
                       <span>archwebapp.apk İndir</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Client APK Box */}
-              <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4 flex flex-col justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-start justify-between gap-2">
-                    <h4 className="text-xs font-bold font-mono tracking-wider text-[var(--accent)] uppercase flex items-center gap-1.5">
-                      <Package size={14} /> Mobil İstemci (.APK)
-                    </h4>
-                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[8px] text-emerald-400 font-mono font-bold uppercase shrink-0">
-                      v20.1.2
-                    </span>
-                  </div>
-                  <p className="text-xs text-white/80 font-bold mt-1">archinstall.apk</p>
-                  <p className="text-[11px] text-white/50">Cihazınızda yerel tam ekran arayüzü çalıştırmak için indirin.</p>
-                </div>
-
-                <div className="pt-2">
-                  {downloadingFile === 'apk' ? (
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-[10px] font-mono text-white/60">
-                        <span>İndiriliyor...</span>
-                        <span>%{downloadProgress}</span>
-                      </div>
-                      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-[var(--accent)] transition-all duration-150 rounded-full"
-                          style={{ width: `${downloadProgress}%` }}
-                        />
-                      </div>
-                    </div>
-                  ) : downloadedFiles['apk'] ? (
-                    <div className="text-center space-y-2">
-                      <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[11px] text-emerald-400 font-medium">
-                        <CheckCircle2 size={12} /> İndirildi!
-                      </div>
-                      <button 
-                        onClick={() => handleDownloadFile('apk')}
-                        className="text-[11px] text-[var(--accent)] hover:underline flex items-center gap-1 justify-center mx-auto cursor-pointer"
-                      >
-                        <ArrowDownToLine size={10} /> Tekrar İndir
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => handleDownloadFile('apk')}
-                      className="w-full py-2.5 px-3 bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 hover:from-[var(--accent)]/95 hover:to-[var(--accent)]/85 text-white font-bold text-xs rounded-lg shadow transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <Download size={12} />
-                      <span>archinstall.apk İndir</span>
                     </button>
                   )}
                 </div>
