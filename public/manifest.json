@@ -1,8 +1,8 @@
 {
-  "id": "Archweb OS",
-  "short_name": "Archweb OS",
-  "name": "Archweb Operating System",
-  "description": "Yapımcı: Emin Alp. Çocuklar ve profesyoneller için modern, web tabanlı ve yüksek performanslı bir işletim sistemi deneyimi.",
+  "id": "Archweb for Kids",
+  "short_name": "ArchWeb for Kids",
+  "name": "ArchWeb for Kids",
+  "description": "Yapımcı: Emin Alp. Çocuklar ve gelişticiler için modern, web tabanlı Arch Linux işletim sistemi (ArchWeb OS & ArchWeb Operatif System).",
   "lang": "tr",
   "dir": "ltr",
   "prefer_related_applications": false,

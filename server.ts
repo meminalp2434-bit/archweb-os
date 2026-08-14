@@ -181,7 +181,8 @@ function initializeServerStorage() {
     "Videolar",
     "Çocuk Dünyası",
     "Sunucu",
-    "archweb"
+    "archweb",
+    "archweb/com.archwebos.tr"
   ];
 
   defaultFolders.forEach(folder => {
@@ -320,6 +321,18 @@ function initializeServerStorage() {
     {
       relPath: "archweb/ArchWeb_OS_Setup_ios.ipa",
       content: "ArchWeb OS iOS Application Setup Package (.IPA)\n==============================================\nBundle ID: com.archweb.os.ios.setup\nVersion: 20.1.2\n\niOS cihazlar için tam kurulum (Setup) paketidir."
+    },
+    {
+      relPath: "archweb/com.archwebos.tr/base.apk",
+      content: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    package=\"com.archwebos.tr\"\n    android:versionCode=\"20102\"\n    android:versionName=\"20.1.2\">\n\n    <uses-permission android:name=\"android.permission.INTERNET\" />\n    <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />\n\n    <application\n        android:label=\"ArchWeb Operatif System (Base APK)\"\n        android:icon=\"@mipmap/ic_launcher\"\n        android:theme=\"@style/Theme.ArchWeb.NoActionBar\">\n        <activity android:name=\".MainActivity\"\n            android:exported=\"true\">\n            <intent-filter>\n                <action android:name=\"android.intent.action.MAIN\" />\n                <category android:name=\"android.intent.category.LAUNCHER\" />\n            </intent-filter>\n        </activity>\n    </application>\n</manifest>"
+    },
+    {
+      relPath: "archweb/com.archwebos.tr/AndroidManifest.xml",
+      content: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    package=\"com.archwebos.tr\"\n    android:versionCode=\"20102\"\n    android:versionName=\"20.1.2\">\n    <application android:label=\"ArchWeb Operatif System\" android:icon=\"@mipmap/ic_launcher\" />\n</manifest>"
+    },
+    {
+      relPath: "archweb/com.archwebos.tr/config.json",
+      content: "{\n  \"app_id\": \"com.archwebos.tr\",\n  \"app_name\": \"ArchWeb Operatif System\",\n  \"base_apk\": \"base.apk\",\n  \"version\": \"20.1.2\",\n  \"author\": \"Emin Alp\",\n  \"target_sdk\": 34\n}"
     },
     {
       relPath: "Çocuk Dünyası/günlük_programım.txt",

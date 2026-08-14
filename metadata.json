@@ -1,6 +1,6 @@
 {
   "name": "ArchWeb for Kids",
-  "description": "Çocuklar için özel olarak tasarlanmış, web tabanlı Arch Linux terminal ve sistem simülasyonu.",
+  "description": "Çocuklar ve geliştiriciler için özel olarak tasarlanmış web tabanlı Arch Linux işletim sistemi (ArchWeb OS & ArchWeb Operatif System).",
   "requestFramePermissions": [
     "camera",
     "microphone",

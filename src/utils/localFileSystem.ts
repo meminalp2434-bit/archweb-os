@@ -93,6 +93,59 @@ const getInitialFilesState = (): VirtualFilesState => {
       { name: "ArchWeb_OS_universal.zip", size: "28.5 MB", content: "ArchWeb OS Universal Zip Package for All Platforms (Windows, macOS, Linux, Android, iOS)" },
       { name: "archweb_kids_os.zip", size: "15.0 MB", content: "ArchWeb for Kids OS Source Code & Package ZIP" }
     ],
+    "/archweb/com.archwebos.tr": [
+      {
+        name: "base.apk",
+        size: "12.8 MB",
+        content: `<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.archwebos.tr"
+    android:versionCode="20102"
+    android:versionName="20.1.2">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <application
+        android:label="ArchWeb OS (Base APK)"
+        android:icon="@mipmap/ic_launcher"
+        android:theme="@style/Theme.ArchWeb.NoActionBar">
+        <activity android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>`
+      },
+      {
+        name: "AndroidManifest.xml",
+        size: "1.2 KB",
+        content: `<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.archwebos.tr"
+    android:versionCode="20102"
+    android:versionName="20.1.2">
+    <application android:label="ArchWeb Operatif System" android:icon="@mipmap/ic_launcher" />
+</manifest>`
+      },
+      {
+        name: "config.json",
+        size: "340 B",
+        content: JSON.stringify({
+          app_id: "com.archwebos.tr",
+          app_name: "ArchWeb Operatif System",
+          base_apk: "base.apk",
+          version: "20.1.2",
+          author: "Emin Alp",
+          target_sdk: 34
+        }, null, 2)
+      }
+    ],
     "/home/user/Müzik": [],
     "/home/user/Resimler": [],
     "/home/user/Videolar": [],
@@ -118,7 +171,11 @@ const getInitialFilesState = (): VirtualFilesState => {
     "/home/user/Müzik": [],
     "/home/user/Resimler": [],
     "/home/user/Videolar": [],
-    "/home/user/Çocuk Dünyası": []
+    "/home/user/Çocuk Dünyası": [],
+    "/archweb": [
+      { name: "com.archwebos.tr" }
+    ],
+    "/archweb/com.archwebos.tr": []
   };
 
   return { allFiles, subFolders };
@@ -377,7 +434,8 @@ export const getAllOfflineDirectories = (): string[] => {
     '/home/user/Resimler', 
     '/home/user/Videolar', 
     '/home/user/Çocuk Dünyası', 
-    '/archweb'
+    '/archweb',
+    '/archweb/com.archwebos.tr'
   ]);
   
   Object.keys(state.subFolders).forEach(path => {

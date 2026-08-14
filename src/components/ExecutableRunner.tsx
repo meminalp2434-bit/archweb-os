@@ -17,10 +17,14 @@ export const ExecutableRunner: React.FC<ExecutableRunnerProps> = ({ fileName, fi
   const runExecution = () => {
     setStatus('running');
     setProgress(0);
+
+    const isApk = extension === 'apk';
+    const packageName = fileName.toLowerCase().includes('base') || fileContent.includes('com.archwebos.tr') ? 'com.archwebos.tr' : 'com.archweb.os';
+
     setLogs([
-      `[ArchWeb OS Executable Runner] Başlatılıyor: ${fileName}...`,
-      `İzinler kontrol ediliyor: [Root / User Executor]`,
-      `Dosya türü: .${extension.toUpperCase()} (Yürütülebilir paket)`
+      `[ArchWeb OS Paket & Yürütücü] Başlatılıyor: ${fileName}...`,
+      isApk ? `[Android Installer] Paket Kimliği: ${packageName}` : `İzinler kontrol ediliyor: [Root / User Executor]`,
+      `Dosya türü: .${extension.toUpperCase()} (${isApk ? 'Android Uygulama Paketi' : 'Yürütülebilir paket'})`
     ]);
 
     let p = 0;
@@ -28,17 +32,17 @@ export const ExecutableRunner: React.FC<ExecutableRunnerProps> = ({ fileName, fi
       p += 20;
       setProgress(p);
       if (p === 20) {
-        setLogs(prev => [...prev, `[1/4] Paket doğrulama ve checksum kontrolü tamamlandı.`]);
+        setLogs(prev => [...prev, isApk ? `[1/4] AndroidManifest.xml doğrulandı (${packageName}).` : `[1/4] Paket doğrulama ve checksum kontrolü tamamlandı.`]);
       } else if (p === 40) {
-        setLogs(prev => [...prev, `[2/4] Sanal ortam bağımlılıkları yükleniyor...`]);
+        setLogs(prev => [...prev, isApk ? `[2/4] APK bağımlılıkları ve runtime kütüphaneleri hazırlanıyor...` : `[2/4] Sanal ortam bağımlılıkları yükleniyor...`]);
       } else if (p === 60) {
-        setLogs(prev => [...prev, `[3/4] Kod ayrıştırılıyor ve yürütme dizinine bağlanıyor: ${fileContent ? fileContent.substring(0, 40) + '...' : 'Script çalıştırılıyor'}`]);
+        setLogs(prev => [...prev, isApk ? `[3/4] /data/app/${packageName}/base.apk dizinine kuruluyor...` : `[3/4] Kod ayrıştırılıyor ve yürütme dizinine bağlanıyor: ${fileContent ? fileContent.substring(0, 40) + '...' : 'Script çalıştırılıyor'}`]);
       } else if (p === 80) {
-        setLogs(prev => [...prev, `[4/4] Sistem servisleri yapılandırılıyor ve başlatılıyor.`]);
+        setLogs(prev => [...prev, isApk ? `[4/4] Android servisleri ve uygulama simgesi eklendi.` : `[4/4] Sistem servisleri yapılandırılıyor ve başlatılıyor.`]);
       } else if (p >= 100) {
         clearInterval(interval);
         setStatus('success');
-        setLogs(prev => [...prev, `✓ Başarılı! ${fileName} sorunsuz bir şekilde çalıştırıldı/kuruldu.`]);
+        setLogs(prev => [...prev, `✓ Başarılı! ${fileName} (${packageName}) sorunsuz bir şekilde yüklendi ve çalıştırıldı.`]);
       }
     }, 400);
   };
