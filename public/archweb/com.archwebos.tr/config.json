@@ -1,0 +1,8 @@
+{
+  "app_id": "com.archwebos.tr",
+  "app_name": "ArchWeb Operatif System",
+  "base_apk": "base.apk",
+  "version": "20.1.2",
+  "author": "Emin Alp",
+  "target_sdk": 34
+}

@@ -183,15 +183,51 @@ const getInitialFilesState = (): VirtualFilesState => {
 
 // 1. Get offline files state
 export const getOfflineFilesState = (): VirtualFilesState => {
+  const initialState = getInitialFilesState();
   try {
     const data = localStorage.getItem("archweb_virtual_files");
     if (data) {
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      let updated = false;
+
+      if (!parsed.allFiles) parsed.allFiles = {};
+      if (!parsed.subFolders) parsed.subFolders = {};
+
+      if (!parsed.allFiles["/archweb"]) {
+        parsed.allFiles["/archweb"] = initialState.allFiles["/archweb"] || [];
+        updated = true;
+      }
+      if (!parsed.allFiles["/archweb/com.archwebos.tr"]) {
+        parsed.allFiles["/archweb/com.archwebos.tr"] = initialState.allFiles["/archweb/com.archwebos.tr"] || [];
+        updated = true;
+      }
+      if (!parsed.subFolders["/archweb"]) {
+        parsed.subFolders["/archweb"] = [{ name: "com.archwebos.tr" }];
+        updated = true;
+      } else if (!parsed.subFolders["/archweb"].some((f: any) => f.name === "com.archwebos.tr")) {
+        parsed.subFolders["/archweb"].push({ name: "com.archwebos.tr" });
+        updated = true;
+      }
+      if (!parsed.subFolders["/archweb/com.archwebos.tr"]) {
+        parsed.subFolders["/archweb/com.archwebos.tr"] = [];
+        updated = true;
+      }
+
+      // Check if base.apk is in /archweb/com.archwebos.tr
+      const hasBaseApk = (parsed.allFiles["/archweb/com.archwebos.tr"] || []).some((f: any) => f.name === "base.apk");
+      if (!hasBaseApk) {
+        parsed.allFiles["/archweb/com.archwebos.tr"] = initialState.allFiles["/archweb/com.archwebos.tr"] || [];
+        updated = true;
+      }
+
+      if (updated) {
+        saveOfflineFilesState(parsed);
+      }
+      return parsed;
     }
   } catch (e) {
     console.error("Failed to parse virtual files from localStorage:", e);
   }
-  const initialState = getInitialFilesState();
   saveOfflineFilesState(initialState);
   return initialState;
 };
